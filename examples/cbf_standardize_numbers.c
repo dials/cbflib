@@ -14,8 +14,6 @@
 #include <string.h>
 
 
-char * fgetln(FILE *, size_t *);
-
 void usage ( void ) {
     
     fprintf(stderr,
@@ -34,9 +32,9 @@ int main (int argc, char ** argv) {
     char format[10];
     size_t lineln, ii;
     char * line;
-    int c;
-    int bracket;
-    int termc;
+    char c;
+    char bracket;
+    char termc;
     int numcomp;
     int spacestarted;
     int digits = 6;
@@ -65,22 +63,15 @@ int main (int argc, char ** argv) {
         numcomp = 0;
         while(lineln) {
             c = *line;
-            c &= 0xFF;
             if (isspace(c) || c == '[' || c == '(' || c == '{') {
                 bracket = c;
                 lineln--;
                 line++;
-                if (!spacestarted) fputc (' ',stdout);
+                if (!spacestarted) putchar(' ');
                 switch (c) {
-                    case '[': termc = ']';
-                        termc &= 0xFF;
-                        fputc (c,stdout); fputc (' ',stdout); spacestarted = 1; numcomp = 0; break;
-                    case '{': termc = '}';
-                        termc &= 0xFF;
-                        fputc (c,stdout); fputc (' ',stdout); spacestarted = 1; numcomp = 0; break;
-                    case '(': termc = ')';
-                        termc &= 0xFF;
-                        fputc (c,stdout); fputc (' ',stdout); spacestarted = 1; numcomp = 0; break;
+                    case '[': termc = ']'; putchar (c); putchar(' '); spacestarted = 1; numcomp = 0; break;
+                    case '{': termc = '}'; putchar (c); putchar(' '); spacestarted = 1; numcomp = 0; break;
+                    case '(': termc = ')'; putchar (c); putchar(' '); spacestarted = 1; numcomp = 0; break;
                     default: spacestarted = 1; break;
                 }
                 continue;
@@ -90,7 +81,7 @@ int main (int argc, char ** argv) {
                 char * endptr;
                 for (ii=0; ii < lineln; ii++) text[ii] = line[ii];
                 text[lineln] = '\0';
-                if (!spacestarted) fputc (' ',stdout);
+                if (!spacestarted) putchar(' ');
                 number = strtod(text,&endptr)*ascale;
                 anumber = fabs(number);
                 if (anumber < 0.5) number = 0.;
@@ -121,22 +112,22 @@ int main (int argc, char ** argv) {
                 continue;
             }
             if (c == ',' || (termc && c == termc)) {
-                if (!spacestarted) fputc (' ',stdout);
-                fputc (c,stdout);
-                fputc (' ',stdout);
+                if (!spacestarted) putchar(' ');
+                putchar (c);
+                putchar (' ');
                 numcomp = 0;
                 line ++;
                 lineln --;
-                spacestarted = 0;
+                spacestarted = 1;
                 if (termc && c == termc) termc = '\0';
                 continue;
             }
-            fputc (c,stdout);
+            putchar(c);
             line ++;
             lineln --;
             
         }
-        fputc ('\n', stdout);
+        putchar('\n');
         
     }
     return 0;
