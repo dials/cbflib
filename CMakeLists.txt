@@ -280,6 +280,13 @@ if(COMMAND cmake_policy)
 endif(COMMAND cmake_policy)
 
 
+# Set timestamps of extracted contents to the time of extraction.
+# Resolved by explicitly setting DOWNLOAD_EXTRACT_TIMESTAMP in
+# externalproject_add() or fetchcontent_declare(), but the option was
+# only introduced in CMake 3.24.
+cmake_policy(SET CMP0135 NEW)
+
+
 set(CBF_USE_FORTRAN_ENV $ENV{CBF_USE_FORTRAN})
 set(CBF_F90FLAGS_ENV $ENV{F90FLAGS})
 set(CBF_USE_ULP $ENV{CBF_USE_ULP})
@@ -491,10 +498,18 @@ set(GRAPHICS  "${CBFlib_SOURCE_DIR}/html_graphics" CACHE STRING "")
 set(CBF_TIFF        "tiff-4.0.3-rev-29Sep13")
 set(TIFF_INSTALL_DIR "${CMAKE_BINARY_DIR}/${CBF_TIFF}")
 
+
+#
+# CQRlib
+set(CBF_CQRLIB "cqrlib-1.1.4")
+set(CBF_CQRLIB_URL "https://github.com/yayahjb/cqrlib/archive/refs/tags/CQRlib-1.1.4.tar.gz")
+set(CQRLIB_INSTALL_DIR "${CMAKE_BINARY_DIR}/${CBF_CQRLIB}")
+
+
 #
 # Definitions to get a version of HDF5
 #
-set(CBF_HDF5        "hdf5-1.8.14")
+set(CBF_HDF5        "hdf5-1.14.4-2")
 set(CBF_HDF5URL  "http://downloads.sf.net/cbflib/${CBF_HDF5}.tar.gz")
 set(CBF_HDF5REGISTER_ARG "--register")
 if (CBF_HDF5REGISTER_MANUAL_ENV STREQUAL "YES")
@@ -541,6 +556,12 @@ set(CBF_HDF5URL  "http://downloads.sf.net/cbflib/${CBF_HDF5}.tar.gz")
 find_program(WGET_EXECUTABLE wget)
 CBF_DEBUG_MESSAGE( "WGET found at ${WGET_EXECUTABLE}")
 
+
+#
+# libm
+set(libm "$<$<NOT:$<C_COMPILER_ID:MSVC>>:m>")
+
+
 #
 #  ZLIB
 #
@@ -577,7 +598,45 @@ ExternalProject_add(
 	INSTALL_DIR ${CMAKE_BINARY_DIR}/${CBF_HDF5}
 )
 
-set(HDF5_LIBRARY_PATH ${HDF5_INSTALL_DIR}/lib/libhdf5${CMAKE_SHARED_LIBRARY_SUFFIX})
+
+# Cannot set INTERFACE_INCLUDE_DIRECTORIES on an imported target
+# to a non-existent path: for now, create a directory now that
+# will be populated during build.
+file(MAKE_DIRECTORY "${HDF5_INSTALL_DIR}/include")
+add_library(hdf5 SHARED IMPORTED)
+add_dependencies(hdf5 ${CBF_HDF5})
+set_target_properties(hdf5 PROPERTIES
+  IMPORTED_LOCATION "${HDF5_INSTALL_DIR}/lib/libhdf5${CMAKE_SHARED_LIBRARY_SUFFIX}"
+  INTERFACE_INCLUDE_DIRECTORIES "${HDF5_INSTALL_DIR}/include")
+target_compile_definitions(hdf5
+  INTERFACE H5_USE_110_API)
+
+
+#
+# CQRlib
+#
+# If a cloned repository is patched, CMake seems to attempt to
+# invoke PATCH_COMMAND on every run.  For now, avoid automatically
+# patching cloned repositories.
+find_program(PATCH patch)
+externalproject_add(${CBF_CQRLIB}
+  URL "${CBF_CQRLIB_URL}"
+  PATCH_COMMAND "${PATCH}"
+    -N -i "${CMAKE_CURRENT_SOURCE_DIR}/patches/cqrlib-1.1.4.patch" -p 1 -t
+  CMAKE_CACHE_ARGS
+    "-DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}"
+    "-DCMAKE_INSTALL_BINDIR:PATH=${CQRLIB_INSTALL_DIR}/bin"
+    "-DCMAKE_INSTALL_INCLUDEDIR:PATH=${CQRLIB_INSTALL_DIR}/include"
+    "-DCMAKE_INSTALL_LIBDIR:PATH=${CQRLIB_INSTALL_DIR}/lib"
+    "-DCMAKE_INSTALL_PREFIX:PATH=${CQRLIB_INSTALL_DIR}")
+
+file(MAKE_DIRECTORY "${CQRLIB_INSTALL_DIR}/include/cqrlib")
+add_library(CQR SHARED IMPORTED)
+add_dependencies(CQR ${CBF_CQRLIB})
+set_target_properties(CQR PROPERTIES
+  IMPORTED_LOCATION "${CQRLIB_INSTALL_DIR}/lib/libCQRlib${CMAKE_SHARED_LIBRARY_SUFFIX}"
+  INTERFACE_INCLUDE_DIRECTORIES "${CQRLIB_INSTALL_DIR}/include")
+
 
 #
 # CBF_REGEX or CBF_PCRE
@@ -588,7 +647,7 @@ set(HDF5_LIBRARY_PATH ${HDF5_INSTALL_DIR}/lib/libhdf5${CMAKE_SHARED_LIBRARY_SUFF
 # - an (optional) dependency to build
 #
 # Try for PCRE first
-find_library(CBF_REGEXLIB pcre)
+find_library(CBF_REGEXLIB pcreposix)
 find_path(CBF_REGEXLIB_INCLUDE_DIR NAMES pcreposix.h)
 message(STATUS "CBF_REGEXLIB_INCLUDE_DIR for pcreposix.h = '${CBF_REGEXLIB_INCLUDE_DIR}'")
 message(STATUS "CBF_REGEXLIB = '${CBF_REGEXLIB}'")
@@ -621,9 +680,25 @@ if (NOT CBF_REGEXLIB_INCLUDE_DIR OR NOT CBF_REGEXLIB)
 		add_definitions(-DCBF_REGEXLIB_REGEX)
 	endif ()
 else ()
-	set(CBF_RE "")
-		set(CBF_REGEXLIB_LIBRARY_PATH "${CBF_REGEXLIB}/libpcre.so")
-	add_definitions(-DCBF_REGEXLIB_PCRE)
+	add_library(pcreposix_static STATIC IMPORTED)
+	set_target_properties(pcreposix_static PROPERTIES
+		IMPORTED_LOCATION "${CBF_REGEXLIB}"
+		INTERFACE_INCLUDE_DIRECTORIES "${CBF_REGEXLIB_INCLUDE_DIR}")
+	find_library(_pcre_static pcre)
+	target_link_libraries(pcreposix_static INTERFACE "${_pcre_static}")
+	target_compile_definitions(pcreposix_static
+	  INTERFACE CBF_REGEXLIB_PCRE)
+
+	set(_find_library_suffix_save "${CMAKE_FIND_LIBRARY_SUFFIX}")
+	set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" ".so")
+	find_library(_pcreposix_shared pcre)
+	add_library(pcreposix_shared SHARED IMPORTED)
+	set_target_properties(pcreposix_shared PROPERTIES
+	  IMPORTED_LOCATION "${_pcreposix_shared}"
+	  INTERFACE_INCLUDE_DIRECTORIES "${CBF_REGEXLIB_INCLUDE_DIR}")
+	target_compile_definitions(pcreposix_shared
+	  INTERFACE CBF_REGEXLIB_PCRE)
+	set(CMAKE_FIND_LIBRARY_SUFFIX "${_find_library_suffix_save}")
 endif ()
 
 #
@@ -690,6 +765,7 @@ set(
     ${CBF__SRC}/cbf_hdf5.c
     ${CBF__SRC}/cbf_hdf5_filter.c
     ${CBF__SRC}/cbf_lex.c
+    ${CBF__SRC}/cbf_minicbf_header.c
     ${CBF__SRC}/cbf_nibble_offset.c
     ${CBF__SRC}/cbf_packed.c
     ${CBF__SRC}/cbf_predictor.c
@@ -774,6 +850,7 @@ set(
     ${CBF__INCLUDE}/cbf_hdf5.h			
     ${CBF__INCLUDE}/cbf_hdf5_filter.h
     ${CBF__INCLUDE}/cbf_lex.h			
+    ${CBF__INCLUDE}/cbf_minicbf_header.h
     ${CBF__INCLUDE}/cbf_nibble_offset.h
     ${CBF__INCLUDE}/cbf_packed.h		
     ${CBF__INCLUDE}/cbf_predictor.h
@@ -866,8 +943,6 @@ include_directories(
 	BEFORE SYSTEM
                       ${CBFlib_SOURCE_DIR}/include 
 	${CBFlib_BINARY_DIR}/${CBF_TIFF}/include
-	${CBFlib_BINARY_DIR}/${CBF_HDF5}/include
-                      ${CBF_REGEXLIB_INCLUDE_DIR}
                       )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/bin")
@@ -879,22 +954,27 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
 add_library(cbf_static STATIC ${CBF_C_SOURCES})
-add_dependencies(cbf_static ${CBF_RE} ${CBF_TIFF} ${CBF_HDF5})
+add_dependencies(cbf_static ${CBF_TIFF})
 set_target_properties(cbf_static PROPERTIES OUTPUT_NAME "cbf")
 set_target_properties(cbf_static PROPERTIES LINKER_LANGUAGE C)
 set_target_properties(cbf_static PROPERTIES SOVERSION "${CBF_APIVERSION}")
-set(CBF_STATIC_LIBRARY_PATH ${CBFlib_BINARY_DIR}/lib/libcbf.a)
+target_link_libraries(cbf_static
+  PUBLIC hdf5
+  PRIVATE pcreposix_static
+  PRIVATE ${libm})
 
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
 add_library(cbf_shared SHARED  ${CBF_C_SOURCES})
-add_dependencies(cbf_shared ${CBF_RE} ${CBF_TIFF} ${CBF_HDF5})
+add_dependencies(cbf_shared ${CBF_TIFF})
 set_target_properties(cbf_shared PROPERTIES OUTPUT_NAME "cbf")
 set_target_properties(cbf_shared PROPERTIES LINKER_LANGUAGE C)
 set_target_properties(cbf_shared PROPERTIES SOVERSION "${CBF_APIVERSION}")
-target_link_libraries(cbf_shared ${HDF5_LIBRARY_PATH})
-set(CBF_SHARED_LIBRARY_PATH ${CBFlib_BINARY_DIR}/lib/libcbf.so)
+target_link_libraries(cbf_shared
+  PUBLIC hdf5
+  PRIVATE pcreposix_shared
+  PRIVATE ${libm})
 
 #
 # Build the static and shared IMG libraries
@@ -911,7 +991,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
 add_library(img_shared SHARED  ${CBF__SRC}/img.c)
 set_target_properties(img_shared PROPERTIES OUTPUT_NAME "img")
 set_target_properties(img_shared PROPERTIES LINKER_LANGUAGE C)
-target_link_libraries(img_shared ${HDF5_LIBRARY_PATH})
+target_link_libraries(img_shared hdf5)
 set(IMG_SHARED_LIBRARY_PATH ${CBFlib_BINARY_DIR}/lib/libimg.so)
 
 
@@ -949,7 +1029,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
 add_library(fcb_shared SHARED  ${CBF_F90_BUILT_SOURCES};${CBF_F90_SOURCES})
 set_target_properties(fcb_shared PROPERTIES OUTPUT_NAME "fcb")
 set_target_properties(fcb_shared PROPERTIES LINKER_LANGUAGE C)
-target_link_libraries(fcb_shared ${HDF5_LIBRARY_PATH})
+target_link_libraries(fcb_shared hdf5)
 set(FCB_SHARED_LIBRARY_PATH ${CBFlib_BINARY_DIR}/lib/libfcb.so)
 
 endif (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
@@ -961,37 +1041,39 @@ endif (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
 
 # Note: to add a target with multiple sources/dependencies/libraries you must pass a list
 # separated by semicolons for the appropriate parameter.
-# Note: the math library should be linked in by appending ';m' to the library list here
+# Note: the math library should be linked in by appending ';${libm}' to the library list here
 macro(add_target target source dependencies libraries)
 	add_executable(${target} ${source})
-	add_dependencies(${target} ${dependencies})
+	if("${dependencies}")
+		add_dependencies(${target} "${dependencies}")
+	endif()
 	target_link_libraries(${target} ${libraries})
 endmacro()
 
-add_target(tiff2cbf "${CBF__EXAMPLES}/tiff2cbf.c" "cbf_static;${CBF_TIFF}" "${CBF_STATIC_LIBRARY_PATH};${TIFF_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
-add_target(cbf2nexus "${CBF__EXAMPLES}/cbf2nexus.c" "cbf_static;${CBF_HDF5}" "${CBF_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
-add_target(nexus2cbf "${CBF__EXAMPLES}/nexus2cbf.c" "cbf_static;${CBF_HDF5}" "${CBF_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
-add_target(minicbf2nexus "${CBF__EXAMPLES}/minicbf2nexus.c" "cbf_static;${CBF_HDF5}" "${CBF_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
-add_target(adscimg2cbf "${CBF__EXAMPLES}/adscimg2cbf.c;${CBF__EXAMPLES}/adscimg2cbf_sub.c" "cbf_static" "${CBF_STATIC_LIBRARY_PATH};m")
-add_target(cbf2adscimg "${CBF__EXAMPLES}/cbf2adscimg.c;${CBF__EXAMPLES}/cbf2adscimg_sub.c" "cbf_static" "${CBF_STATIC_LIBRARY_PATH};m")
-add_target(convert_image "${CBF__EXAMPLES}/convert_image.c" "cbf_static;img_static" "${CBF_STATIC_LIBRARY_PATH};${IMG_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
-add_target(convert_minicbf "${CBF__EXAMPLES}/convert_minicbf.c" "cbf_static" "${CBF_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
-add_target(makecbf "${CBF__EXAMPLES}/makecbf.c" "cbf_static;img_static" "${CBF_STATIC_LIBRARY_PATH};${IMG_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
-add_target(cbf_tail "${CBF__EXAMPLES}/cbf_tail.c" "cbf_static" "${CBF_STATIC_LIBRARY_PATH}")
-add_target(changtestcompression "${CBF__EXAMPLES}/changtestcompression.c" "cbf_static" "${CBF_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
-add_target(img2cif "${CBF__EXAMPLES}/img2cif.c" "cbf_static;img_static" "${CBF_STATIC_LIBRARY_PATH};${IMG_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
-add_target(cif2cbf "${CBF__EXAMPLES}/cif2cbf.c" "cbf_static;${CBF_HDF5}" "${CBF_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH};m")
-add_target(cbf_template_t "${CBF__DECTRIS_EXAMPLES}/cbf_template_t.c" "cbf_static" "${CBF_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
-add_target(testcell "${CBF__EXAMPLES}/testcell.C" "cbf_static" "${CBF_STATIC_LIBRARY_PATH}")
-add_target(sauter_test "${CBF__EXAMPLES}/sauter_test.C" "cbf_static" "${CBF_STATIC_LIBRARY_PATH}")
-add_target(sequence_match "${CBF__EXAMPLES}/sequence_match.c" "cbf_static" "${CBF_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
-add_target(testulp "${CBF__EXAMPLES}/testulp.c" "cbf_static" "${CBF_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
-add_target(testhdf5 "${CBF__EXAMPLES}/testhdf5.c" "cbf_static;${CBF_HDF5}" "${CBF_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
-add_target(testtree "${CBF__EXAMPLES}/testtree.c" "cbf_static" "${CBF_STATIC_LIBRARY_PATH};;${HDF5_LIBRARY_PATH}")
-add_target(testalloc "${CBF__EXAMPLES}/testalloc.c" "cbf_static" "${CBF_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
-add_target(testflat "${CBF__EXAMPLES}/testflat.c" "cbf_static" "${CBF_STATIC_LIBRARY_PATH};;${HDF5_LIBRARY_PATH}")
-add_target(testflatpacked "${CBF__EXAMPLES}/testflatpacked.c" "cbf_static" "${CBF_STATIC_LIBRARY_PATH};;${HDF5_LIBRARY_PATH}")
-add_target(testreals "${CBF__EXAMPLES}/testreals.c" "cbf_static" "${CBF_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
+add_target(tiff2cbf "${CBF__EXAMPLES}/tiff2cbf.c" "${CBF_TIFF}" "cbf_static;${TIFF_LIBRARY_PATH}")
+add_target(cbf2nexus "${CBF__EXAMPLES}/cbf2nexus.c" "" cbf_static)
+add_target(nexus2cbf "${CBF__EXAMPLES}/nexus2cbf.c" "" cbf_static)
+add_target(minicbf2nexus "${CBF__EXAMPLES}/minicbf2nexus.c" "" cbf_static)
+add_target(adscimg2cbf "${CBF__EXAMPLES}/adscimg2cbf.c;${CBF__EXAMPLES}/adscimg2cbf_sub.c" "" "cbf_static;${libm}")
+add_target(cbf2adscimg "${CBF__EXAMPLES}/cbf2adscimg.c;${CBF__EXAMPLES}/cbf2adscimg_sub.c" "" "cbf_static;${libm}")
+add_target(convert_image "${CBF__EXAMPLES}/convert_image.c" "img_static" "cbf_static;${IMG_STATIC_LIBRARY_PATH}")
+add_target(convert_minicbf "${CBF__EXAMPLES}/convert_minicbf.c" "" cbf_static)
+add_target(makecbf "${CBF__EXAMPLES}/makecbf.c" "cbf_static;img_static" "cbf_static;${IMG_STATIC_LIBRARY_PATH}")
+add_target(cbf_tail "${CBF__EXAMPLES}/cbf_tail.c" "" "cbf_static")
+add_target(changtestcompression "${CBF__EXAMPLES}/changtestcompression.c" "" "cbf_static")
+add_target(img2cif "${CBF__EXAMPLES}/img2cif.c" "img_static" "cbf_static")
+add_target(cif2cbf "${CBF__EXAMPLES}/cif2cbf.c" "" "cbf_static;CQR;${libm}")
+add_target(cbf_template_t "${CBF__DECTRIS_EXAMPLES}/cbf_template_t.c" "" "cbf_static")
+add_target(testcell "${CBF__EXAMPLES}/testcell.C" "" "cbf_static")
+add_target(sauter_test "${CBF__EXAMPLES}/sauter_test.C" "" "cbf_static")
+add_target(sequence_match "${CBF__EXAMPLES}/sequence_match.c" "" "cbf_static")
+add_target(testulp "${CBF__EXAMPLES}/testulp.c" "" "cbf_static")
+add_target(testhdf5 "${CBF__EXAMPLES}/testhdf5.c" "" "cbf_static")
+add_target(testtree "${CBF__EXAMPLES}/testtree.c" "" "cbf_static")
+add_target(testalloc "${CBF__EXAMPLES}/testalloc.c" "" "cbf_static")
+add_target(testflat "${CBF__EXAMPLES}/testflat.c" "" "cbf_static")
+add_target(testflatpacked "${CBF__EXAMPLES}/testflatpacked.c" "" "cbf_static")
+add_target(testreals "${CBF__EXAMPLES}/testreals.c" "" "cbf_static")
 
 if (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
 
@@ -1009,8 +1091,8 @@ add_custom_command(OUTPUT "${CBF__BLDEXMP}/test_xds_binary.f90"
     DEPENDS ${CBF_M4_FCB_DEFINES} "${CBF__M4}/test_xds_binary.m4"
     COMMENT "Generating ${test_xds_binary.f90}")
 
-add_target(test_fcb_read_image "${CBF__BLDEXMP}/test_fcb_read_image.f90" "fcb_static" "${FCB_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
-add_target(test_xds_binary "${CBF__BLDEXMP}/test_xds_binary.f90" "fcb_static" "${FCB_STATIC_LIBRARY_PATH};${HDF5_LIBRARY_PATH}")
+add_target(test_fcb_read_image "${CBF__BLDEXMP}/test_fcb_read_image.f90" "fcb_static" "${FCB_STATIC_LIBRARY_PATH};hdf5")
+add_target(test_xds_binary "${CBF__BLDEXMP}/test_xds_binary.f90" "fcb_static" "${FCB_STATIC_LIBRARY_PATH};hdf5")
 
 endif (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
 
