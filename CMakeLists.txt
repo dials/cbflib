@@ -1052,7 +1052,7 @@ endmacro()
 
 add_target(tiff2cbf "${CBF__EXAMPLES}/tiff2cbf.c" "${CBF_TIFF}" "cbf_static;${TIFF_LIBRARY_PATH}")
 add_target(cbf2nexus "${CBF__EXAMPLES}/cbf2nexus.c" "" cbf_static)
-add_target(nexus2cbf "${CBF__EXAMPLES}/nexus2cbf.c" "" cbf_static)
+add_target(nexus2cbf "${CBF__EXAMPLES}/nexus2cbf.c" "" "cbf_static;hdf5")
 add_target(minicbf2nexus "${CBF__EXAMPLES}/minicbf2nexus.c" "" cbf_static)
 add_target(adscimg2cbf "${CBF__EXAMPLES}/adscimg2cbf.c;${CBF__EXAMPLES}/adscimg2cbf_sub.c" "" "cbf_static;${libm}")
 add_target(cbf2adscimg "${CBF__EXAMPLES}/cbf2adscimg.c;${CBF__EXAMPLES}/cbf2adscimg_sub.c" "" "cbf_static;${libm}")

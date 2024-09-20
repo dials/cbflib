@@ -242,6 +242,8 @@
 #include <unistd.h>
 #include <stdint.h>
 
+#include <hdf5.h>
+
 #include "cbf.h"
 #include "cbf_simple.h"
 #include "img.h"
