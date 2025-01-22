@@ -669,7 +669,7 @@ extern "C" {
                     
                     match = 0;
                     
-                    for(crow = 0; crow < count+1; crow++) {
+                    for(crow = 0; crow < count; crow++) {
                         
                         if (!cbf_cistrcmp(xscan_id,scanids[crow])) {
                             
