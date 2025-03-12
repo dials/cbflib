@@ -1,343 +1,61 @@
+cmake_minimum_required(VERSION 3.24)
 
-######################################################################
-#  CMakeLists.txt - cmake build file for make to create CBFlib       #
-#                                                                    #
-# Version 0.9.6 06 November 2018                                     #
-#                                                                    #
-#                          Paul Ellis and                            #
-#         Herbert J. Bernstein (yaya@bernstein-plus-sons.com)        #
-#                                                                    #
-# (C) Copyright 2006 - 2018 Herbert J. Bernstein                     #
-#                                                                    #
-######################################################################
+project(CBFlib C CXX)
 
-######################################################################
-#                                                                    #
-# YOU MAY REDISTRIBUTE THE CBFLIB PACKAGE UNDER THE TERMS OF THE GPL #
-#                                                                    #
-# ALTERNATIVELY YOU MAY REDISTRIBUTE THE CBFLIB API UNDER THE TERMS  #
-# OF THE LGPL                                                        #
-#                                                                    #
-######################################################################
+# Decide if we want fortran
+if(DEFINED BUILD_FORTRAN AND BUILD_FORTRAN)
+	# We've requested fortran explicitly
+	enable_language(Fortran)
+	option(BUILD_FORTRAN "Build the fortran parts of CBFlib" ON)
+elseif(NOT DEFINED BUILD_FORTRAN)
+	# The user didn't explicitly indicate, enable if available
+	include(CheckLanguage)
+	check_language(Fortran)
+	option(BUILD_FORTRAN "Build the fortran parts of CBFlib" $CMAKE_Fortran_COMPILER)
+	if(BUILD_FORTRAN)
+		enable_language(Fortran)
+	endif()
+else()
+	# The user explicitly said no fortran, record as an option anyway
+	option(BUILD_FORTRAN "Build the fortran parts of CBFlib" NO)
+endif()
 
-########################### GPL NOTICES ##############################
-#                                                                    #
-# This program is free software; you can redistribute it and/or      #
-# modify it under the terms of the GNU General Public License as     #
-# published by the Free Software Foundation; either version 2 of     #
-# (the License, or (at your option) any later version.               #
-#                                                                    #
-# This program is distributed in the hope that it will be useful,    #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of     #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the      #
-# GNU General Public License for more details.                       #
-#                                                                    #
-# You should have received a copy of the GNU General Public License  #
-# along with this program; if not, write to the Free Software        #
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA           #
-# 02111-1307  USA                                                    #
-#                                                                    #
-######################################################################
+option(USE_ULP "Use ULP?" NO)
 
-######################### LGPL NOTICES ###############################
-#                                                                    #
-# This library is free software; you can redistribute it and/or      #
-# modify it under the terms of the GNU Lesser General Public         #
-# License as published by the Free Software Foundation; either       #
-# version 2.1 of the License, or (at your option) any later version. #
-#                                                                    #
-# This library is distributed in the hope that it will be useful,    #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of     #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  #
-# Lesser General Public License for more details.                    #
-#                                                                    #
-# You should have received a copy of the GNU Lesser General Public   #
-# License along with this library; if not, write to the Free         #
-# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,    #
-# MA  02110-1301  USA                                                #
-#                                                                    #
-######################################################################
-
-######################################################################
-#                                                                    #
-#                    Stanford University Notices                     #
-#  for the CBFlib software package that incorporates SLAC software   #
-#                 on which copyright is disclaimed                   #
-#                                                                    #
-# This software                                                      #
-# -------------                                                      #
-# The term "this software", as used in these Notices, refers to      #
-# those portions of the software package CBFlib that were created by #
-# employees of the Stanford Linear Accelerator Center, Stanford      #
-# University.                                                        #
-#                                                                    #
-# Stanford disclaimer of copyright                                   #
-# --------------------------------                                   #
-# Stanford University, owner of the copyright, hereby disclaims its  #
-# copyright and all other rights in this software.  Hence, anyone    #
-# may freely use it for any purpose without restriction.             #
-#                                                                    #
-# Acknowledgement of sponsorship                                     #
-# ------------------------------                                     #
-# This software was produced by the Stanford Linear Accelerator      #
-# Center, Stanford University, under Contract DE-AC03-76SFO0515 with #
-# the Department of Energy.                                          #
-#                                                                    #
-# Government disclaimer of liability                                 #
-# ----------------------------------                                 #
-# Neither the United States nor the United States Department of      #
-# Energy, nor any of their employees, makes any warranty, express or #
-# implied, or assumes any legal liability or responsibility for the  #
-# accuracy, completeness, or usefulness of any data, apparatus,      #
-# product, or process disclosed, or represents that its use would    #
-# not infringe privately owned rights.                               #
-#                                                                    #
-# Stanford disclaimer of liability                                   #
-# --------------------------------                                   #
-# Stanford University makes no representations or warranties,        #
-# express or implied, nor assumes any liability for the use of this  #
-# software.                                                          #
-#                                                                    #
-# Maintenance of notices                                             #
-# ----------------------                                             #
-# In the interest of clarity regarding the origin and status of this #
-# software, this and all the preceding Stanford University notices   #
-# are to remain affixed to any copy or derivative of this software   #
-# made or distributed by the recipient and are to be affixed to any  #
-# copy of software made or distributed by the recipient that         #
-# contains a copy or derivative of this software.                    #
-#                                                                    #
-# Based on SLAC Software Notices, Set 4                              #
-# OTT.002a, 2004 FEB 03                                              #
-######################################################################
-
-
-
-######################################################################
-#                               NOTICE                               #
-# Creative endeavors depend on the lively exchange of ideas. There   #
-# are laws and customs which establish rights and responsibilities   #
-# for authors and the users of what authors create.  This notice     #
-# is not intended to prevent you from using the software and         #
-# documents in this package, but to ensure that there are no         #
-# misunderstandings about terms and conditions of such use.          #
-#                                                                    #
-# Please read the following notice carefully.  If you do not         #
-# understand any portion of this notice, please seek appropriate     #
-# professional legal advice before making use of the software and    #
-# documents included in this software package.  In addition to       #
-# whatever other steps you may be obliged to take to respect the     #
-# intellectual property rights of the various parties involved, if   #
-# you do make use of the software and documents in this package,     #
-# please give credit where credit is due by citing this package,     #
-# its authors and the URL or other source from which you obtained    #
-# it, or equivalent primary references in the literature with the    #
-# same authors.                                                      #
-#                                                                    #
-# Some of the software and documents included within this software   #
-# package are the intellectual property of various parties, and      #
-# placement in this package does not in any way imply that any       #
-# such rights have in any way been waived or diminished.             #
-#                                                                    #
-# With respect to any software or documents for which a copyright    #
-# exists, ALL RIGHTS ARE RESERVED TO THE OWNERS OF SUCH COPYRIGHT.   #
-#                                                                    #
-# Even though the authors of the various documents and software      #
-# found here have made a good faith effort to ensure that the        #
-# documents are correct and that the software performs according     #
-# to its documentation, and we would greatly appreciate hearing of   #
-# any problems you may encounter, the programs and documents any     #
-# files created by the programs are provided **AS IS** without any   *
-# warranty as to correctness, merchantability or fitness for any     #
-# particular or general use.                                         #
-#                                                                    #
-# THE RESPONSIBILITY FOR ANY ADVERSE CONSEQUENCES FROM THE USE OF    #
-# PROGRAMS OR DOCUMENTS OR ANY FILE OR FILES CREATED BY USE OF THE   #
-# PROGRAMS OR DOCUMENTS LIES SOLELY WITH THE USERS OF THE PROGRAMS   #
-# OR DOCUMENTS OR FILE OR FILES AND NOT WITH AUTHORS OF THE          #
-# PROGRAMS OR DOCUMENTS.                                             #
-######################################################################
-
-######################################################################
-#                                                                    #
-#                           The IUCr Policy                          #
-#      for the Protection and the Promotion of the STAR File and     #
-#     CIF Standards for Exchanging and Archiving Electronic Data     #
-#                                                                    #
-# Overview                                                           #
-#                                                                    #
-# The Crystallographic Information File (CIF)[1] is a standard for   #
-# information interchange promulgated by the International Union of  #
-# Crystallography (IUCr). CIF (Hall, Allen & Brown, 1991) is the     #
-# recommended method for submitting publications to Acta             #
-# Crystallographica Section C and reports of crystal structure       #
-# determinations to other sections of Acta Crystallographica         #
-# and many other journals. The syntax of a CIF is a subset of the    #
-# more general STAR File[2] format. The CIF and STAR File approaches #
-# are used increasingly in the structural sciences for data exchange #
-# and archiving, and are having a significant influence on these     #
-# activities in other fields.                                        #
-#                                                                    #
-# Statement of intent                                                #
-#                                                                    #
-# The IUCr's interest in the STAR File is as a general data          #
-# interchange standard for science, and its interest in the CIF,     #
-# a conformant derivative of the STAR File, is as a concise data     #
-# exchange and archival standard for crystallography and structural  #
-# science.                                                           #
-#                                                                    #
-# Protection of the standards                                        #
-#                                                                    #
-# To protect the STAR File and the CIF as standards for              #
-# interchanging and archiving electronic data, the IUCr, on behalf   #
-# of the scientific community,                                       #
-#                                                                    #
-# # holds the copyrights on the standards themselves,                *
-#                                                                    #
-# # owns the associated trademarks and service marks, and            *
-#                                                                    #
-# # holds a patent on the STAR File.                                 *
-#                                                                    #
-# These intellectual property rights relate solely to the            #
-# interchange formats, not to the data contained therein, nor to     #
-# the software used in the generation, access or manipulation of     #
-# the data.                                                          #
-#                                                                    #
-# Promotion of the standards                                         #
-#                                                                    #
-# The sole requirement that the IUCr, in its protective role,        #
-# imposes on software purporting to process STAR File or CIF data    #
-# is that the following conditions be met prior to sale or           #
-# distribution.                                                      #
-#                                                                    #
-# # Software claiming to read files written to either the STAR       *
-# File or the CIF standard must be able to extract the pertinent     #
-# data from a file conformant to the STAR File syntax, or the CIF    #
-# syntax, respectively.                                              #
-#                                                                    #
-# # Software claiming to write files in either the STAR File, or     *
-# the CIF, standard must produce files that are conformant to the    #
-# STAR File syntax, or the CIF syntax, respectively.                 #
-#                                                                    #
-# # Software claiming to read definitions from a specific data       *
-# dictionary approved by the IUCr must be able to extract any        #
-# pertinent definition which is conformant to the dictionary         #
-# definition language (DDL)[3] associated with that dictionary.      #
-#                                                                    #
-# The IUCr, through its Committee on CIF Standards, will assist      #
-# any developer to verify that software meets these conformance      #
-# conditions.                                                        #
-#                                                                    #
-# Glossary of terms                                                  #
-#                                                                    #
-# [1] CIF:  is a data file conformant to the file syntax defined     #
-# at http://www.iucr.org/iucr-top/cif/spec/index.html                #
-#                                                                    #
-# [2] STAR File:  is a data file conformant to the file syntax       #
-# defined at http://www.iucr.org/iucr-top/cif/spec/star/index.html   #
-#                                                                    #
-# [3] DDL:  is a language used in a data dictionary to define data   #
-# items in terms of "attributes". Dictionaries currently approved    #
-# by the IUCr, and the DDL versions used to construct these          #
-# dictionaries, are listed at                                        #
-# http://www.iucr.org/iucr-top/cif/spec/ddl/index.html               #
-#                                                                    #
-# Last modified: 30 September 2000                                   #
-#                                                                    #
-# IUCr Policy Copyright (C) 2000 International Union of              #
-# Crystallography                                                    #
-######################################################################
-
-######################################################################
-#  CMakeLists.txt for CBFlib                                         #
-#                                                                    #
-#  Assumed directory structure                                       #
-#    CBFlib_SOURCE_DIR        CBFlib kit containing this file        #
-#      doc                    Directory with documentation           #
-#      examples               Directory with example programs        #
-#      include                Directory with header files            #
-#      m4                     Directory with m4 files                #
-#      src                    Directory with source files            #
-#                                                                    #
-#    CBFlib_BINARY_DIR        CBFlib build directory                 #
-#                               usually ${CBFlib_SOURCE_DIR}/build   #
-#      external_packages      Directory for HDF5, libtiff, etc.      #
-#        hdf5-1.8.11                                                 #
-#        tiff-3.9.4-rev-6Feb11                                       #
-#        regex-20090805                                              #
-#        zlib-1.2.8                                                  #
-#      data_files             Directory for test files               #
-#      bin                    Directory for executable programs      #
-#      include                Directory with build-created headers   #
-#      src                    Directory with build-created source    #
-#                                                                    #
-######################################################################
-
-cmake_minimum_required(VERSION 2.8)
-
-if(COMMAND cmake_policy)
-  cmake_policy(SET CMP0003 NEW)
-endif(COMMAND cmake_policy)
-
-
-# Set timestamps of extracted contents to the time of extraction.
-# Resolved by explicitly setting DOWNLOAD_EXTRACT_TIMESTAMP in
-# externalproject_add() or fetchcontent_declare(), but the option was
-# only introduced in CMake 3.24.
-cmake_policy(SET CMP0135 NEW)
-
-
-set(CBF_USE_FORTRAN_ENV $ENV{CBF_USE_FORTRAN})
 set(CBF_F90FLAGS_ENV $ENV{F90FLAGS})
 set(CBF_USE_ULP $ENV{CBF_USE_ULP})
 set(CBF_M4FLAGS_ENV $ENV{M4FLAGS})
 set(CBF_HDF5REGISTER_MANUAL_ENV $ENV{CBF_HDF5REGISTER_MANUAL})
 
-if (CBF_USE_FORTRAN_ENV STREQUAL "NO")
-  project (CBFlib C CXX)
-  set(CBF_HDF5_ENABLE_FORTRAN "no")
-else (CBF_USE_FORTRAN_ENV STREQUAL "NO")
-  project (CBFlib C CXX Fortran)
-  set(CBF_HDF5_ENABLE_FORTRAN "yes")
-endif (CBF_USE_FORTRAN_ENV STREQUAL "NO")
 enable_testing()
 
-set (CBF_CMAKE_DEBUG "ON")
-
-if (CBF_USE_ULP STREQUAL "YES")
-  set(CMAKE_C_FLAGS "-Wall -g -fno-strict-aliasing -DCBF_USE_ULP")
-else (CBF_USE_ULP STREQUAL "YES")
-  set(CMAKE_C_FLAGS "-Wall -g -fno-strict-aliasing")
-endif (CBF_USE_ULP STREQUAL "YES")
+if (USE_ULP)
+	add_compile_definitions("$<$<COMPILE_LANGUAGE:C,CXX>:CBF_USE_ULP>")
+endif()
 
 #
 #  User setable parameters
 #
 
-if (CBF_M4FLAGS_ENV)
+if(CBF_M4FLAGS_ENV)
   set(CBF_M4FLAGS ${CBF_M4FLAGS_ENV})
-else (CBF_M4FLAGS_ENV)
+else(CBF_M4FLAGS_ENV)
   set(CBF_M4FLAGS "-Dfcb_bytes_in_rec=4096")
-endif (CBF_M4FLAGS_ENV)
+endif(CBF_M4FLAGS_ENV)
 
-if (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
+# TODO: Decide if we still want to add these in cases where the user had no specific flags?
+# if(BUILD_FORTRAN)
+# set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -fno-range-check")
+# set(CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG}   -fno-range-check")
+# endif()
 
-if (CBF_F90FLAGS_ENV)
-  set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} ${CBF_F90FLAGS_ENV}")
-  set(CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG}   ${CBF_F90FLAGS_ENV}")
-else (CBF_F90FLAGS_ENV)
-  set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -fno-range-check")
-  set(CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG}   -fno-range-check")
-endif (CBF_F90FLAGS_ENV)
-
-endif (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
-
-# make sure that the default is a RELEASE
-if (NOT CMAKE_BUILD_TYPE)
-  set (CMAKE_BUILD_TYPE RELEASE CACHE STRING
-      "Choose the type of build, options are: None Debug Release."
-      FORCE)
-endif (NOT CMAKE_BUILD_TYPE)
+# Explicitly make "Release" the default build type
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+  endif()
+endif()
 
 #
 #  Favor static libraries
@@ -354,30 +72,11 @@ ENDIF(WIN32)
 #
 
 #
-#  CBF_DEBUG_MESSAGE if CBF_CMAKE_DEBUG issue str
-#
-macro(CBF_DEBUG_MESSAGE str)
-  if(CBF_CMAKE_DEBUG)
-    message(STATUS ${str})
-  endif(CBF_CMAKE_DEBUG)
-endmacro (CBF_DEBUG_MESSAGE)
-
-#
-# CBF_REQUIRE_DIRECTORY -- require directory dir
-#
-macro(CBF_REQUIRE_DIRECTORY dir)
-  if (NOT EXISTS "${dir}")
-    file(MAKE_DIRECTORY "${dir}")
-    CBF_DEBUG_MESSAGE("Created directory ${dir}")
-  endif (NOT EXISTS "${dir}")
-endmacro(CBF_REQUIRE_DIRECTORY)
-
-#
 # CBF_LOAD_TARBALL -- load TARBALL into WORK_DIR as UNPACKED_DIRECTORY
 #                     Use an absolute path for UNPACKED_DIRECTORY
 #
 macro(CBF_LOAD_TARBALL WORK_DIR UNPACKED_DIRECTORY TARBALL)
-if (NOT EXISTS ${UNPACKED_DIRECTORY})
+if(NOT EXISTS ${UNPACKED_DIRECTORY})
 execute_process(
   COMMAND ${WGET_EXECUTABLE} ${TARBALL}
   WORKING_DIRECTORY ${WORK_DIR}
@@ -390,7 +89,7 @@ execute_process(
   COMMAND ${CMAKE_COMMAND} -E remove ${UNPACKED_DIRECTORY}.tar.gz
   WORKING_DIRECTORY ${WORK_DIR}
 )
-endif (NOT EXISTS ${UNPACKED_DIRECTORY})
+endif(NOT EXISTS ${UNPACKED_DIRECTORY})
 endmacro(CBF_LOAD_TARBALL)
 
 
@@ -406,7 +105,7 @@ set(CBF__INCLUDE   "${CBFlib_SOURCE_DIR}/include" )
 set(CBF__M4        "${CBFlib_SOURCE_DIR}/m4" )
 set(CBF__DOC       "${CBFlib_SOURCE_DIR}/doc" )
 set(CBF__EXAMPLES  "${CBFlib_SOURCE_DIR}/examples" )
-set(CBF__EXTERNAL_PACKAGES 
+set(CBF__EXTERNAL_PACKAGES
                    "${CBFlib_SOURCE_DIR}/external_packages" )
 set(CBF__DECTRIS_EXAMPLES
                    "${CBF__EXAMPLES}/dectris_cbf_template_test" )
@@ -426,58 +125,46 @@ set(CBF__DATA      "${CBFlib_BINARY_DIR}/data_files" )
 
 set(HDF5_PLUGIN_PATH ${CBF__LIB})
 
-
-CBF_REQUIRE_DIRECTORY(${CBF__BLDSRC})
-CBF_REQUIRE_DIRECTORY(${CBF__BLDEXMP})
-CBF_REQUIRE_DIRECTORY(${CBF__BIN})
-CBF_REQUIRE_DIRECTORY(${CBF__LIB})
-CBF_REQUIRE_DIRECTORY(${CBF__BIN_INCLUDE})
-CBF_REQUIRE_DIRECTORY(${CBF__SHARE})
-CBF_REQUIRE_DIRECTORY(${CBF__EXT_PKG})
-CBF_REQUIRE_DIRECTORY(${CBF__DATA})
-
 # Version string and API version string -- obtained from cbf.h
 
 # Extract the version components
 
-file (READ ${CBFlib_SOURCE_DIR}/include/cbf.h CBFlib_cbf_h_contents)
-string (REGEX REPLACE ".*#define[ \t]+CBF_VERS_MAJOR[ \t]+([0-9]*).*$"
+file(READ ${CBFlib_SOURCE_DIR}/include/cbf.h CBFlib_cbf_h_contents)
+string(REGEX REPLACE ".*#define[ \t]+CBF_VERS_MAJOR[ \t]+([0-9]*).*$"
     "\\1" CBF_VERS_MAJOR ${CBFlib_cbf_h_contents})
-CBF_DEBUG_MESSAGE( "MAJOR VERSION: ${CBF_VERS_MAJOR}")
-string (REGEX REPLACE ".*#define[ \t]+CBF_VERS_MINOR[ \t]+([0-9]*).*$"
+message(DEBUG "MAJOR VERSION: ${CBF_VERS_MAJOR}")
+string(REGEX REPLACE ".*#define[ \t]+CBF_VERS_MINOR[ \t]+([0-9]*).*$"
     "\\1" CBF_VERS_MINOR ${CBFlib_cbf_h_contents})
-CBF_DEBUG_MESSAGE( "MINOR VERSION: ${CBF_VERS_MINOR}")
-string (REGEX REPLACE ".*#define[ \t]+CBF_VERS_RELEASE[ \t]+([0-9.]*).*$"
+message(DEBUG "MINOR VERSION: ${CBF_VERS_MINOR}")
+string(REGEX REPLACE ".*#define[ \t]+CBF_VERS_RELEASE[ \t]+([0-9.]*).*$"
     "\\1" CBF_VERS_RELEASE ${CBFlib_cbf_h_contents})
-CBF_DEBUG_MESSAGE( "RELEASE: ${CBF_VERS_RELEASE}")
-string (REGEX REPLACE ".*#define[ \t]+CBF_VERS_SUBRELEASE[ \t]+\"([0-9A-Za-z.]*)\".*$"
+message(DEBUG "RELEASE: ${CBF_VERS_RELEASE}")
+string(REGEX REPLACE ".*#define[ \t]+CBF_VERS_SUBRELEASE[ \t]+\"([0-9A-Za-z.]*)\".*$"
     "\\1" CBF_VERS_SUBRELEASE ${CBFlib_cbf_h_contents})
-CBF_DEBUG_MESSAGE( "SUBRELEASE: ${CBF_VERS_SUBRELEASE}")
+message(DEBUG "SUBRELEASE: ${CBF_VERS_SUBRELEASE}")
 
 # Extract the API version components
 
-string (REGEX REPLACE ".*#define[ \t]+CBF_APIVERS_CUR[ \t]+([0-9]*).*$"
+string(REGEX REPLACE ".*#define[ \t]+CBF_APIVERS_CUR[ \t]+([0-9]*).*$"
     "\\1" CBF_APIVERS_CUR ${CBFlib_cbf_h_contents})
-CBF_DEBUG_MESSAGE( "API VERSION: ${CBF_APIVERS_CUR}")
-string (REGEX REPLACE ".*#define[ \t]+CBF_APIVERS_REV[ \t]+([0-9]*).*$"
+message(DEBUG "API VERSION: ${CBF_APIVERS_CUR}")
+string(REGEX REPLACE ".*#define[ \t]+CBF_APIVERS_REV[ \t]+([0-9]*).*$"
     "\\1" CBF_APIVERS_REV ${CBFlib_cbf_h_contents})
-CBF_DEBUG_MESSAGE( "API REVISION: ${CBF_APIVERS_REV}")
-string (REGEX REPLACE ".*#define[ \t]+CBF_APIVERS_AGE[ \t]+([0-9]*).*$"
+message(DEBUG "API REVISION: ${CBF_APIVERS_REV}")
+string(REGEX REPLACE ".*#define[ \t]+CBF_APIVERS_AGE[ \t]+([0-9]*).*$"
     "\\1" CBF_APIVERS_AGE ${CBFlib_cbf_h_contents})
-CBF_DEBUG_MESSAGE( "API AGE: ${CBF_APIVERS_AGE}")
+message(DEBUG "API AGE: ${CBF_APIVERS_AGE}")
 
 
 if(CBF_VERS_SUBRELEASE)
-  set (CBF_VERSION "${CBF_VERS_MAJOR}.${CBF_VERS_MINOR}.${CBF_VERS_RELEASE}-${CBF_VERS_SUBRELEASE}")
+  set(CBF_VERSION "${CBF_VERS_MAJOR}.${CBF_VERS_MINOR}.${CBF_VERS_RELEASE}-${CBF_VERS_SUBRELEASE}")
 else(CBF_VERS_SUBRELEASE)
-  set (CBF_VERSION "${CBF_VERS_MAJOR}.${CBF_VERS_MINOR}.${CBF_VERS_RELEASE}")
+  set(CBF_VERSION "${CBF_VERS_MAJOR}.${CBF_VERS_MINOR}.${CBF_VERS_RELEASE}")
 endif(CBF_VERS_SUBRELEASE)
-if(CBF_CMAKE_DEBUG)
-  message (STATUS "VERSION:  ${CBF_VERSION}")
-endif(CBF_CMAKE_DEBUG)
+message(DEBUG "VERSION:  ${CBF_VERSION}")
 
-set (CBF_APIVERSION "${CBF_APIVERS_CUR}.${CBF_APIVERS_REV}.${CBF_APIVERS_AGE}")
-CBF_DEBUG_MESSAGE( "APIVERSION:  ${CBF_APIVERSION}")
+set(CBF_APIVERSION "${CBF_APIVERS_CUR}.${CBF_APIVERS_REV}.${CBF_APIVERS_AGE}")
+message(DEBUG "APIVERSION:  ${CBF_APIVERSION}")
 
 
 
@@ -512,11 +199,11 @@ set(CQRLIB_INSTALL_DIR "${CMAKE_BINARY_DIR}/${CBF_CQRLIB}")
 set(CBF_HDF5        "hdf5-1.14.4-2")
 set(CBF_HDF5URL  "http://downloads.sf.net/cbflib/${CBF_HDF5}.tar.gz")
 set(CBF_HDF5REGISTER_ARG "--register")
-if (CBF_HDF5REGISTER_MANUAL_ENV STREQUAL "YES")
+if(CBF_HDF5REGISTER_MANUAL_ENV STREQUAL "YES")
   set(CBF_HDF5REGISTER_VAL "manual")
-else (CBF_HDF5REGISTER_MANUAL_ENV STREQUAL "YES")
+else(CBF_HDF5REGISTER_MANUAL_ENV STREQUAL "YES")
   set(CBF_HDF5REGISTER_VAL "plugin")
-endif (CBF_HDF5REGISTER_MANUAL_ENV STREQUAL "YES")  
+endif(CBF_HDF5REGISTER_MANUAL_ENV STREQUAL "YES")
 set(HDF5_EXTERNALLY_CONFIGURED  1)
 set(HDF5_INSTALL_DIR "${CMAKE_BINARY_DIR}/${CBF_HDF5}")
 set(HDF5_BINARY_DIR "${CBF_HDF5}/bin")
@@ -554,7 +241,7 @@ set(CBF_HDF5URL  "http://downloads.sf.net/cbflib/${CBF_HDF5}.tar.gz")
 # Get wget
 #
 find_program(WGET_EXECUTABLE wget)
-CBF_DEBUG_MESSAGE( "WGET found at ${WGET_EXECUTABLE}")
+message(DEBUG "WGET found at ${WGET_EXECUTABLE}")
 
 
 #
@@ -592,7 +279,7 @@ ExternalProject_add(
 		-DHDF5_BUILD_CPP_LIB:BOOL=Off
 		-DBUILD_SHARED_LIBS:BOOL=On
 		-DHDF5_BUILD_TOOLS:BOOL=On
-        -DHDF5_ENABLE_FORTRAN=${CBF_HDF5_ENABLE_FORTRAN}
+        -DHDF5_ENABLE_FORTRAN=${BUILD_FORTRAN}
 		-DCMAKE_INSTALL_PREFIX:PATH=${HDF5_INSTALL_DIR}
 		-DCMAKE_INSTALL_RPATH:PATH=${HDF5_INSTALL_DIR}/lib
 	INSTALL_DIR ${CMAKE_BINARY_DIR}/${CBF_HDF5}
@@ -651,14 +338,14 @@ find_library(CBF_REGEXLIB pcreposix)
 find_path(CBF_REGEXLIB_INCLUDE_DIR NAMES pcreposix.h)
 message(STATUS "CBF_REGEXLIB_INCLUDE_DIR for pcreposix.h = '${CBF_REGEXLIB_INCLUDE_DIR}'")
 message(STATUS "CBF_REGEXLIB = '${CBF_REGEXLIB}'")
-if (NOT CBF_REGEXLIB_INCLUDE_DIR OR NOT CBF_REGEXLIB)
+if(NOT CBF_REGEXLIB_INCLUDE_DIR OR NOT CBF_REGEXLIB)
 	# PCRE not found, try for REGEX
 	message(STATUS "'pcre' library not found")
 	find_library(CBF_REGEXLIB regex)
 	find_path(CBF_REGEXLIB_INCLUDE_DIR NAMES regex.h)
 	message(STATUS "CBF_REGEXLIB_INCLUDE_DIR for regex.h = '${CBF_REGEXLIB_INCLUDE_DIR}'")
 	message(STATUS "CBF_REGEXLIB = '${CBF_REGEXLIB}'")
-	if (NOT CBF_REGEXLIB_INCLUDE_DIR OR NOT CBF_REGEXLIB)
+	if(NOT CBF_REGEXLIB_INCLUDE_DIR OR NOT CBF_REGEXLIB)
 		# Neither PCRE not REGEX found, load and build PCRE
 		message(STATUS "'regex' library not found")
 		ExternalProject_add(
@@ -674,12 +361,12 @@ if (NOT CBF_REGEXLIB_INCLUDE_DIR OR NOT CBF_REGEXLIB)
 		set(CBF_REGEXLIB_INCLUDE_DIR ${CMAKE_BINARY_DIR}/${CBF_PCRE}/include)
 		set(CBF_REGEXLIB_LIBRARY_PATH ${CBFlib_BINARY_DIR}/${CBF_PCRE}/lib/libpcre.a)
 		add_definitions(-DCBF_REGEXLIB_PCRE)
-	else ()
+	else()
 		set(CBF_RE "")
 		set(CBF_REGEXLIB_LIBRARY_PATH "${CBF_REGEXLIB}/libregex.so")
 		add_definitions(-DCBF_REGEXLIB_REGEX)
-	endif ()
-else ()
+	endif()
+else()
 	add_library(pcreposix_static STATIC IMPORTED)
 	set_target_properties(pcreposix_static PROPERTIES
 		IMPORTED_LOCATION "${CBF_REGEXLIB}"
@@ -699,7 +386,7 @@ else ()
 	target_compile_definitions(pcreposix_shared
 	  INTERFACE CBF_REGEXLIB_PCRE)
 	set(CMAKE_FIND_LIBRARY_SUFFIX "${_find_library_suffix_save}")
-endif ()
+endif()
 
 #
 # Data Directories
@@ -726,22 +413,22 @@ CBF_LOAD_TARBALL(${CBF__DATA} ${CBF_DATADIRS} ${CBF_DATAURLS})
 file(GLOB CBF_DATADIRI_FILES "${CBF_DATADIRI}/*")
 file(GLOB CBF_DATADIRO_FILES "${CBF_DATADIRO}/*")
 foreach(loop_file ${CBF_DATADIRI_FILES} )
-  if (NOT "${loop_file}" MATCHES "[*.]md5")
+  if(NOT "${loop_file}" MATCHES "[*.]md5")
     file(MD5 "${loop_file}" loop_file_md5)
     file(STRINGS "${loop_file}.md5" loop_file_md5_orig LIMIT_COUNT 1)
-    if (NOT ("${loop_file_md5}" STREQUAL "${loop_file_md5_orig}"))
+    if(NOT ("${loop_file_md5}" STREQUAL "${loop_file_md5_orig}"))
       message(WARNINH "loop_file: ${loop_file}:|${loop_file_md5}|${loop_file_md5_orig}|")
-    endif (NOT ("${loop_file_md5}" STREQUAL "${loop_file_md5_orig}"))
-  endif (NOT "${loop_file}" MATCHES "[*.]md5")
+    endif(NOT ("${loop_file_md5}" STREQUAL "${loop_file_md5_orig}"))
+  endif(NOT "${loop_file}" MATCHES "[*.]md5")
 endforeach(loop_file)
 foreach(loop_file ${CBF_DATADIRO_FILES} )
-  if (NOT "${loop_file}" MATCHES "[*.]md5")
+  if(NOT "${loop_file}" MATCHES "[*.]md5")
     file(MD5 "${loop_file}" loop_file_md5)
     file(STRINGS "${loop_file}.md5" loop_file_md5_orig LIMIT_COUNT 1)
-    if (NOT ("${loop_file_md5}" STREQUAL "${loop_file_md5_orig}"))
+    if(NOT ("${loop_file_md5}" STREQUAL "${loop_file_md5_orig}"))
       message(WARNING "loop_file: ${loop_file}:|${loop_file_md5}|${loop_file_md5_orig}|")
-    endif (NOT ("${loop_file_md5}" STREQUAL "${loop_file_md5_orig}"))
-  endif (NOT "${loop_file}" MATCHES "[*.]md5")
+    endif(NOT ("${loop_file_md5}" STREQUAL "${loop_file_md5_orig}"))
+  endif(NOT "${loop_file}" MATCHES "[*.]md5")
 endforeach(loop_file)
 
 
@@ -784,37 +471,35 @@ set(
     ${CBF__SRC}/img.c
 )
 
-if (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
+if(BUILD_FORTRAN)
+	set(
+		CBF_F90_BUILT_SOURCES
+				${CBF__BLDSRC}/fcb_exit_binary.f90
+				${CBF__BLDSRC}/fcb_next_binary.f90
+				${CBF__BLDSRC}/fcb_open_cifin.f90
+				${CBF__BLDSRC}/fcb_packed.f90
+				${CBF__BLDSRC}/fcb_read_bits.f90
+				${CBF__BLDSRC}/fcb_read_image.f90
+		${CBF__BLDSRC}/fcb_read_xds_i2.f90
+	)
 
-set(
-	CBF_F90_BUILT_SOURCES 
-			${CBF__BLDSRC}/fcb_exit_binary.f90
-			${CBF__BLDSRC}/fcb_next_binary.f90
-			${CBF__BLDSRC}/fcb_open_cifin.f90
-			${CBF__BLDSRC}/fcb_packed.f90
-			${CBF__BLDSRC}/fcb_read_bits.f90
-			${CBF__BLDSRC}/fcb_read_image.f90
-	${CBF__BLDSRC}/fcb_read_xds_i2.f90
-)
-            
-set(
-	CBF_F90_SOURCES
-	${CBF__SRC}/fcb_atol_wcnt.f90
-			${CBF__SRC}/fcb_ci_strncmparr.f90
-			${CBF__SRC}/fcb_nblen_array.f90
-			${CBF__SRC}/fcb_read_byte.f90
-			${CBF__SRC}/fcb_read_line.f90
-	${CBF__SRC}/fcb_skip_whitespace.f90
-)
-
-endif (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
+	set(
+		CBF_F90_SOURCES
+		${CBF__SRC}/fcb_atol_wcnt.f90
+				${CBF__SRC}/fcb_ci_strncmparr.f90
+				${CBF__SRC}/fcb_nblen_array.f90
+				${CBF__SRC}/fcb_read_byte.f90
+				${CBF__SRC}/fcb_read_line.f90
+		${CBF__SRC}/fcb_skip_whitespace.f90
+	)
+endif()
 
 # use, i.e. don't skip the full RPATH for the build tree
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 
 # when building, don't use the install RPATH already
 # (but later on when installing)
-SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
+SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 
 SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
@@ -829,35 +514,35 @@ IF("${isSystemDir}" STREQUAL "-1")
    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib" )
 ENDIF("${isSystemDir}" STREQUAL "-1")
 
-			
+
 #
 # Header files
 #
 set(
 	CBF_HEADERS
-	${CBF__INCLUDE}/cbf.h			
+	${CBF__INCLUDE}/cbf.h
     ${CBF__INCLUDE}/cbf_alloc.h
     ${CBF__INCLUDE}/cbf_ascii.h
-    ${CBF__INCLUDE}/cbf_binary.h		
+    ${CBF__INCLUDE}/cbf_binary.h
     ${CBF__INCLUDE}/cbf_byte_offset.h
     ${CBF__INCLUDE}/cbf_canonical.h
     ${CBF__INCLUDE}/cbf_codes.h
-    ${CBF__INCLUDE}/cbf_compress.h		
-    ${CBF__INCLUDE}/cbf_context.h		
-    ${CBF__INCLUDE}/cbf_copy.h			
-    ${CBF__INCLUDE}/cbf_file.h			
-    ${CBF__INCLUDE}/cbf_getopt.h		
-    ${CBF__INCLUDE}/cbf_hdf5.h			
+    ${CBF__INCLUDE}/cbf_compress.h
+    ${CBF__INCLUDE}/cbf_context.h
+    ${CBF__INCLUDE}/cbf_copy.h
+    ${CBF__INCLUDE}/cbf_file.h
+    ${CBF__INCLUDE}/cbf_getopt.h
+    ${CBF__INCLUDE}/cbf_hdf5.h
     ${CBF__INCLUDE}/cbf_hdf5_filter.h
-    ${CBF__INCLUDE}/cbf_lex.h			
+    ${CBF__INCLUDE}/cbf_lex.h
     ${CBF__INCLUDE}/cbf_minicbf_header.h
     ${CBF__INCLUDE}/cbf_nibble_offset.h
-    ${CBF__INCLUDE}/cbf_packed.h		
+    ${CBF__INCLUDE}/cbf_packed.h
     ${CBF__INCLUDE}/cbf_predictor.h
     ${CBF__INCLUDE}/cbf_read_binary.h
-    ${CBF__INCLUDE}/cbf_read_mime.h		
-    ${CBF__INCLUDE}/cbf_simple.h		
-    ${CBF__INCLUDE}/cbf_string.h		
+    ${CBF__INCLUDE}/cbf_read_mime.h
+    ${CBF__INCLUDE}/cbf_simple.h
+    ${CBF__INCLUDE}/cbf_string.h
     ${CBF__INCLUDE}/cbf_stx.h
     ${CBF__INCLUDE}/cbf_tree.h
     ${CBF__INCLUDE}/cbf_uncompressed.h
@@ -866,42 +551,40 @@ set(
     ${CBF__INCLUDE}/cbf_write_binary.h
     ${CBF__INCLUDE}/cbf_ws.h
     ${CBF__INCLUDE}/global.h
-    ${CBF__INCLUDE}/cbff.h			
+    ${CBF__INCLUDE}/cbff.h
 	${CBF__INCLUDE}/md5.h
     ${CBF__INCLUDE}/img.h
 )
 
 
-if (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
+if(BUILD_FORTRAN)
+	#
+	# m4 FCB library macro files
+	#
+	set(
+		CBF_M4_FCB_DEFINES
+		${CBF__M4}/fcblib_defines.m4
+	)
 
-#
-# m4 FCB library macro files
-#
-set(
-	CBF_M4_FCB_DEFINES
-	${CBF__M4}/fcblib_defines.m4
-)
-
-set(
-	CBF_M4_FCB_FILES 
-			${CBF__M4}/fcb_exit_binary.m4
-			${CBF__M4}/fcb_next_binary.m4
-			${CBF__M4}/fcb_open_cifin.m4
-			${CBF__M4}/fcb_packed.m4
-			${CBF__M4}/fcb_read_bits.m4
-			${CBF__M4}/fcb_read_image.m4
-	${CBF__M4}/fcb_read_xds_i2.m4
-)
-#
-# m4 F90 examples macro files
-#
-set(
-	CBF_M4_F90_EXAMPLES
-            ${CBF__M4}/test_fcb_read_image.m4
-	${CBF__M4}/test_xds_binary.m4
-)
-
-endif (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
+	set(
+		CBF_M4_FCB_FILES
+				${CBF__M4}/fcb_exit_binary.m4
+				${CBF__M4}/fcb_next_binary.m4
+				${CBF__M4}/fcb_open_cifin.m4
+				${CBF__M4}/fcb_packed.m4
+				${CBF__M4}/fcb_read_bits.m4
+				${CBF__M4}/fcb_read_image.m4
+		${CBF__M4}/fcb_read_xds_i2.m4
+	)
+	#
+	# m4 F90 examples macro files
+	#
+	set(
+		CBF_M4_F90_EXAMPLES
+				${CBF__M4}/test_fcb_read_image.m4
+		${CBF__M4}/test_xds_binary.m4
+	)
+endif()
 
 
 #
@@ -941,7 +624,7 @@ set(
 
 include_directories(
 	BEFORE SYSTEM
-                      ${CBFlib_SOURCE_DIR}/include 
+                      ${CBFlib_SOURCE_DIR}/include
 	${CBFlib_BINARY_DIR}/${CBF_TIFF}/include
                       )
 
@@ -995,44 +678,44 @@ target_link_libraries(img_shared hdf5)
 set(IMG_SHARED_LIBRARY_PATH ${CBFlib_BINARY_DIR}/lib/libimg.so)
 
 
-if (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
+if(BUILD_FORTRAN)
 
-#
-# Build the f90 library sources
-#
-find_program(M4 m4)
-foreach(f90src IN LISTS CBF_F90_BUILT_SOURCES)
-  get_filename_component(filename "${f90src}" NAME_WE )
-  set(f90bldsrc "${CBF__BLDSRC}/${filename}.f90")
-  set(f90srcm4 "${CBF__M4}/${filename}.m4")
-	add_custom_command(
-		OUTPUT "${f90bldsrc}"
-    WORKING_DIRECTORY "${CBF__M4}"
-    COMMAND ${M4} -P "${CBF_M4FLAGS}" "${f90srcm4}" > "${f90bldsrc}"
-    DEPENDS ${CBF_M4_FCB_DEFINES} ${f90srcm4}
-		COMMENT "Generating ${f90bldsrc}"
-	)
-endforeach(f90src)
-
-
-#
-# Build the fcb libraries
-#
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
-add_library(fcb_static STATIC ${CBF_F90_BUILT_SOURCES};${CBF_F90_SOURCES})
-set_target_properties(fcb_static PROPERTIES OUTPUT_NAME "fcb")
-set_target_properties(fcb_static PROPERTIES LINKER_LANGUAGE C)
-set(FCB_STATIC_LIBRARY_PATH ${CBFlib_BINARY_DIR}/lib/libfcb.a)
+	#
+	# Build the f90 library sources
+	#
+	find_program(M4 m4)
+	foreach(f90src IN LISTS CBF_F90_BUILT_SOURCES)
+	get_filename_component(filename "${f90src}" NAME_WE )
+	set(f90bldsrc "${CBF__BLDSRC}/${filename}.f90")
+	set(f90srcm4 "${CBF__M4}/${filename}.m4")
+		add_custom_command(
+			OUTPUT "${f90bldsrc}"
+		WORKING_DIRECTORY "${CBF__M4}"
+		COMMAND ${M4} -P "${CBF_M4FLAGS}" "${f90srcm4}" > "${f90bldsrc}"
+		DEPENDS ${CBF_M4_FCB_DEFINES} ${f90srcm4}
+			COMMENT "Generating ${f90bldsrc}"
+		)
+	endforeach(f90src)
 
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
-add_library(fcb_shared SHARED  ${CBF_F90_BUILT_SOURCES};${CBF_F90_SOURCES})
-set_target_properties(fcb_shared PROPERTIES OUTPUT_NAME "fcb")
-set_target_properties(fcb_shared PROPERTIES LINKER_LANGUAGE C)
-target_link_libraries(fcb_shared hdf5)
-set(FCB_SHARED_LIBRARY_PATH ${CBFlib_BINARY_DIR}/lib/libfcb.so)
+	#
+	# Build the fcb libraries
+	#
+	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
+	add_library(fcb_static STATIC ${CBF_F90_BUILT_SOURCES};${CBF_F90_SOURCES})
+	set_target_properties(fcb_static PROPERTIES OUTPUT_NAME "fcb")
+	set_target_properties(fcb_static PROPERTIES LINKER_LANGUAGE C)
+	set(FCB_STATIC_LIBRARY_PATH ${CBFlib_BINARY_DIR}/lib/libfcb.a)
 
-endif (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
+
+	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
+	add_library(fcb_shared SHARED  ${CBF_F90_BUILT_SOURCES};${CBF_F90_SOURCES})
+	set_target_properties(fcb_shared PROPERTIES OUTPUT_NAME "fcb")
+	set_target_properties(fcb_shared PROPERTIES LINKER_LANGUAGE C)
+	target_link_libraries(fcb_shared hdf5)
+	set(FCB_SHARED_LIBRARY_PATH ${CBFlib_BINARY_DIR}/lib/libfcb.so)
+
+endif()
 
 
 #
@@ -1075,72 +758,72 @@ add_target(testflat "${CBF__EXAMPLES}/testflat.c" "" "cbf_static")
 add_target(testflatpacked "${CBF__EXAMPLES}/testflatpacked.c" "" "cbf_static")
 add_target(testreals "${CBF__EXAMPLES}/testreals.c" "" "cbf_static")
 
-if (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
+if(BUILD_FORTRAN)
 
-#
-#  F90 examples
-#
-add_custom_command(OUTPUT "${CBF__BLDEXMP}/test_fcb_read_image.f90"
-    WORKING_DIRECTORY "${CBF__M4}"
-    COMMAND ${M4} -P "${CBF_M4FLAGS}" "${CBF__M4}/test_fcb_read_image.m4" > "${CBF__BLDEXMP}/test_fcb_read_image.f90"
-    DEPENDS ${CBF_M4_FCB_DEFINES} "${CBF__M4}/test_fcb_read_image.m4"
-    COMMENT "Generating ${test_fcb_read_image.f90}")
-add_custom_command(OUTPUT "${CBF__BLDEXMP}/test_xds_binary.f90"
-    WORKING_DIRECTORY "${CBF__M4}"
-    COMMAND ${M4} -P "${CBF_M4FLAGS}" "${CBF__M4}/test_xds_binary.m4" > "${CBF__BLDEXMP}/test_xds_binary.f90"
-    DEPENDS ${CBF_M4_FCB_DEFINES} "${CBF__M4}/test_xds_binary.m4"
-    COMMENT "Generating ${test_xds_binary.f90}")
+	#
+	#  F90 examples
+	#
+	add_custom_command(OUTPUT "${CBF__BLDEXMP}/test_fcb_read_image.f90"
+		WORKING_DIRECTORY "${CBF__M4}"
+		COMMAND ${M4} -P "${CBF_M4FLAGS}" "${CBF__M4}/test_fcb_read_image.m4" > "${CBF__BLDEXMP}/test_fcb_read_image.f90"
+		DEPENDS ${CBF_M4_FCB_DEFINES} "${CBF__M4}/test_fcb_read_image.m4"
+		COMMENT "Generating ${test_fcb_read_image.f90}")
+	add_custom_command(OUTPUT "${CBF__BLDEXMP}/test_xds_binary.f90"
+		WORKING_DIRECTORY "${CBF__M4}"
+		COMMAND ${M4} -P "${CBF_M4FLAGS}" "${CBF__M4}/test_xds_binary.m4" > "${CBF__BLDEXMP}/test_xds_binary.f90"
+		DEPENDS ${CBF_M4_FCB_DEFINES} "${CBF__M4}/test_xds_binary.m4"
+		COMMENT "Generating ${test_xds_binary.f90}")
 
-add_target(test_fcb_read_image "${CBF__BLDEXMP}/test_fcb_read_image.f90" "fcb_static" "${FCB_STATIC_LIBRARY_PATH};hdf5")
-add_target(test_xds_binary "${CBF__BLDEXMP}/test_xds_binary.f90" "fcb_static" "${FCB_STATIC_LIBRARY_PATH};hdf5")
+	add_target(test_fcb_read_image "${CBF__BLDEXMP}/test_fcb_read_image.f90" "fcb_static" "${FCB_STATIC_LIBRARY_PATH};hdf5")
+	add_target(test_xds_binary "${CBF__BLDEXMP}/test_xds_binary.f90" "fcb_static" "${FCB_STATIC_LIBRARY_PATH};hdf5")
 
-endif (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
+endif()
 
 
 
 #
 # install
 #
-install (TARGETS makecbf DESTINATION bin)
-install (TARGETS img2cif DESTINATION bin)
-install (TARGETS cif2cbf DESTINATION bin)
-install (TARGETS adscimg2cbf DESTINATION bin)
-install (TARGETS cbf2adscimg DESTINATION bin)
-install (TARGETS changtestcompression DESTINATION bin)
-install (TARGETS convert_image DESTINATION bin)
-install (TARGETS convert_minicbf DESTINATION bin)
-install (TARGETS minicbf2nexus DESTINATION bin)
-install (TARGETS cbf2nexus DESTINATION bin)
-install (TARGETS nexus2cbf DESTINATION bin)
-install (TARGETS cbf_template_t DESTINATION bin)
-install (TARGETS testcell DESTINATION bin)
-install (TARGETS sauter_test DESTINATION bin)
-install (TARGETS sequence_match DESTINATION bin)
-install (TARGETS tiff2cbf DESTINATION bin)
-install (TARGETS cbf_static DESTINATION lib)
-install (TARGETS cbf_shared DESTINATION lib)
+install(TARGETS makecbf DESTINATION bin)
+install(TARGETS img2cif DESTINATION bin)
+install(TARGETS cif2cbf DESTINATION bin)
+install(TARGETS adscimg2cbf DESTINATION bin)
+install(TARGETS cbf2adscimg DESTINATION bin)
+install(TARGETS changtestcompression DESTINATION bin)
+install(TARGETS convert_image DESTINATION bin)
+install(TARGETS convert_minicbf DESTINATION bin)
+install(TARGETS minicbf2nexus DESTINATION bin)
+install(TARGETS cbf2nexus DESTINATION bin)
+install(TARGETS nexus2cbf DESTINATION bin)
+install(TARGETS cbf_template_t DESTINATION bin)
+install(TARGETS testcell DESTINATION bin)
+install(TARGETS sauter_test DESTINATION bin)
+install(TARGETS sequence_match DESTINATION bin)
+install(TARGETS tiff2cbf DESTINATION bin)
+install(TARGETS cbf_static DESTINATION lib)
+install(TARGETS cbf_shared DESTINATION lib)
 
-if (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
-  install (TARGETS fcb_static DESTINATION lib)
-  install (TARGETS fcb_shared DESTINATION lib)
-endif (NOT (CBF_USE_FORTRAN_ENV STREQUAL "NO"))
+if(BUILD_FORTRAN)
+  install(TARGETS fcb_static DESTINATION lib)
+  install(TARGETS fcb_shared DESTINATION lib)
+endif()
 
-install (TARGETS img_static DESTINATION lib)
-install (TARGETS img_shared DESTINATION lib)
-install (DIRECTORY ${CBF__INCLUDE}/ DESTINATION include/cbflib FILES_MATCHING PATTERN "*.h")
-install (DIRECTORY ${CBF__BIN_INCLUDE}/* DESTINATION include/cbflib FILES_MATCHING PATTERN "*.h")
+install(TARGETS img_static DESTINATION lib)
+install(TARGETS img_shared DESTINATION lib)
+install(DIRECTORY ${CBF__INCLUDE}/ DESTINATION include/cbflib FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY ${CBF__BIN_INCLUDE}/* DESTINATION include/cbflib FILES_MATCHING PATTERN "*.h")
 
 # message(STATUS "CMAKE_INSTALL_PREFIX/lib ${CMAKE_INSTALL_PREFIX}/lib")
 
 # path to the valgrind executable
 set(VALGRIND_COMMAND "")
 find_program(VALGRIND valgrind)
-if (VALGRIND)
-	CBF_DEBUG_MESSAGE("valgrind found at ${VALGRIND}")
+if(VALGRIND)
+	message(DEBUG "valgrind found at ${VALGRIND}")
 	set(VALGRIND_COMMAND ${VALGRIND} --error-exitcode=3 --leak-check=full)
-else ()
-	CBF_DEBUG_MESSAGE("valgrind could not be not found")
-endif ()
+else()
+	message(DEBUG "valgrind could not be not found")
+endif()
 
 #
 # tests  -- to be extended
@@ -1151,8 +834,8 @@ endif ()
 #
 macro(CBF_SET_TEST_ENVIRONMENT TESTNAME)
   IF(WIN32)
-    set (xrpathname "PATH")
-    set (xrpath "${HDF5_INSTALL_DIR}/lib;$ENV{PATH}")
+    set(xrpathname "PATH")
+    set(xrpath "${HDF5_INSTALL_DIR}/lib;$ENV{PATH}")
     string(REPLACE ";" "\\;" xrpath "${xrpath}")
   ELSE(WIN32)
     IF(APPLE)
@@ -1160,7 +843,7 @@ macro(CBF_SET_TEST_ENVIRONMENT TESTNAME)
     ELSE(APPLE)
       set(xrpathname "LD_LIBRARY_PATH")
     ENDIF(APPLE)
-    set (xrpath "${HDF5_INSTALL_DIR}/lib:$ENV{${xrpathname}}")
+    set(xrpath "${HDF5_INSTALL_DIR}/lib:$ENV{${xrpathname}}")
   ENDIF(WIN32)
   set_property(TEST ${TESTNAME} PROPERTY ENVIRONMENT "${xrpathname}=${xrpath}")
   message(status "${xrpathname}=${xrpath}")
@@ -1168,8 +851,8 @@ endmacro(CBF_SET_TEST_ENVIRONMENT)
 
 macro(CBF_APPEND_TEST_ENVIRONMENT TESTNAME)
   IF(WIN32)
-    set (xrpathname "PATH")
-    set (xrpath "${HDF5_INSTALL_DIR}/lib;$ENV{PATH}")
+    set(xrpathname "PATH")
+    set(xrpath "${HDF5_INSTALL_DIR}/lib;$ENV{PATH}")
     string(REPLACE ";" "\\;" xrpath "${xrpath}")
   ELSE(WIN32)
     IF(APPLE)
@@ -1177,7 +860,7 @@ macro(CBF_APPEND_TEST_ENVIRONMENT TESTNAME)
     ELSE(APPLE)
       set( xrpathname "LD_LIBRARY_PATH" )
     ENDIF(APPLE)
-    set (xrpath "${HDF5_INSTALL_DIR}/lib;$ENV{${xrpathname}")
+    set(xrpath "${HDF5_INSTALL_DIR}/lib;$ENV{${xrpathname}")
   ENDIF(WIN32)
   set_property(TEST ${TESTNAME} APPEND PROPERTY ENVIRONMENT "$xrpathname=${xrpath}")
 endmacro(CBF_APPEND_TEST_ENVIRONMENT TESTNAME)
@@ -1201,7 +884,7 @@ add_test(img2cif_canonical.cif ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/img2cif -c cano
 set_property(TEST img2cif_canonical.cif PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 # $(BIN)/img2cif -c flatpacked -m headers -d digest -e none example.mar2300 img2cif_packed.cbf
 add_test(img2cif_packed.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/img2cif -c flatpacked -m headers -d digest -e none ${CBF_DATADIRI}/example.mar2300 ${CBF__DATA}/img2cif_packed.cbf)
-set_property(TEST img2cif_packed.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST img2cif_packed.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 # $(BIN)/img2cif -c canonical -m headers -d digest -e none example.mar2300 img2cif_canonical.cbf
 add_test(img2cif_canonical.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/img2cif -c canonical -m headers -d digest -e none ${CBF_DATADIRI}/example.mar2300 ${CBF__DATA}/img2cif_canonical.cbf)
 set_property(TEST img2cif_canonical.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
@@ -1222,34 +905,34 @@ set_property(TEST cmp-cif2cbf_packed.cbf-makecbf.cbf PROPERTY ENVIRONMENT "DYLD_
 add_test(cmp-cif2cbf_packed.cbf-img2cif_packed.cbf ${CMAKE_COMMAND} -E compare_files ${CBF__DATA}/cif2cbf_packed.cbf ${CBF__DATA}/img2cif_packed.cbf)
 set_property(TEST cmp-cif2cbf_packed.cbf-img2cif_packed.cbf APPEND PROPERTY DEPENDS cif2cbf_packed.cbf)
 set_property(TEST cmp-cif2cbf_packed.cbf-img2cif_packed.cbf APPEND PROPERTY DEPENDS img2cif_packed.cbf)
-set_property(TEST cmp-cif2cbf_packed.cbf-img2cif_packed.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST cmp-cif2cbf_packed.cbf-img2cif_packed.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 # -cmp cif2cbf_canonical.cbf img2cif_canonical.cbf
 add_test(cmp-cif2cbf_canonical.cbf-img2cif_canonical.cbf ${CMAKE_COMMAND} -E compare_files ${CBF__DATA}/cif2cbf_canonical.cbf ${CBF__DATA}/img2cif_canonical.cbf)
 set_property(TEST cmp-cif2cbf_canonical.cbf-img2cif_canonical.cbf APPEND PROPERTY DEPENDS cif2cbf_canonical.cbf)
 set_property(TEST cmp-cif2cbf_canonical.cbf-img2cif_canonical.cbf APPEND PROPERTY DEPENDS img2cif_canonical.cbf)
-set_property(TEST cmp-cif2cbf_canonical.cbf-img2cif_canonical.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST cmp-cif2cbf_canonical.cbf-img2cif_canonical.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 
 # $(BIN)/cif2cbf -e hex -c none makecbf.cbf cif2cbf_ehcn.cif
 add_test(cif2cbf_ehcn.cif ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/cif2cbf -e hex -c none ${CBF__DATA}/makecbf.cbf ${CBF__DATA}/cif2cbf_ehcn.cif)
 set_property(TEST cif2cbf_ehcn.cif APPEND PROPERTY DEPENDS makecbf)
-set_property(TEST cif2cbf_ehcn.cif PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST cif2cbf_ehcn.cif PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 # $(BIN)/cif2cbf -e none -c flatpacked cif2cbf_ehcn.cif cif2cbf_encp.cbf
 add_test(cif2cbf_encp.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/cif2cbf -e none -c flatpacked ${CBF__DATA}/cif2cbf_ehcn.cif ${CBF__DATA}/cif2cbf_encp.cbf)
 set_property(TEST cif2cbf_encp.cbf APPEND PROPERTY DEPENDS cif2cbf_ehcn.cif)
-set_property(TEST cif2cbf_encp.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST cif2cbf_encp.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 #-cmp makecbf.cbf cif2cbf_encp.cbf
 add_test(cmp-makecbf.cbf-cif2cbf_encp.cbf ${CMAKE_COMMAND} -E compare_files ${CBF__DATA}/makecbf.cbf ${CBF__DATA}/cif2cbf_encp.cbf)
 set_property(TEST cmp-makecbf.cbf-cif2cbf_encp.cbf APPEND PROPERTY DEPENDS makecbf)
 set_property(TEST cmp-makecbf.cbf-cif2cbf_encp.cbf APPEND PROPERTY DEPENDS cif2cbf_encp.cbf)
-set_property(TEST cmp-makecbf.cbf-cif2cbf_encp.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST cmp-makecbf.cbf-cif2cbf_encp.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 
 # $(BIN)/cif2cbf -i 9ins.cif -o 9ins.cbf
 add_test(9ins.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/cif2cbf -i ${CBF_DATADIRI}/9ins.cif -o ${CBF__DATA}/9ins.cbf)
-set_property(TEST 9ins.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST 9ins.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 # -cmp 9ins.cif 9ins.cbf
 add_test(cmp-9ins.cif-9ins.cbf ${CMAKE_COMMAND} -E compare_files ${CBF_DATADIRI}/9ins.cif ${CBF__DATA}/9ins.cbf)
 set_property(TEST cmp-9ins.cif-9ins.cbf APPEND PROPERTY DEPENDS 9ins.cbf)
-set_property(TEST cmp-9ins.cif-9ins.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST cmp-9ins.cif-9ins.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 
 # $(BIN)/convert_image -F example.mar2300 converted_flat.cbf
 add_test(
@@ -1263,16 +946,16 @@ set_property(TEST converted_flat.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${H
 # -cmp converted_flat_orig.cbf converted_flat.cbf
 add_test(cmp-converted_flat_orig.cbf-converted_flat.cbf ${CMAKE_COMMAND} -E compare_files ${CBF_DATADIRO}/converted_flat_orig.cbf ${CBF__DATA}/converted_flat.cbf)
 set_property(TEST cmp-converted_flat_orig.cbf-converted_flat.cbf APPEND PROPERTY DEPENDS converted_flat.cbf)
-set_property(TEST cmp-converted_flat_orig.cbf-converted_flat.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST cmp-converted_flat_orig.cbf-converted_flat.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 
 # $(BIN)/convert_image example.mar2300 converted.cbf
 add_test(converted.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/convert_image -p ${CBFlib_SOURCE_DIR}/templates/template_mar345_2300x2300.cbf ${CBF_DATADIRI}/example.mar2300 ${CBF__DATA}/converted.cbf)
-set_property(TEST converted.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST converted.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 
 # -cmp converted_orig.cbf converted.cbf
 add_test(cmp-converted_orig.cbf-converted.cbf ${CMAKE_COMMAND} -E compare_files ${CBF_DATADIRO}/converted_orig.cbf ${CBF__DATA}/converted.cbf)
 set_property(TEST cmp-converted_orig.cbf-converted.cbf APPEND PROPERTY DEPENDS converted.cbf)
-set_property(TEST cmp-converted_orig.cbf-converted.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST cmp-converted_orig.cbf-converted.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 
 # copy a file into another directory so that test input data is not modified
 add_test(mb_LP_1_001.img ${CMAKE_COMMAND} -E copy ${CBF_DATADIRI}/mb_LP_1_001.img ${CBF__DATA}/mb_LP_1_001.img)
@@ -1291,7 +974,7 @@ set_property(TEST adscconverted_flat.cbf APPEND PROPERTY DEPENDS mb_LP_1_001.img
 # -cmp adscconverted_flat_orig.cbf adscconverted_flat.cbf
 add_test(cmp-adscconverted_flat_orig.cbf-adscconverted_flat.cbf ${CMAKE_COMMAND} -E compare_files ${CBF_DATADIRO}/adscconverted_flat_orig.cbf ${CBF__DATA}/adscconverted_flat.cbf)
 set_property(TEST cmp-adscconverted_flat_orig.cbf-adscconverted_flat.cbf APPEND PROPERTY DEPENDS adscconverted_flat.cbf)
-set_property(TEST cmp-adscconverted_flat_orig.cbf-adscconverted_flat.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST cmp-adscconverted_flat_orig.cbf-adscconverted_flat.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 
 # $(BIN)/convert_image -d adscquantum315 mb_LP_1_001.img adscconverted.cbf
 add_test(
@@ -1307,25 +990,25 @@ set_property(TEST adscconverted.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HD
 # -cmp adscconverted_orig.cbf adscconverted.cbf
 add_test(cmp-adscconverted_orig.cbf-adscconverted.cbf ${CMAKE_COMMAND} -E compare_files ${CBF_DATADIRO}/adscconverted_orig.cbf ${CBF__DATA}/adscconverted.cbf)
 set_property(TEST cmp-adscconverted_orig.cbf-adscconverted.cbf APPEND PROPERTY DEPENDS adscconverted.cbf)
-set_property(TEST cmp-adscconverted_orig.cbf-adscconverted.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST cmp-adscconverted_orig.cbf-adscconverted.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 
 # $(BIN)/adscimg2cbf --no_pad --cbf_packed,flat mb_LP_1_001.img
 add_test(mb_LP_1_001.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/adscimg2cbf --no_pad --cbf_packed,flat ${CBF__DATA}/mb_LP_1_001.img)
 set_property(TEST mb_LP_1_001.cbf APPEND PROPERTY DEPENDS mb_LP_1_001.img)
-set_property(TEST mb_LP_1_001.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST mb_LP_1_001.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 # -cmp mb_LP_1_001_orig.cbf mb_LP_1_001.cbf
 add_test(cmp-mb_LP_1_001_orig.cbf-mb_LP_1_001.cbf ${CMAKE_COMMAND} -E compare_files ${CBF_DATADIRO}/mb_LP_1_001_orig.cbf ${CBF__DATA}/mb_LP_1_001.cbf)
 set_property(TEST cmp-mb_LP_1_001_orig.cbf-mb_LP_1_001.cbf APPEND PROPERTY DEPENDS mb_LP_1_001.cbf)
-set_property(TEST cmp-mb_LP_1_001_orig.cbf-mb_LP_1_001.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST cmp-mb_LP_1_001_orig.cbf-mb_LP_1_001.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 
 # cp mb_LP_1_001.cbf nmb_LP_1_001.cbf
 add_test(nmb_LP_1_001.cbf ${CMAKE_COMMAND} -E copy ${CBF__DATA}/mb_LP_1_001.cbf ${CBF__DATA}/nmb_LP_1_001.cbf)
 set_property(TEST nmb_LP_1_001.cbf APPEND PROPERTY DEPENDS mb_LP_1_001.cbf)
-set_property(TEST nmb_LP_1_001.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST nmb_LP_1_001.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 # $(BIN)/cbf2adscimg nmb_LP_1_001.cbf
 add_test(nmb_LP_1_001.img ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/cbf2adscimg ${CBF__DATA}/nmb_LP_1_001.cbf)
 set_property(TEST nmb_LP_1_001.img APPEND PROPERTY DEPENDS nmb_LP_1_001.cbf)
-set_property(TEST nmb_LP_1_001.img PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST nmb_LP_1_001.img PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 # -cmp mb_LP_1_001.img nmb_LP_1_001.img
 add_test(cmp-mb_LP_1_001.img-nmb_LP_1_001.img ${CMAKE_COMMAND} -E compare_files ${CBF__DATA}/mb_LP_1_001.img ${CBF__DATA}/nmb_LP_1_001.img)
 set_property(TEST cmp-mb_LP_1_001.img-nmb_LP_1_001.img APPEND PROPERTY DEPENDS mb_LP_1_001.img)
@@ -1340,7 +1023,7 @@ add_test(
 	${CBF_DATADIRI}/insulin_pilatus6m.cbf
 	${CBF__DATA}/insulin_pilatus6mconverted.cbf
 )
-set_property(TEST insulin_pilatus6mconverted.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST insulin_pilatus6mconverted.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 
 # -cmp insulin_pilatus6mconverted_rev_orig.cbf insulin_pilatus6mconverted.cbf
 add_test(
@@ -1350,7 +1033,7 @@ add_test(
 	${CBF__DATA}/insulin_pilatus6mconverted.cbf
 )
 set_property(TEST cmp-insulin_pilatus6mconverted_rev_orig.cbf-insulin_pilatus6mconverted.cbf APPEND PROPERTY DEPENDS insulin_pilatus6mconverted.cbf)
-set_property(TEST cmp-insulin_pilatus6mconverted_rev_orig.cbf-insulin_pilatus6mconverted.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST cmp-insulin_pilatus6mconverted_rev_orig.cbf-insulin_pilatus6mconverted.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 
 # $(BIN)/convert_minicbf -d pilatus6m insulin_pilatus6m.cbf insulin_pilatus6mconverted_v2.cbf
 add_test(
@@ -1361,7 +1044,7 @@ add_test(
 	${CBF_DATADIRI}/insulin_pilatus6m.cbf
 	${CBF__DATA}/insulin_pilatus6mconverted_v2.cbf
 )
-set_property(TEST insulin_pilatus6mconverted_v2.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST insulin_pilatus6mconverted_v2.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 # -cmp insulin_pilatus6mconverted_v2_orig.cbf insulin_pilatus6mconverted_v2.cbf
 add_test(
 	cmp-insulin_pilatus6mconverted_v2_orig.cbf-insulin_pilatus6mconverted_v2.cbf
@@ -1369,7 +1052,7 @@ add_test(
 	${CBF_DATADIRO}/insulin_pilatus6mconverted_v2_orig.cbf
 	${CBF__DATA}/insulin_pilatus6mconverted_v2.cbf
 )
-set_property(TEST cmp-insulin_pilatus6mconverted_v2_orig.cbf-insulin_pilatus6mconverted_v2.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST cmp-insulin_pilatus6mconverted_v2_orig.cbf-insulin_pilatus6mconverted_v2.cbf PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 set_property(TEST cmp-insulin_pilatus6mconverted_v2_orig.cbf-insulin_pilatus6mconverted_v2.cbf APPEND PROPERTY DEPENDS insulin_pilatus6mconverted_v2.cbf)
 
 # cif2cbf basic round-trip to hdf5 tests
@@ -1384,7 +1067,7 @@ add_test(
 )
 set_property(TEST insulin_pilatus6mconverted.cbf.h5 APPEND PROPERTY ENVIRONMENT "HDF5_PLUGIN_PATH=${HDF5_PLUGIN_PATH}")
 set_property(TEST insulin_pilatus6mconverted.cbf.h5 APPEND PROPERTY DEPENDS insulin_pilatus6mconverted.cbf)
-set_property(TEST insulin_pilatus6mconverted.cbf.h5 PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib") 
+set_property(TEST insulin_pilatus6mconverted.cbf.h5 PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${HDF5_INSTALL_DIR}/lib")
 
 # $(BIN)/cif2cbf -5 rn $(HDF5REGISTER) -en -cp -i insulin_pilatus6mconverted.cbf.h5 -o insulin_pilatus6mconverted.cbf.h5.cbf
 add_test(
@@ -1615,7 +1298,7 @@ add_test(cmp-testcell_orig.prt-testcell.prt ${CMAKE_COMMAND} -E compare_files ${
 set_property(TEST cmp-testcell_orig.prt-testcell.prt APPEND PROPERTY DEPENDS testcell)
 
 # basic minicbf2nexus tests
-  
+
 # generate a hfd5 file from minicbf data
 add_test(
 	minicbf.h5
@@ -1630,7 +1313,7 @@ add_test(
 	${CBF_DATADIRI}/X4_lots_M1S4_1_0004.cbf
 	${CBF_DATADIRI}/X4_lots_M1S4_1_0005.cbf
 )
-  
+
 # dump the content of generated and reference hdf5 files & use 'cbf_tail' to strip off some file names
 add_test(
 	minicbf_original.dump
