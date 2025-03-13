@@ -21683,7 +21683,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
         {
             CBF_START_ARRAY(char, lcname,len+1);
 
-            for (ii=0; ii<len; ii++) lcname[ii] = tolower(name[ii]);
+            for (ii=0; ii<len+1; ii++) lcname[ii] = tolower(name[ii]);
 
             retval = cbf_match(lcname,(char *)pattern);
 
