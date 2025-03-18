@@ -912,12 +912,12 @@ int main (int argc, char *argv [])
   cbf_failnez (cbf_set_integerarray_wdims_fs (cbf, compression, 1,
                                  img_pixelptr (img, 0, 0), sizeof (int), 1,
                                  img_rows (img) * img_columns (img),
-                                 "little_endian",dimension[0],dimension[1],0,0 ))
+                                 "little_endian",dimension[0],dimension[1],1,0 ))
   } else {
       cbf_failnez (cbf_set_integerarray_wdims_fs (cbf, compression, 1,
                                                   img_pixelptr (img, 0, 0), sizeof (int), 1,
                                                   img_rows (img) * img_columns (img),
-                                                  "little_endian",dimension[1],dimension[0],0,0 ))
+                                                  "little_endian",dimension[1],dimension[0],1,0 ))
   }
   
 
