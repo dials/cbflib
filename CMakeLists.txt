@@ -288,6 +288,13 @@ set(VERSION_INFO "3:0:1")
 cmake_policy(SET CMP0135 NEW)
 
 
+# Output directories for static and shared libraries as well as
+# binaries.  These appear to be required to on Windows and for running
+# h5dump elsewhere.
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+
 set(CBF_F90FLAGS_ENV $ENV{F90FLAGS})
 set(CBF_USE_ULP $ENV{CBF_USE_ULP})
 set(CBF_M4FLAGS_ENV $ENV{M4FLAGS})
@@ -343,6 +350,12 @@ if (NOT CMAKE_BUILD_TYPE)
       "Choose the type of build, options are: None Debug Release."
       FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
+
+
+# Check for missing functions: regcomp(3) is in POSIX.1-2001,
+# POSIX.1-2008.
+include(CheckSymbolExists)
+check_symbol_exists(regcomp "regex.h" HAVE_REGCOMP)
 
 
 #
@@ -471,18 +484,14 @@ else(CBF_DONT_USE_LONG_LONG)
   set(CBF_NOLLFLAG "")
 endif(CBF_DONT_USE_LONG_LONG)
 
+
 #
 # URLs from which to retrieve needed external package snapshots
 #
-# We give two REGEX packages, the old 1993 regex release for
-#    compatability with older CBFlib release Makefiles
-#    and a recent PCRE for use in the future.  Only the PCRE
-#    version is used for cmake builds
-#
-set(CBF_REGEX    "regex-20090805")
-set(CBF_PCRE     "pcre-8.33")
-set(CBF_REGEXURL "http://downloads.sf.net/cbflib/${CBF_REGEX}.tar.gz")
-set(CBF_PCREURL  "http://downloads.sf.net/cbflib/${CBF_PCRE}.tar.gz")
+fetchcontent_declare(pcreposix
+  URL "http://downloads.sf.net/cbflib/pcre-8.38.tar.gz"
+  URL_HASH MD5=8a353fe1450216b6655dfcf3561716d9)
+
 set(CBF_HDF5URL  "http://downloads.sf.net/cbflib/${CBF_HDF5}.tar.gz")
 
 
@@ -581,67 +590,46 @@ set_target_properties(CQR PROPERTIES
 
 
 #
-# CBF_REGEX or CBF_PCRE
+# PCRE
 #
-# Need to get:
-# - an include directory
-# - a library to link against
-# - an (optional) dependency to build
-#
-# Try for PCRE first
-find_library(CBF_REGEXLIB pcreposix)
-find_path(CBF_REGEXLIB_INCLUDE_DIR NAMES pcreposix.h)
-message(STATUS "CBF_REGEXLIB_INCLUDE_DIR for pcreposix.h = '${CBF_REGEXLIB_INCLUDE_DIR}'")
-message(STATUS "CBF_REGEXLIB = '${CBF_REGEXLIB}'")
-if (NOT CBF_REGEXLIB_INCLUDE_DIR OR NOT CBF_REGEXLIB)
-	# PCRE not found, try for REGEX
-	message(STATUS "'pcre' library not found")
-	find_library(CBF_REGEXLIB regex)
-	find_path(CBF_REGEXLIB_INCLUDE_DIR NAMES regex.h)
-	message(STATUS "CBF_REGEXLIB_INCLUDE_DIR for regex.h = '${CBF_REGEXLIB_INCLUDE_DIR}'")
-	message(STATUS "CBF_REGEXLIB = '${CBF_REGEXLIB}'")
-	if (NOT CBF_REGEXLIB_INCLUDE_DIR OR NOT CBF_REGEXLIB)
-		# Neither PCRE not REGEX found, load and build PCRE
-		message(STATUS "'regex' library not found")
-		ExternalProject_add(
-			PCRE
-			URL ${CBF_PCREURL}
-			SOURCE_DIR ${CMAKE_BINARY_DIR}/external_packages/${CBF_PCRE}
-			CMAKE_ARGS
-				-DCMAKE_BUILD_TYPE:STRING=RELEASE DEBUG
-				-DCMAKE_INSTALL_PREFIX:PATH=${CBFlib_BINARY_DIR}/${CBF_PCRE}
-			INSTALL_DIR ${CBFlib_BINARY_DIR}/${CBF_PCRE}
-		)
-		set(CBF_RE "PCRE")
-		set(CBF_REGEXLIB_INCLUDE_DIR ${CMAKE_BINARY_DIR}/${CBF_PCRE}/include)
-		set(CBF_REGEXLIB_LIBRARY_PATH ${CBFlib_BINARY_DIR}/${CBF_PCRE}/lib/libpcre.a)
-		add_definitions(-DCBF_REGEXLIB_PCRE)
-	else ()
-		set(CBF_RE "")
-		set(CBF_REGEXLIB_LIBRARY_PATH "${CBF_REGEXLIB}/libregex.so")
-		add_definitions(-DCBF_REGEXLIB_REGEX)
-	endif ()
-else ()
-	add_library(pcreposix_static STATIC IMPORTED)
-	set_target_properties(pcreposix_static PROPERTIES
-		IMPORTED_LOCATION "${CBF_REGEXLIB}"
-		INTERFACE_INCLUDE_DIRECTORIES "${CBF_REGEXLIB_INCLUDE_DIR}")
-	find_library(_pcre_static pcre)
-	target_link_libraries(pcreposix_static INTERFACE "${_pcre_static}")
-	target_compile_definitions(pcreposix_static
-	  INTERFACE CBF_REGEXLIB_PCRE)
+# Linking against an external PCRE1 library (no longer maintained)
+# with a libc that has the regex functions will define regcomp(3),
+# regerror(3), regexec(3), and regfree(3) twice: do not set
+# CBF_WITH_PCRE if libc has the regexec functions.  PCRE2 does it
+# differently: it defines the regex functions prefixed with pcre2_ and
+# maps them onto the unprefixed names with preprocessor directives.
+set(CBF_WITH_PCRE OFF CACHE BOOL
+  "Link against internally built Perl-compatible regular expressions library")
+mark_as_advanced(CBF_WITH_PCRE)
 
-	set(_find_library_suffix_save "${CMAKE_FIND_LIBRARY_SUFFIX}")
-	set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" ".so")
-	find_library(_pcreposix_shared pcre)
-	add_library(pcreposix_shared SHARED IMPORTED)
-	set_target_properties(pcreposix_shared PROPERTIES
-	  IMPORTED_LOCATION "${_pcreposix_shared}"
-	  INTERFACE_INCLUDE_DIRECTORIES "${CBF_REGEXLIB_INCLUDE_DIR}")
-	target_compile_definitions(pcreposix_shared
-	  INTERFACE CBF_REGEXLIB_PCRE)
-	set(CMAKE_FIND_LIBRARY_SUFFIX "${_find_library_suffix_save}")
-endif ()
+if(CBF_WITH_PCRE)
+  # Do not try to link pcretest against readline, because the PCRE
+  # build system does not catch the libtinfo dependency (for tputs and
+  # friends).  Note that PCRE-8.38 is not using GNUInstallDirs; later
+  # versions may.
+  #
+  # PCRE 8.38 reads the DEBUG_LOCATION property of the pcregrep and
+  # pcretest targets--disable both targets.
+  set(PCRE_BUILD_PCREGREP OFF CACHE INTERNAL "Bulid pcregrep")
+  set(PCRE_BUILD_TESTS OFF CACHE INTERNAL "Build the tests")
+  fetchcontent_makeavailable(pcreposix)
+
+
+  # Always use the pcreposix.h from ${pcreposix_SOURCE_DIR} rather
+  # than a system-supplied header.
+  target_include_directories(pcreposix BEFORE PUBLIC "${pcreposix_SOURCE_DIR}")
+
+elseif(HAVE_REGCOMP)
+  add_library(pcreposix INTERFACE IMPORTED)
+  target_compile_definitions(pcreposix
+    INTERFACE CBF_REGEXLIB_REGEX)
+
+else()
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(pcreposix REQUIRED IMPORTED_TARGET libpcreposix)
+  add_library(pcreposix ALIAS PkgConfig::pcreposix)
+endif()
+
 
 #
 # Data Directories
@@ -881,52 +869,27 @@ set(
 include_directories(BEFORE SYSTEM
   ${CBFlib_SOURCE_DIR}/include)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/bin")
 
 #
 #  Build the static and shared CBF libraries
 #
-
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
-add_library(cbf_static STATIC ${CBF_C_SOURCES})
-set_target_properties(cbf_static PROPERTIES OUTPUT_NAME "cbf")
-set_target_properties(cbf_static PROPERTIES LINKER_LANGUAGE C)
-set_target_properties(cbf_static PROPERTIES SOVERSION "${SOVERSION}")
-target_link_libraries(cbf_static
+add_library(cbf ${CBF_C_SOURCES})
+set_target_properties(cbf PROPERTIES OUTPUT_NAME "cbf")
+set_target_properties(cbf PROPERTIES LINKER_LANGUAGE C)
+set_target_properties(cbf PROPERTIES SOVERSION "${SOVERSION}")
+target_link_libraries(cbf
   PUBLIC hdf5
-  PRIVATE pcreposix_static
+  PRIVATE pcreposix
   PRIVATE ${libm})
 
-
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
-add_library(cbf_shared SHARED  ${CBF_C_SOURCES})
-set_target_properties(cbf_shared PROPERTIES OUTPUT_NAME "cbf")
-set_target_properties(cbf_shared PROPERTIES LINKER_LANGUAGE C)
-set_target_properties(cbf_shared PROPERTIES SOVERSION "${SOVERSION}")
-target_link_libraries(cbf_shared
-  PUBLIC hdf5
-  PRIVATE pcreposix_shared
-  PRIVATE ${libm})
 
 #
 # Build the static and shared IMG libraries
 #
-
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
-add_library(img_static STATIC ${CBF__SRC}/img.c)
-set_target_properties(img_static PROPERTIES OUTPUT_NAME "img")
-set_target_properties(img_static PROPERTIES LINKER_LANGUAGE C)
-set(IMG_STATIC_LIBRARY_PATH ${CBFlib_BINARY_DIR}/lib/libimg.a)
-
-
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
-add_library(img_shared SHARED  ${CBF__SRC}/img.c)
-set_target_properties(img_shared PROPERTIES OUTPUT_NAME "img")
-set_target_properties(img_shared PROPERTIES LINKER_LANGUAGE C)
-target_link_libraries(img_shared hdf5)
-set(IMG_SHARED_LIBRARY_PATH ${CBFlib_BINARY_DIR}/lib/libimg.so)
+add_library(img "${CBF__SRC}/img.c")
+set_target_properties(img PROPERTIES OUTPUT_NAME "img")
+set_target_properties(img PROPERTIES LINKER_LANGUAGE C)
+target_link_libraries(img hdf5)
 
 
 if(CBF_ENABLE_FORTRAN)
@@ -952,20 +915,10 @@ endforeach(f90src)
 #
 # Build the fcb libraries
 #
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
-add_library(fcb_static STATIC ${CBF_F90_BUILT_SOURCES};${CBF_F90_SOURCES})
-set_target_properties(fcb_static PROPERTIES OUTPUT_NAME "fcb")
-set_target_properties(fcb_static PROPERTIES LINKER_LANGUAGE C)
-set(FCB_STATIC_LIBRARY_PATH ${CBFlib_BINARY_DIR}/lib/libfcb.a)
-
-
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CBFlib_BINARY_DIR}/lib")
-add_library(fcb_shared SHARED  ${CBF_F90_BUILT_SOURCES};${CBF_F90_SOURCES})
-set_target_properties(fcb_shared PROPERTIES OUTPUT_NAME "fcb")
-set_target_properties(fcb_shared PROPERTIES LINKER_LANGUAGE C)
-target_link_libraries(fcb_shared hdf5)
-set(FCB_SHARED_LIBRARY_PATH ${CBFlib_BINARY_DIR}/lib/libfcb.so)
-
+add_library(fcb ${CBF_F90_BUILT_SOURCES};${CBF_F90_SOURCES})
+set_target_properties(fcb PROPERTIES OUTPUT_NAME "fcb")
+set_target_properties(fcb PROPERTIES LINKER_LANGUAGE C)
+target_link_libraries(fcb hdf5)
 endif()
 
 
@@ -976,130 +929,130 @@ add_executable(tiff2cbf
   "${CBF__EXAMPLES}/tif_sprint.c"
   "${CBF__EXAMPLES}/tiff2cbf.c")
 target_link_libraries(tiff2cbf
-  cbf_static
+  cbf
   tiff)
 
 add_executable(cbf2nexus
   "${CBF__EXAMPLES}/cbf2nexus.c")
 target_link_libraries(cbf2nexus
-  cbf_static)
+  cbf)
 
 add_executable(nexus2cbf
   "${CBF__EXAMPLES}/nexus2cbf.c")
 target_link_libraries(nexus2cbf
-  cbf_static
+  cbf
   hdf5)
 
 add_executable(minicbf2nexus
   "${CBF__EXAMPLES}/minicbf2nexus.c")
 target_link_libraries(minicbf2nexus
-  cbf_static)
+  cbf)
 
 add_executable(adscimg2cbf
   "${CBF__EXAMPLES}/adscimg2cbf.c"
   "${CBF__EXAMPLES}/adscimg2cbf_sub.c")
 target_link_libraries(adscimg2cbf
-  cbf_static
+  cbf
   "${libm}")
 
 add_executable(cbf2adscimg
   "${CBF__EXAMPLES}/cbf2adscimg.c"
   "${CBF__EXAMPLES}/cbf2adscimg_sub.c")
 target_link_libraries(cbf2adscimg
-  cbf_static
+  cbf
   "${libm}")
 
 add_executable(convert_image
   "${CBF__EXAMPLES}/convert_image.c")
 target_link_libraries(convert_image
-  cbf_static)
+  cbf)
 
 add_executable(convert_minicbf
   "${CBF__EXAMPLES}/convert_minicbf.c")
 target_link_libraries(convert_minicbf
-  cbf_static)
+  cbf)
 
 add_executable(makecbf
   "${CBF__EXAMPLES}/makecbf.c")
 target_link_libraries(makecbf
-  cbf_static)
+  cbf)
 
 add_executable(cbf_tail
   "${CBF__EXAMPLES}/cbf_tail.c")
 target_link_libraries(cbf_tail
-  cbf_static)
+  cbf)
 
 add_executable(changtestcompression
   "${CBF__EXAMPLES}/changtestcompression.c")
 target_link_libraries(changtestcompression
-  cbf_static)
+  cbf)
 
 add_executable(img2cif
   "${CBF__EXAMPLES}/img2cif.c")
 target_link_libraries(img2cif
-  cbf_static)
+  cbf)
 
 add_executable(cif2cbf
   "${CBF__EXAMPLES}/cif2cbf.c")
 target_link_libraries(cif2cbf
-  cbf_static
+  cbf
   CQR
   "${libm}")
 
 add_executable(cbf_template_t
   "${CBF__DECTRIS_EXAMPLES}/cbf_template_t.c")
 target_link_libraries(cbf_template_t
-  cbf_static)
+  cbf)
 
 add_executable(testcell
   "${CBF__EXAMPLES}/testcell.C")
 target_link_libraries(testcell
-  cbf_static)
+  cbf)
 
 add_executable(sauter_test
   "${CBF__EXAMPLES}/sauter_test.C")
 target_link_libraries(sauter_test
-  cbf_static)
+  cbf)
 
 add_executable(sequence_match
   "${CBF__EXAMPLES}/sequence_match.c")
 target_link_libraries(sequence_match
-  cbf_static)
+  cbf)
 
 add_executable(testulp
   "${CBF__EXAMPLES}/testulp.c")
 target_link_libraries(testulp
-  cbf_static)
+  cbf)
 
 add_executable(testhdf5
   "${CBF__EXAMPLES}/testhdf5.c")
 target_link_libraries(testhdf5
-  cbf_static)
+  cbf)
 
 add_executable(testtree
   "${CBF__EXAMPLES}/testtree.c")
 target_link_libraries(testtree
-  cbf_static)
+  cbf)
 
 add_executable(testalloc
   "${CBF__EXAMPLES}/testalloc.c")
 target_link_libraries(testalloc
-  cbf_static)
+  cbf)
 
 add_executable(testflat
   "${CBF__EXAMPLES}/testflat.c")
 target_link_libraries(testflat
-  cbf_static)
+  cbf)
 
 add_executable(testflatpacked
   "${CBF__EXAMPLES}/testflatpacked.c")
 target_link_libraries(testflatpacked
-  cbf_static)
+  cbf)
 
 add_executable(testreals
   "${CBF__EXAMPLES}/testreals.c")
 target_link_libraries(testreals
-  cbf_static)
+  cbf)
 
 
 #
@@ -1120,13 +1073,13 @@ if(CBF_ENABLE_FORTRAN)
   add_executable(test_fcb_read_image
     "${CBF__BLDEXMP}/test_fcb_read_image.f90")
   target_link_libraries(test_fcb_read_image
-    "${FCB_STATIC_LIBRARY_PATH}"
+    fcb
     hdf5)
 
   add_executable(test_xds_binary
     "${CBF__BLDEXMP}/test_xds_binary.f90")
   target_link_libraries(test_xds_binary
-    "${FCB_STATIC_LIBRARY_PATH}"
+    fcb
     hdf5)
 endif()
 
@@ -1150,16 +1103,13 @@ install (TARGETS testcell DESTINATION bin)
 install (TARGETS sauter_test DESTINATION bin)
 install (TARGETS sequence_match DESTINATION bin)
 install (TARGETS tiff2cbf DESTINATION bin)
-install (TARGETS cbf_static DESTINATION lib)
-install (TARGETS cbf_shared DESTINATION lib)
+install(TARGETS cbf DESTINATION lib)
 
 if(CBF_ENABLE_FORTRAN)
-  install (TARGETS fcb_static DESTINATION lib)
-  install (TARGETS fcb_shared DESTINATION lib)
+  install(TARGETS fcb DESTINATION lib)
 endif()
 
-install (TARGETS img_static DESTINATION lib)
-install (TARGETS img_shared DESTINATION lib)
+install(TARGETS img DESTINATION lib)
 install (DIRECTORY ${CBF__INCLUDE}/ DESTINATION include/cbflib FILES_MATCHING PATTERN "*.h")
 install (DIRECTORY ${CBF__BIN_INCLUDE}/* DESTINATION include/cbflib FILES_MATCHING PATTERN "*.h")
 
