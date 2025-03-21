@@ -1,13 +1,11 @@
-message("input: ${input}")
-message("output: ${output}")
 execute_process(
-	COMMAND @HDF5_BINARY_DIR@/h5dump ${input}
-	COMMAND @CMAKE_RUNTIME_OUTPUT_DIRECTORY@/cbf_tail -n 1
-	OUTPUT_FILE ${output}
-	RESULT_VARIABLE result
-	ERROR_VARIABLE error
-)
-if (result)
-	message("${error}")
-	message(FATAL_ERROR "failed: ${result}")
-endif ()
+  COMMAND "$<TARGET_FILE:h5dump>" "${input-file}"
+  COMMAND "$<TARGET_FILE:cbf_tail>" -n 1
+  OUTPUT_FILE "${output-file}"
+  RESULT_VARIABLE results
+  ERROR_VARIABLE error)
+foreach(result IN LISTS results)
+  if(result)
+    message(FATAL_ERROR "failed: ${error}")
+  endif()
+endforeach()
