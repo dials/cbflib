@@ -1,0 +1,34 @@
+name: make tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+          - name: create conda env for build
+            run: |
+              conda create -y -n build -c conda-forge python=3.11 python-build
+          - name: build
+            run: |
+              source /usr/share/miniconda/etc/profile.d/conda.sh
+              conda activate build
+              make all
+          - name: create conda env for test
+            run: |
+              conda create -y -n test -c conda-forge python=3.11 numpy matplotlib
+          - name: test
+            run: |
+              source /usr/share/miniconda/etc/profile.d/conda.sh
+              conda activate test
+              make tests > test.out 2>&1
+          - name : check test output
+            run: |
+              ! grep ignored test.out
