@@ -438,13 +438,6 @@ set(DECTRIS_EXAMPLES "${EXAMPLES}/dectris_cbf_template_test" CACHE STRING "")
 set(MINICBF_TEST "${CBFlib_SOURCE_DIR}/minicbf_test" CACHE STRING "")
 set(GRAPHICS  "${CBFlib_SOURCE_DIR}/html_graphics" CACHE STRING "")
 
-
-#
-# CQRlib
-set(CBF_CQRLIB "cqrlib-1.1.4")
-set(CBF_CQRLIB_URL "https://github.com/yayahjb/cqrlib/archive/refs/tags/CQRlib-1.1.4.tar.gz")
-set(CQRLIB_INSTALL_DIR "${CMAKE_BINARY_DIR}/${CBF_CQRLIB}")
-
 include(FetchContent)
 find_program(PATCH patch)
 
@@ -462,6 +455,12 @@ endif(CBF_DONT_USE_LONG_LONG)
 #
 # URLs from which to retrieve needed external package snapshots
 #
+fetchcontent_declare(cqrlib
+  URL "https://github.com/yayahjb/cqrlib/archive/refs/tags/CQRlib-1.1.4.tar.gz"
+  URL_HASH MD5=629a349ed5e8bf6f2a69a2fb1da11c45
+  PATCH_COMMAND "${PATCH}"
+    -N -i "${CMAKE_CURRENT_SOURCE_DIR}/patches/cqrlib-1.1.4.patch" -p 1 -t)
+
 fetchcontent_declare(hdf5
   URL "http://downloads.sf.net/cbflib/hdf5-1.14.4-2.tar.gz"
   URL_HASH MD5=1791c5f70660bf4ec2e05fc15526c181)
@@ -474,8 +473,6 @@ fetchcontent_declare(pcreposix
 #
 # libm
 set(libm "$<$<NOT:$<C_COMPILER_ID:MSVC>>:m>")
-
-include(ExternalProject)
 
 
 #
@@ -506,31 +503,22 @@ endif()
 
 #
 # CQRlib
-#
-# If a cloned repository is patched, CMake seems to attempt to
-# invoke PATCH_COMMAND on every run.  For now, avoid automatically
-# patching cloned repositories.
-#
-# Cannot set INTERFACE_INCLUDE_DIRECTORIES on an imported target
-# to a non-existent path: for now, create a directory now that
-# will be populated during build.
-externalproject_add(${CBF_CQRLIB}
-  URL "${CBF_CQRLIB_URL}"
-  PATCH_COMMAND "${PATCH}"
-    -N -i "${CMAKE_CURRENT_SOURCE_DIR}/patches/cqrlib-1.1.4.patch" -p 1 -t
-  CMAKE_CACHE_ARGS
-    "-DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}"
-    "-DCMAKE_INSTALL_BINDIR:PATH=${CQRLIB_INSTALL_DIR}/bin"
-    "-DCMAKE_INSTALL_INCLUDEDIR:PATH=${CQRLIB_INSTALL_DIR}/include"
-    "-DCMAKE_INSTALL_LIBDIR:PATH=${CQRLIB_INSTALL_DIR}/lib"
-    "-DCMAKE_INSTALL_PREFIX:PATH=${CQRLIB_INSTALL_DIR}")
+set(CBF_WITH_CQRLIB ON CACHE BOOL
+  "Link against internally built CQRlib library")
+mark_as_advanced(CBF_WITH_CQRLIB)
 
-file(MAKE_DIRECTORY "${CQRLIB_INSTALL_DIR}/include/cqrlib")
-add_library(CQR SHARED IMPORTED)
-add_dependencies(CQR ${CBF_CQRLIB})
-set_target_properties(CQR PROPERTIES
-  IMPORTED_LOCATION "${CQRLIB_INSTALL_DIR}/lib/libCQRlib${CMAKE_SHARED_LIBRARY_SUFFIX}"
-  INTERFACE_INCLUDE_DIRECTORIES "${CQRLIB_INSTALL_DIR}/include")
+if(CBF_WITH_CQRLIB)
+  fetchcontent_makeavailable(cqrlib)
+else()
+  find_library(cqrlib_library CQRlib)
+  find_path(cqrlib_include_dir cqrlib.h)
+
+  add_library(CQR UNKNOWN IMPORTED)
+  set_target_properties(CQR PROPERTIES
+    IMPORTED_LOCATION "${cqrlib_library}"
+    INTERFACE_INCLUDE_DIRECTORIES "${cqrlib_include_dir}"
+    INTERFACE_LINK_LIBRARIES "${libm}")
+endif()
 
 
 #
