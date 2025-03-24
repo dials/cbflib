@@ -26,7 +26,7 @@ jobs:
       run: |
         source /usr/share/miniconda/etc/profile.d/conda.sh
         conda activate test
-        make tests > test.out 2>&1
+        make tests 2>&1 | tee test.out
     - name : check test output
       run: |
         ! grep ignored test.out
