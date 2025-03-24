@@ -15,8 +15,8 @@ jobs:
         conda create -y -n test -c conda-forge python=3.11 numpy matplotlib
     - name: install extra dependencies
       run: |
-        apt-get update
-        apt-get install -y libjpeg-dev liblzma-dev
+        sudo apt-get update
+        sudo apt-get install -y libjpeg-dev liblzma-dev
     - name: build
       run: |
         source /usr/share/miniconda/etc/profile.d/conda.sh
