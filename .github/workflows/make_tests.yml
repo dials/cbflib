@@ -9,17 +9,19 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: create conda env for build
+    - name: create conda environments
       run: |
         conda create -y -n build -c conda-forge python=3.11 python-build
+        conda create -y -n test -c conda-forge python=3.11 numpy matplotlib
+    - name: install extra dependencies
+      run: |
+        apt update
+        apt install -y libjpeg-dev liblzma-dev
     - name: build
       run: |
         source /usr/share/miniconda/etc/profile.d/conda.sh
         conda activate build
         make all
-    - name: create conda env for test
-      run: |
-        conda create -y -n test -c conda-forge python=3.11 numpy matplotlib
     - name: test
       run: |
         source /usr/share/miniconda/etc/profile.d/conda.sh
