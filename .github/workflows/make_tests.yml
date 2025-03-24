@@ -1,9 +1,9 @@
-name: make tests
+name: Make build and tests
 
 on: push
 
 jobs:
-  build:
+  build_test:
 
     runs-on: ubuntu-latest
 
