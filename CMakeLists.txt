@@ -438,13 +438,6 @@ set(DECTRIS_EXAMPLES "${EXAMPLES}/dectris_cbf_template_test" CACHE STRING "")
 set(MINICBF_TEST "${CBFlib_SOURCE_DIR}/minicbf_test" CACHE STRING "")
 set(GRAPHICS  "${CBFlib_SOURCE_DIR}/html_graphics" CACHE STRING "")
 
-include(FetchContent)
-find_program(PATCH patch)
-
-fetchcontent_declare(tiff
-  URL "http://downloads.sf.net/cbflib/tiff-4.0.6_rev_3Nov16.tar.gz"
-  URL_HASH MD5=594d1811ce715f7d5ec586bf5e0c4732)
-
 if(CBF_DONT_USE_LONG_LONG)
   set(CBF_NOLLFLAG "-DCBF_DONT_USE_LONG_LONG")
 else(CBF_DONT_USE_LONG_LONG)
@@ -455,6 +448,9 @@ endif(CBF_DONT_USE_LONG_LONG)
 #
 # URLs from which to retrieve needed external package snapshots
 #
+include(FetchContent)
+find_program(PATCH patch REQUIRED)
+
 fetchcontent_declare(cqrlib
   URL "https://github.com/yayahjb/cqrlib/archive/refs/tags/CQRlib-1.1.4.tar.gz"
   URL_HASH MD5=629a349ed5e8bf6f2a69a2fb1da11c45
@@ -469,36 +465,14 @@ fetchcontent_declare(pcreposix
   URL "http://downloads.sf.net/cbflib/pcre-8.38.tar.gz"
   URL_HASH MD5=8a353fe1450216b6655dfcf3561716d9)
 
+fetchcontent_declare(tiff
+  URL "http://downloads.sf.net/cbflib/tiff-4.0.6_rev_3Nov16.tar.gz"
+  URL_HASH MD5=594d1811ce715f7d5ec586bf5e0c4732)
+
 
 #
 # libm
 set(libm "$<$<NOT:$<C_COMPILER_ID:MSVC>>:m>")
-
-
-#
-# TIFF
-#
-# LibTIFF to support tiff2cbf.
-set(CBF_WITH_LIBTIFF ON CACHE BOOL
-  "Link against internally built LibTIFF library")
-mark_as_advanced(CBF_WITH_LIBTIFF)
-
-if(CBF_WITH_LIBTIFF)
-  # The first LibTIFF at https://gitlab.com/libtiff/libtiff with
-  # native CMake support seems to be 4.0.5.  The first version that
-  # builds on current MSYS2 is 4.0.9.
-  #
-  # 4.0.3-rev-29Sep13 appears to have CMakeLists.txt patched in but
-  # fails on MSYS2: multiple definition of ua_wcsicmp.
-  set(tiff-contrib OFF)
-  set(tiff-docs OFF)
-  set(tiff-tests OFF)
-  set(tiff-tools OFF)
-  fetchcontent_makeavailable(tiff)
-else()
-  find_package(TIFF REQUIRED)
-  add_library(tiff ALIAS TIFF::TIFF)
-endif()
 
 
 #
@@ -621,6 +595,43 @@ else()
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(pcreposix REQUIRED IMPORTED_TARGET libpcreposix)
   add_library(pcreposix ALIAS PkgConfig::pcreposix)
+endif()
+
+
+#
+# TIFF
+#
+# LibTIFF to support tiff2cbf.  Disable tests if building in-tree; the
+# tiff-tests cache variable was introduced in LibTIFF 4.5.0.
+set(CBF_WITH_LIBTIFF ON CACHE BOOL
+  "Link against internally built LibTIFF library")
+mark_as_advanced(CBF_WITH_LIBTIFF)
+
+if(CBF_WITH_LIBTIFF)
+  # The first LibTIFF at https://gitlab.com/libtiff/libtiff with
+  # native CMake support seems to be 4.0.5.  The first version that
+  # builds on current MSYS2 is 4.0.9.
+  #
+  # 4.0.3-rev-29Sep13 appears to have CMakeLists.txt patched in but
+  # fails on MSYS2: multiple definition of ua_wcsicmp.
+  set(tiff-contrib OFF CACHE INTERNAL "Build TIFF contrib")
+  set(tiff-docs OFF CACHE INTERNAL "Build TIFF documentation")
+  set(tiff-tests OFF CACHE INTERNAL "Build TIFF tests")
+  set(tiff-tools OFF CACHE INTERNAL "Build TIFF tools")
+  fetchcontent_makeavailable(tiff)
+else()
+  # find_package(TIFF) appears to miss the dependencies (Lerc, jbig,
+  # etc) for a static LibTIFF.  pkg_check_modules(... IMPORTED_TARGET
+  # libtiff-4) on the other hand always seems to create a
+  # shared-library target; see
+  # https://gitlab.kitware.com/cmake/cmake/-/issues/21714.
+  #
+  # Use pkg-config, with the intent of eventually switching to
+  # cmake_pkg_config(), because e.g. Debian does not ship CMake config
+  # files in their dev packages.
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(tiff REQUIRED IMPORTED_TARGET libtiff-4)
+  add_library(tiff ALIAS PkgConfig::tiff)
 endif()
 
 
