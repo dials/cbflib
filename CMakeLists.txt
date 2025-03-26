@@ -299,7 +299,7 @@ set(CBF_F90FLAGS_ENV $ENV{F90FLAGS})
 set(CBF_USE_ULP $ENV{CBF_USE_ULP})
 set(CBF_M4FLAGS_ENV $ENV{M4FLAGS})
 
-option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
+option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 
 option(CBF_ENABLE_FORTRAN "Enable Fortran 90" ON)
 if(CBF_ENABLE_FORTRAN)
@@ -895,7 +895,6 @@ target_link_libraries(cbf
 add_library(img "${CBF__SRC}/img.c")
 set_target_properties(img PROPERTIES OUTPUT_NAME "img")
 set_target_properties(img PROPERTIES LINKER_LANGUAGE C)
-target_link_libraries(img hdf5)
 
 
 if(CBF_ENABLE_FORTRAN)
@@ -924,7 +923,6 @@ endforeach(f90src)
 add_library(fcb ${CBF_F90_BUILT_SOURCES};${CBF_F90_SOURCES})
 set_target_properties(fcb PROPERTIES OUTPUT_NAME "fcb")
 set_target_properties(fcb PROPERTIES LINKER_LANGUAGE C)
-target_link_libraries(fcb hdf5)
 endif()
 
 

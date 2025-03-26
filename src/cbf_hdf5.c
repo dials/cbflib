@@ -283,14 +283,6 @@ extern "C" {
 #include <assert.h>
 #include <errno.h>
 
-#if !defined(CBF_NO_REGEX)
-#ifdef CBF_REGEXLIB_REGEX
-#include <regex.h>
-#else
-#include <pcreposix.h>
-#endif
-#endif
-
     static int cbf_find_array_data_h5type
     (hid_t * const type,
      unsigned int bits,
