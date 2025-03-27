@@ -1585,79 +1585,102 @@ add_test(cmp-minicbf_original.dump-minicbf.dump ${CMAKE_COMMAND} -E compare_file
 set_property(TEST cmp-minicbf_original.dump-minicbf.dump APPEND PROPERTY DEPENDS minicbf_original.dump)
 set_property(TEST cmp-minicbf_original.dump-minicbf.dump APPEND PROPERTY DEPENDS minicbf.dump)
 
-# round-trip cbf2nexus & nexus2cbf tests using i19 data
+#
+# cbf2nexus/nexus2cbf
+#
+# Roundtrip cbf2nexus and nexus2cbf using i19 data.  Dump the content
+# of generated HDF5 files and use cbf_tail to strip off some file
+# names.
+add_test(NAME cbf2nexus-1
+  COMMAND cbf2nexus -c zlib --list
+    -o "${CBF__DATA}/i19-1.h5"
+    "${CBF_DATA_INPUT}/1191_00005.cbf")
+set_tests_properties(cbf2nexus-1 PROPERTIES
+  FIXTURES_SETUP cbf2nexus-1
+  REQUIRED_FILES "${CBF_DATA_INPUT}/1191_00005.cbf")
 
-# generate the data
-add_test(i19-1.h5 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/cbf2nexus -c zlib --list -o ${CBF__DATA}/i19-1.h5 "${CBF_DATA_INPUT}/1191_00005.cbf")
+add_test(NAME cbf2nexus-1-cleanup
+  COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/i19-1.h5")
+set_tests_properties(cbf2nexus-1-cleanup PROPERTIES
+  FIXTURES_CLEANUP cbf2nexus-1)
 
-add_test(i19-1.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/nexus2cbf -o ${CBF__DATA}/i19-1.cbf ${CBF__DATA}/i19-1.h5)
-set_property(TEST i19-1.cbf APPEND PROPERTY DEPENDS i19-1.h5)
+add_test(NAME nexus2cbf-1
+  COMMAND nexus2cbf
+    -o "${CBF__DATA}/i19-1.cbf"
+    "${CBF__DATA}/i19-1.h5")
+set_tests_properties(nexus2cbf-1 PROPERTIES
+  FIXTURES_REQUIRED cbf2nexus-1
+  FIXTURES_SETUP nexus2cbf-1)
 
-add_test(i19-2.h5 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/cbf2nexus -c zlib --list -o ${CBF__DATA}/i19-2.h5 ${CBF__DATA}/i19-1.cbf)
-set_property(TEST i19-2.h5 APPEND PROPERTY DEPENDS i19-1.cbf)
+add_test(NAME nexus2cbf-1-cleanup
+  COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/i19-1.cbf")
+set_tests_properties(nexus2cbf-1-cleanup PROPERTIES
+  FIXTURES_CLEANUP nexus2cbf-1)
 
-add_test(i19-2.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/nexus2cbf -o ${CBF__DATA}/i19-2.cbf ${CBF__DATA}/i19-2.h5)
-set_property(TEST i19-2.cbf APPEND PROPERTY DEPENDS i19-2.h5)
+add_test(NAME cbf2nexus-2
+  COMMAND cbf2nexus -c zlib --list
+    -o "${CBF__DATA}/i19-2.h5"
+    "${CBF__DATA}/i19-1.cbf")
+set_tests_properties(cbf2nexus-2 PROPERTIES
+  FIXTURES_REQUIRED nexus2cbf-1
+  FIXTURES_SETUP cbf2nexus-2)
 
-# compare the cbf files from i19 data
-add_test(cmp-i19-1.cbf-i19-2.cbf ${CMAKE_COMMAND} -E compare_files ${CBF__DATA}/i19-1.cbf ${CBF__DATA}/i19-2.cbf)
-set_property(TEST cmp-i19-1.cbf-i19-2.cbf APPEND PROPERTY DEPENDS i19-1.cbf)
-set_property(TEST cmp-i19-1.cbf-i19-2.cbf APPEND PROPERTY DEPENDS i19-2.cbf)
+add_test(NAME cbf2nexus-2-cleanup
+  COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/i19-2.h5")
+set_tests_properties(cbf2nexus-2-cleanup PROPERTIES
+  FIXTURES_CLEANUP cbf2nexus-2)
 
-# dump the content of generated hdf5 files & use 'cbf_tail' to strip off some file names
-add_test(NAME i19-1.dump
+add_test(NAME nexus2cbf-2
+  COMMAND nexus2cbf
+    -o "${CBF__DATA}/i19-2.cbf"
+    "${CBF__DATA}/i19-2.h5")
+set_tests_properties(nexus2cbf-2 PROPERTIES
+  FIXTURES_REQUIRED cbf2nexus-2
+  FIXTURES_SETUP nexus2cbf-2)
+
+add_test(NAME nexus2cbf-2-cleanup
+  COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/i19-2.cbf")
+set_tests_properties(nexus2cbf-2-cleanup PROPERTIES
+  FIXTURES_CLEANUP nexus2cbf-2)
+
+add_test(NAME nexus2cbf-cmp
+  COMMAND ${CMAKE_COMMAND} -E compare_files
+    "${CBF__DATA}/i19-1.cbf"
+    "${CBF__DATA}/i19-2.cbf")
+set_tests_properties(nexus2cbf-cmp PROPERTIES
+  FIXTURES_REQUIRED "nexus2cbf-1;nexus2cbf-2")
+
+add_test(NAME h5dump-1
   COMMAND ${CMAKE_COMMAND}
     "-Dinput-file=${CBF__DATA}/i19-1.h5"
     "-Doutput-file=${CBF__DATA}/i19-1.dump"
     -P "${PROJECT_BINARY_DIR}/h5dump-$<CONFIG>.cmake")
-set_property(TEST i19-1.dump APPEND PROPERTY DEPENDS i19-1.h5)
-add_test(NAME i19-2.dump
+set_tests_properties(h5dump-1 PROPERTIES
+  FIXTURES_REQUIRED cbf2nexus-1
+  FIXTURES_SETUP h5dump-1)
+
+add_test(NAME h5dump-1-cleanup
+  COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/i19-1.dump")
+set_tests_properties(h5dump-1-cleanup PROPERTIES
+  FIXTURES_CLEANUP h5dump-1)
+
+add_test(NAME h5dump-2
   COMMAND ${CMAKE_COMMAND}
     "-Dinput-file=${CBF__DATA}/i19-2.h5"
     "-Doutput-file=${CBF__DATA}/i19-2.dump"
     -P "${PROJECT_BINARY_DIR}/h5dump-$<CONFIG>.cmake")
-set_property(TEST i19-2.dump APPEND PROPERTY DEPENDS i19-2.h5)
+set_tests_properties(h5dump-2 PROPERTIES
+  FIXTURES_REQUIRED cbf2nexus-2
+  FIXTURES_SETUP h5dump-2)
 
-# compare dumped hdf5 file content
-add_test(cmp-i19-1.dump-i19-2.dump ${CMAKE_COMMAND} -E compare_files ${CBF__DATA}/i19-1.dump ${CBF__DATA}/i19-2.dump)
-set_property(TEST cmp-i19-1.dump-i19-2.dump APPEND PROPERTY DEPENDS i19-1.dump)
-set_property(TEST cmp-i19-1.dump-i19-2.dump APPEND PROPERTY DEPENDS i19-2.dump)
+add_test(NAME h5dump-2-cleanup
+  COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/i19-2.dump")
+set_tests_properties(h5dump-2-cleanup PROPERTIES
+  FIXTURES_CLEANUP h5dump-2)
 
-# round-trip cbf2nexus & nexus2cbf tests using i03 data
-
-# generate the data
-add_test(i03-1.h5 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/cbf2nexus -c zlib --list -o ${CBF__DATA}/i03-1.h5 "${CBF_DATA_INPUT}/thaumatin_die_M1S5_1_0005_2.cbf")
-
-add_test(i03-1.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/nexus2cbf -o ${CBF__DATA}/i03-1.cbf ${CBF__DATA}/i03-1.h5)
-set_property(TEST i03-1.cbf APPEND PROPERTY DEPENDS i03-1.h5)
-
-add_test(i03-2.h5 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/cbf2nexus -c zlib --list -o ${CBF__DATA}/i03-2.h5 ${CBF__DATA}/i03-1.cbf)
-set_property(TEST i03-2.h5 APPEND PROPERTY DEPENDS i03-1.cbf)
-
-add_test(i03-2.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/nexus2cbf -o ${CBF__DATA}/i03-2.cbf ${CBF__DATA}/i03-2.h5)
-set_property(TEST i03-2.cbf APPEND PROPERTY DEPENDS i03-2.h5)
-
-# compare the cbf files from i03 data
-add_test(cmp-i03-1.cbf-i03-2.cbf ${CMAKE_COMMAND} -E compare_files ${CBF__DATA}/i03-1.cbf ${CBF__DATA}/i03-2.cbf)
-set_property(TEST cmp-i03-1.cbf-i03-2.cbf APPEND PROPERTY DEPENDS i03-1.cbf)
-set_property(TEST cmp-i03-1.cbf-i03-2.cbf APPEND PROPERTY DEPENDS i03-2.cbf)
-
-# dump the content of generated hdf5 files & use 'cbf_tail' to strip off some file names
-add_test(NAME i03-1.dump
-  COMMAND ${CMAKE_COMMAND}
-    "-Dinput-file=${CBF__DATA}/i03-1.h5"
-    "-Doutput-file=${CBF__DATA}/i03-1.dump"
-    -P "${PROJECT_BINARY_DIR}/h5dump-$<CONFIG>.cmake")
-set_property(TEST i03-1.dump APPEND PROPERTY DEPENDS i03-1.h5)
-add_test(NAME i03-2.dump
-  COMMAND ${CMAKE_COMMAND}
-    "-Dinput-file=${CBF__DATA}/i03-2.h5"
-    "-Doutput-file=${CBF__DATA}/i03-2.dump"
-    -P "${PROJECT_BINARY_DIR}/h5dump-$<CONFIG>.cmake")
-set_property(TEST i03-2.dump APPEND PROPERTY DEPENDS i03-2.h5)
-
-# compare dumped hdf5 file content
-add_test(cmp-i03-1.dump-i03-2.dump ${CMAKE_COMMAND} -E compare_files ${CBF__DATA}/i03-1.dump ${CBF__DATA}/i03-2.dump)
-set_property(TEST cmp-i03-1.dump-i03-2.dump APPEND PROPERTY DEPENDS i03-1.dump)
-set_property(TEST cmp-i03-1.dump-i03-2.dump APPEND PROPERTY DEPENDS i03-2.dump)
-
+add_test(NAME h5dump-cmp
+  COMMAND ${CMAKE_COMMAND} -E compare_files
+    "${CBF__DATA}/i19-1.dump"
+    "${CBF__DATA}/i19-2.dump")
+set_tests_properties(h5dump-cmp PROPERTIES
+  FIXTURES_REQUIRED "h5dump-1;h5dump-2")
