@@ -7,6 +7,42 @@
  
  data_image_1
  
+--- a/adscconverted_flat_orig.cbf
++++ b/adscconverted_flat_orig.cbf
+@@ -1,5 +1,5 @@
+ ###CBF: VERSION 1.7.11
+-# CBF file written by CBFlib v0.9.6
++# CBF file written by CBFlib v0.9.7
+ 
+ data_image_1
+ 
+--- a/adscconverted_orig.cbf
++++ b/adscconverted_orig.cbf
+@@ -1,5 +1,5 @@
+ ###CBF: VERSION 1.7.11
+-# CBF file written by CBFlib v0.9.6
++# CBF file written by CBFlib v0.9.7
+ 
+ data_image_1
+ 
+--- a/converted_flat_orig.cbf
++++ b/converted_flat_orig.cbf
+@@ -1,5 +1,5 @@
+ ###CBF: VERSION 1.7.11
+-# CBF file written by CBFlib v0.9.6
++# CBF file written by CBFlib v0.9.7
+ 
+ data_image_1
+ 
+--- a/converted_orig.cbf
++++ b/converted_orig.cbf
+@@ -1,5 +1,5 @@
+ ###CBF: VERSION 1.7.11
+-# CBF file written by CBFlib v0.9.6
++# CBF file written by CBFlib v0.9.7
+ 
+ data_image_1
+ 
 --- a/insulin_pilatus6mconverted_orig.cbf
 +++ b/insulin_pilatus6mconverted_orig.cbf
 @@ -1,5 +1,5 @@
@@ -28,6 +64,15 @@
  
 --- a/insulin_pilatus6mconverted_v2_orig.cbf
 +++ b/insulin_pilatus6mconverted_v2_orig.cbf
+@@ -1,5 +1,5 @@
+ ###CBF: VERSION 1.7.11
+-# CBF file written by CBFlib v0.9.6
++# CBF file written by CBFlib v0.9.7
+ 
+ data_image_1
+ 
+--- a/mb_LP_1_001_orig.cbf
++++ b/mb_LP_1_001_orig.cbf
 @@ -1,5 +1,5 @@
  ###CBF: VERSION 1.7.11
 -# CBF file written by CBFlib v0.9.6

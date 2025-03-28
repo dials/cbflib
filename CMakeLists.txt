@@ -445,8 +445,10 @@ endif(CBF_DONT_USE_LONG_LONG)
 
 
 #
-# URLs from which to retrieve needed external package snapshots
+# Dependencies, external packages
 #
+# Verify the checksums.  The --binary option appears to be required
+# for patching the test data on MSYS2.
 include(FetchContent)
 find_program(PATCH patch REQUIRED)
 
@@ -455,6 +457,18 @@ fetchcontent_declare(cqrlib
   URL_HASH MD5=629a349ed5e8bf6f2a69a2fb1da11c45
   PATCH_COMMAND "${PATCH}"
     -N -i "${CMAKE_CURRENT_SOURCE_DIR}/patches/cqrlib-1.1.4.patch" -p 1 -t)
+
+fetchcontent_declare(data_input
+  URL "http://downloads.sf.net/cbflib/CBFlib_${PROJECT_VERSION}_Data_Files_Input.tar.gz"
+  URL_HASH MD5=f98ae4214b3e57acb42437ea4b685c4d
+  PATCH_COMMAND "${PATCH}"
+    -N -i "${CMAKE_CURRENT_SOURCE_DIR}/patches/cbflib-data-input-${PROJECT_VERSION}.patch" -p 1 -t --binary)
+
+fetchcontent_declare(data_output
+  URL "http://downloads.sf.net/cbflib/CBFlib_${PROJECT_VERSION}_Data_Files_Output.tar.gz"
+  URL_HASH MD5=edde13b20baf16bb9ab91cfc647ba4d6
+  PATCH_COMMAND "${PATCH}"
+    -N -i "${CMAKE_CURRENT_SOURCE_DIR}/patches/cbflib-data-output-${PROJECT_VERSION}.patch" -p 1 -t --binary)
 
 fetchcontent_declare(hdf5
   URL "http://downloads.sf.net/cbflib/hdf5-1.14.4-2.tar.gz"
@@ -491,6 +505,35 @@ else()
     IMPORTED_LOCATION "${cqrlib_library}"
     INTERFACE_INCLUDE_DIRECTORIES "${cqrlib_include_dir}"
     INTERFACE_LINK_LIBRARIES "${libm}")
+endif()
+
+
+#
+# INPUT/OUTPUT TEST DATA
+#
+# If CBF_WITH_DATA_INPUT and/or CBF_WITH_DATA_OUTPUT are set
+# externally, the test data in the corresponding directories are
+# assumed to be patched.
+set(CBF_WITH_DATA_INPUT "" CACHE FILEPATH
+  "Path to input test data directory")
+mark_as_advanced(CBF_WITH_DATA_INPUT)
+
+if(CBF_WITH_DATA_INPUT)
+  set(data_input "${CBF_WITH_DATA_INPUT}")
+else()
+  fetchcontent_makeavailable(data_input)
+  set(data_input "${data_input_SOURCE_DIR}")
+endif()
+
+set(CBF_WITH_DATA_OUTPUT "" CACHE FILEPATH
+  "Path to reference output test data directory")
+mark_as_advanced(CBF_WITH_DATA_OUTPUT)
+
+if(CBF_WITH_DATA_OUTPUT)
+  set(data_output "${CBF_WITH_DATA_OUTPUT}")
+else()
+  fetchcontent_makeavailable(data_output)
+  set(data_output "${data_output_SOURCE_DIR}")
 endif()
 
 
@@ -631,47 +674,6 @@ else()
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(tiff REQUIRED IMPORTED_TARGET libtiff-4)
   add_library(tiff ALIAS PkgConfig::tiff)
-endif()
-
-
-#
-# Data Directories
-#
-# Verify the checksums.  The --binary option appears to be required
-# for patching the test data on MSYS2.
-fetchcontent_declare(data_input
-  URL "http://downloads.sf.net/cbflib/CBFlib_${PROJECT_VERSION}_Data_Files_Input.tar.gz"
-  URL_HASH MD5=f98ae4214b3e57acb42437ea4b685c4d)
-
-fetchcontent_declare(data_output
-  URL "http://downloads.sf.net/cbflib/CBFlib_${PROJECT_VERSION}_Data_Files_Output.tar.gz"
-  URL_HASH MD5=edde13b20baf16bb9ab91cfc647ba4d6
-  PATCH_COMMAND "${PATCH}"
-    -N -i "${CMAKE_CURRENT_SOURCE_DIR}/patches/cbflib-data-output-${PROJECT_VERSION}.patch" -p 1 -t --binary)
-
-
-#
-# INPUT/OUTPUT TEST DATA
-#
-# If CBF_DATA_INPUT and/or CBF_DATA_OUTPUT are set externally, the
-# test data in the corresponding directories are assumed to be
-# patched.
-set(CBF_DATA_INPUT "" CACHE FILEPATH
-  "Path to input test data directory")
-mark_as_advanced(CBF_DATA_INPUT)
-
-if(NOT CBF_DATA_INPUT)
-  fetchcontent_makeavailable(data_input)
-  set(CBF_DATA_INPUT "${data_input_SOURCE_DIR}")
-endif()
-
-set(CBF_DATA_OUTPUT "" CACHE FILEPATH
-  "Path to reference output test data directory")
-mark_as_advanced(CBF_DATA_OUTPUT)
-
-if(NOT CBF_DATA_OUTPUT)
-  fetchcontent_makeavailable(data_output)
-  set(CBF_DATA_OUTPUT "${data_output_SOURCE_DIR}")
 endif()
 
 
@@ -1140,19 +1142,19 @@ file(GENERATE
 
 # core tests
 
-add_test(makecbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/makecbf "${CBF_DATA_INPUT}/example.mar2300" ${CBF__DATA}/makecbf.cbf)
+add_test(makecbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/makecbf "${data_input}/example.mar2300" ${CBF__DATA}/makecbf.cbf)
 
 # $(BIN)/img2cif -c flatpacked -m headers -d digest -e base64 example.mar2300 img2cif_packed.cif
-add_test(img2cif_packed.cif ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/img2cif -c flatpacked -m headers -d digest -e base64 "${CBF_DATA_INPUT}/example.mar2300" ${CBF__DATA}/img2cif_packed.cif)
+add_test(img2cif_packed.cif ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/img2cif -c flatpacked -m headers -d digest -e base64 "${data_input}/example.mar2300" ${CBF__DATA}/img2cif_packed.cif)
 
 # $(BIN)/img2cif -c canonical -m headers -d digest -e base64 example.mar2300 img2cif_canonical.cif
-add_test(img2cif_canonical.cif ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/img2cif -c canonical -m headers -d digest -e base64 "${CBF_DATA_INPUT}/example.mar2300" ${CBF__DATA}/img2cif_canonical.cif)
+add_test(img2cif_canonical.cif ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/img2cif -c canonical -m headers -d digest -e base64 "${data_input}/example.mar2300" ${CBF__DATA}/img2cif_canonical.cif)
 
 # $(BIN)/img2cif -c flatpacked -m headers -d digest -e none example.mar2300 img2cif_packed.cbf
-add_test(img2cif_packed.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/img2cif -c flatpacked -m headers -d digest -e none "${CBF_DATA_INPUT}/example.mar2300" ${CBF__DATA}/img2cif_packed.cbf)
+add_test(img2cif_packed.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/img2cif -c flatpacked -m headers -d digest -e none "${data_input}/example.mar2300" ${CBF__DATA}/img2cif_packed.cbf)
 
 # $(BIN)/img2cif -c canonical -m headers -d digest -e none example.mar2300 img2cif_canonical.cbf
-add_test(img2cif_canonical.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/img2cif -c canonical -m headers -d digest -e none "${CBF_DATA_INPUT}/example.mar2300" ${CBF__DATA}/img2cif_canonical.cbf)
+add_test(img2cif_canonical.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/img2cif -c canonical -m headers -d digest -e none "${data_input}/example.mar2300" ${CBF__DATA}/img2cif_canonical.cbf)
 
 # $(BIN)/cif2cbf -e none -c flatpacked img2cif_canonical.cif cif2cbf_packed.cbf
 add_test(cif2cbf_packed.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/cif2cbf -e none -c flatpacked ${CBF__DATA}/img2cif_canonical.cif ${CBF__DATA}/cif2cbf_packed.cbf)
@@ -1191,10 +1193,10 @@ set_property(TEST cmp-makecbf.cbf-cif2cbf_encp.cbf APPEND PROPERTY DEPENDS makec
 set_property(TEST cmp-makecbf.cbf-cif2cbf_encp.cbf APPEND PROPERTY DEPENDS cif2cbf_encp.cbf)
 
 # $(BIN)/cif2cbf -i 9ins.cif -o 9ins.cbf
-add_test(9ins.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/cif2cbf -i "${CBF_DATA_INPUT}/9ins.cif" -o ${CBF__DATA}/9ins.cbf)
+add_test(9ins.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/cif2cbf -i "${data_input}/9ins.cif" -o ${CBF__DATA}/9ins.cbf)
 
 # -cmp 9ins.cif 9ins.cbf
-add_test(cmp-9ins.cif-9ins.cbf ${CMAKE_COMMAND} -E compare_files "${CBF_DATA_INPUT}/9ins.cif" ${CBF__DATA}/9ins.cbf)
+add_test(cmp-9ins.cif-9ins.cbf ${CMAKE_COMMAND} -E compare_files "${data_input}/9ins.cif" ${CBF__DATA}/9ins.cbf)
 set_property(TEST cmp-9ins.cif-9ins.cbf APPEND PROPERTY DEPENDS 9ins.cbf)
 
 # $(BIN)/convert_image -F example.mar2300 converted_flat.cbf
@@ -1202,23 +1204,23 @@ add_test(
 	converted_flat.cbf
 	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/convert_image
 	-F -p ${CBFlib_SOURCE_DIR}/templates/template_mar345_2300x2300.cbf
-	"${CBF_DATA_INPUT}/example.mar2300"
+	"${data_input}/example.mar2300"
 	${CBF__DATA}/converted_flat.cbf
 )
 
 # -cmp converted_flat_orig.cbf converted_flat.cbf
-add_test(cmp-converted_flat_orig.cbf-converted_flat.cbf ${CMAKE_COMMAND} -E compare_files "${CBF_DATA_OUTPUT}/converted_flat_orig.cbf" ${CBF__DATA}/converted_flat.cbf)
+add_test(cmp-converted_flat_orig.cbf-converted_flat.cbf ${CMAKE_COMMAND} -E compare_files "${data_output}/converted_flat_orig.cbf" ${CBF__DATA}/converted_flat.cbf)
 set_property(TEST cmp-converted_flat_orig.cbf-converted_flat.cbf APPEND PROPERTY DEPENDS converted_flat.cbf)
 
 # $(BIN)/convert_image example.mar2300 converted.cbf
-add_test(converted.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/convert_image -p ${CBFlib_SOURCE_DIR}/templates/template_mar345_2300x2300.cbf "${CBF_DATA_INPUT}/example.mar2300" ${CBF__DATA}/converted.cbf)
+add_test(converted.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/convert_image -p ${CBFlib_SOURCE_DIR}/templates/template_mar345_2300x2300.cbf "${data_input}/example.mar2300" ${CBF__DATA}/converted.cbf)
 
 # -cmp converted_orig.cbf converted.cbf
-add_test(cmp-converted_orig.cbf-converted.cbf ${CMAKE_COMMAND} -E compare_files "${CBF_DATA_OUTPUT}/converted_orig.cbf" ${CBF__DATA}/converted.cbf)
+add_test(cmp-converted_orig.cbf-converted.cbf ${CMAKE_COMMAND} -E compare_files "${data_output}/converted_orig.cbf" ${CBF__DATA}/converted.cbf)
 set_property(TEST cmp-converted_orig.cbf-converted.cbf APPEND PROPERTY DEPENDS converted.cbf)
 
 # copy a file into another directory so that test input data is not modified
-add_test(mb_LP_1_001.img ${CMAKE_COMMAND} -E copy "${CBF_DATA_INPUT}/mb_LP_1_001.img" ${CBF__DATA}/mb_LP_1_001.img)
+add_test(mb_LP_1_001.img ${CMAKE_COMMAND} -E copy "${data_input}/mb_LP_1_001.img" ${CBF__DATA}/mb_LP_1_001.img)
 
 # $(BIN)/convert_image -F -d adscquantum315 mb_LP_1_001.img adscconverted_flat.cbf
 add_test(
@@ -1232,7 +1234,7 @@ add_test(
 set_property(TEST adscconverted_flat.cbf APPEND PROPERTY DEPENDS mb_LP_1_001.img)
 
 # -cmp adscconverted_flat_orig.cbf adscconverted_flat.cbf
-add_test(cmp-adscconverted_flat_orig.cbf-adscconverted_flat.cbf ${CMAKE_COMMAND} -E compare_files "${CBF_DATA_OUTPUT}/adscconverted_flat_orig.cbf" ${CBF__DATA}/adscconverted_flat.cbf)
+add_test(cmp-adscconverted_flat_orig.cbf-adscconverted_flat.cbf ${CMAKE_COMMAND} -E compare_files "${data_output}/adscconverted_flat_orig.cbf" ${CBF__DATA}/adscconverted_flat.cbf)
 set_property(TEST cmp-adscconverted_flat_orig.cbf-adscconverted_flat.cbf APPEND PROPERTY DEPENDS adscconverted_flat.cbf)
 
 # $(BIN)/convert_image -d adscquantum315 mb_LP_1_001.img adscconverted.cbf
@@ -1247,7 +1249,7 @@ add_test(
 set_property(TEST adscconverted.cbf APPEND PROPERTY DEPENDS mb_LP_1_001.img)
 
 # -cmp adscconverted_orig.cbf adscconverted.cbf
-add_test(cmp-adscconverted_orig.cbf-adscconverted.cbf ${CMAKE_COMMAND} -E compare_files "${CBF_DATA_OUTPUT}/adscconverted_orig.cbf" ${CBF__DATA}/adscconverted.cbf)
+add_test(cmp-adscconverted_orig.cbf-adscconverted.cbf ${CMAKE_COMMAND} -E compare_files "${data_output}/adscconverted_orig.cbf" ${CBF__DATA}/adscconverted.cbf)
 set_property(TEST cmp-adscconverted_orig.cbf-adscconverted.cbf APPEND PROPERTY DEPENDS adscconverted.cbf)
 
 # $(BIN)/adscimg2cbf --no_pad --cbf_packed,flat mb_LP_1_001.img
@@ -1255,7 +1257,7 @@ add_test(mb_LP_1_001.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/adscimg2cbf --no_pad 
 set_property(TEST mb_LP_1_001.cbf APPEND PROPERTY DEPENDS mb_LP_1_001.img)
 
 # -cmp mb_LP_1_001_orig.cbf mb_LP_1_001.cbf
-add_test(cmp-mb_LP_1_001_orig.cbf-mb_LP_1_001.cbf ${CMAKE_COMMAND} -E compare_files "${CBF_DATA_OUTPUT}/mb_LP_1_001_orig.cbf" ${CBF__DATA}/mb_LP_1_001.cbf)
+add_test(cmp-mb_LP_1_001_orig.cbf-mb_LP_1_001.cbf ${CMAKE_COMMAND} -E compare_files "${data_output}/mb_LP_1_001_orig.cbf" ${CBF__DATA}/mb_LP_1_001.cbf)
 set_property(TEST cmp-mb_LP_1_001_orig.cbf-mb_LP_1_001.cbf APPEND PROPERTY DEPENDS mb_LP_1_001.cbf)
 
 # cp mb_LP_1_001.cbf nmb_LP_1_001.cbf
@@ -1278,11 +1280,11 @@ add_test(NAME convert_minicbf-v1
   COMMAND convert_minicbf
     -p "${CBFlib_SOURCE_DIR}/templates/template_pilatus6m_2463x2527.cbf"
     -d pilatus6m -v 1
-    "${CBF_DATA_INPUT}/insulin_pilatus6m.cbf"
+    "${data_input}/insulin_pilatus6m.cbf"
     "${CBF__DATA}/insulin_pilatus6mconverted.cbf")
 set_tests_properties(convert_minicbf-v1 PROPERTIES
   FIXTURES_SETUP convert_minicbf-v1
-  REQUIRED_FILES "${CBFlib_SOURCE_DIR}/templates/template_pilatus6m_2463x2527.cbf;${CBF_DATA_INPUT}/insulin_pilatus6m.cbf")
+  REQUIRED_FILES "${CBFlib_SOURCE_DIR}/templates/template_pilatus6m_2463x2527.cbf;${data_input}/insulin_pilatus6m.cbf")
 
 add_test(NAME convert_minicbf-v1-cleanup
   COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/insulin_pilatus6mconverted.cbf")
@@ -1291,11 +1293,11 @@ set_tests_properties(convert_minicbf-v1-cleanup PROPERTIES
 
 add_test(NAME convert_minicbf-v1-cmp
   COMMAND ${CMAKE_COMMAND} -E compare_files
-    "${CBF_DATA_OUTPUT}/insulin_pilatus6mconverted_orig.cbf"
+    "${data_output}/insulin_pilatus6mconverted_orig.cbf"
     "${CBF__DATA}/insulin_pilatus6mconverted.cbf")
 set_tests_properties(convert_minicbf-v1-cmp PROPERTIES
   FIXTURES_REQUIRED convert_minicbf-v1
-  REQUIRED_FILES "${CBF_DATA_OUTPUT}/insulin_pilatus6mconverted_orig.cbf")
+  REQUIRED_FILES "${data_output}/insulin_pilatus6mconverted_orig.cbf")
 
 
 #
@@ -1304,11 +1306,11 @@ add_test(NAME convert_minicbf-v2
   COMMAND convert_minicbf
     -p "${CBFlib_SOURCE_DIR}/templates/template_pilatus6m_2463x2527.cbf"
     -d pilatus6m
-    "${CBF_DATA_INPUT}/insulin_pilatus6m.cbf"
+    "${data_input}/insulin_pilatus6m.cbf"
     "${CBF__DATA}/insulin_pilatus6mconverted_v2.cbf")
 set_tests_properties(convert_minicbf-v2 PROPERTIES
   FIXTURES_SETUP convert_minicbf-v2
-  REQUIRED_FILES "${CBFlib_SOURCE_DIR}/templates/template_pilatus6m_2463x2527.cbf;${CBF_DATA_INPUT}/insulin_pilatus6m.cbf")
+  REQUIRED_FILES "${CBFlib_SOURCE_DIR}/templates/template_pilatus6m_2463x2527.cbf;${data_input}/insulin_pilatus6m.cbf")
 
 add_test(NAME convert_minicbf-v2-cleanup
   COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/insulin_pilatus6mconverted_v2.cbf")
@@ -1317,11 +1319,11 @@ set_tests_properties(convert_minicbf-v2-cleanup PROPERTIES
 
 add_test(NAME convert_minicbf-v2-cmp
   COMMAND ${CMAKE_COMMAND} -E compare_files
-    "${CBF_DATA_OUTPUT}/insulin_pilatus6mconverted_v2_orig.cbf"
+    "${data_output}/insulin_pilatus6mconverted_v2_orig.cbf"
     "${CBF__DATA}/insulin_pilatus6mconverted_v2.cbf")
 set_tests_properties(convert_minicbf-v2-cmp PROPERTIES
   FIXTURES_REQUIRED convert_minicbf-v2
-  REQUIRED_FILES "${CBF_DATA_OUTPUT}/insulin_pilatus6mconverted_v2_orig.cbf")
+  REQUIRED_FILES "${data_output}/insulin_pilatus6mconverted_v2_orig.cbf")
 
 
 #
@@ -1354,23 +1356,23 @@ set_tests_properties(cif2cbf-opaque-encp-cleanup PROPERTIES
 
 add_test(NAME cif2cbf-opaque-encp-cmp
   COMMAND ${CMAKE_COMMAND} -E compare_files
-    "${CBF_DATA_OUTPUT}/insulin_pilatus6mconverted_orig.cbf.h5.cbf"
+    "${data_output}/insulin_pilatus6mconverted_orig.cbf.h5.cbf"
     "${CBF__DATA}/insulin_pilatus6mconverted.cbf.h5.cbf")
 set_tests_properties(cif2cbf-opaque-encp-cmp PROPERTIES
   FIXTURES_REQUIRED cif2cbf-opaque-encp
-  REQUIRED_FILES "${CBF_DATA_OUTPUT}/insulin_pilatus6mconverted_orig.cbf.h5.cbf")
+  REQUIRED_FILES "${data_output}/insulin_pilatus6mconverted_orig.cbf.h5.cbf")
 
 
 #
 # Check the default as HDF5 dumps
 add_test(NAME insulin-orig-dump
   COMMAND ${CMAKE_COMMAND}
-    "-Dinput-file=${CBF_DATA_OUTPUT}/insulin_pilatus6mconverted_orig.cbf.h5"
+    "-Dinput-file=${data_output}/insulin_pilatus6mconverted_orig.cbf.h5"
     "-Doutput-file=${CBF__DATA}/insulin_pilatus6mconverted_orig.cbf.h5.dump"
     -P "${PROJECT_BINARY_DIR}/h5dump-$<CONFIG>.cmake")
 set_tests_properties(insulin-orig-dump PROPERTIES
   FIXTURES_SETUP insulin-orig-dump
-  REQUIRED_FILES "${CBF_DATA_OUTPUT}/insulin_pilatus6mconverted_orig.cbf.h5")
+  REQUIRED_FILES "${data_output}/insulin_pilatus6mconverted_orig.cbf.h5")
 
 add_test(NAME insulin-orig-dump-cleanup
   COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/insulin_pilatus6mconverted_orig.cbf.h5.dump")
@@ -1575,13 +1577,13 @@ set_tests_properties(cif2cbf-encz-cmp PROPERTIES
 # conversion tests for tiff2cbf
 
 # $(BIN)/tiff2cbf XRD1621.tif XRD1621.cbf
-add_test(XRD1621.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tiff2cbf -cn "${CBF_DATA_INPUT}/XRD1621.tif" ${CBF__DATA}/XRD1621.cbf)
+add_test(XRD1621.cbf ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tiff2cbf -cn "${data_input}/XRD1621.tif" ${CBF__DATA}/XRD1621.cbf)
 
 # $(DIFF) XRD1621_orig.cbf XRD1621.cbf
 add_test(
 	cmp-XRD1621_orig.cbf-XRD1621.cbf
 	${CMAKE_COMMAND} -E compare_files
-	"${CBF_DATA_OUTPUT}/XRD1621_orig.cbf"
+	"${data_output}/XRD1621_orig.cbf"
 	${CBF__DATA}/XRD1621.cbf
 )
 set_property(TEST cmp-XRD1621_orig.cbf-XRD1621.cbf APPEND PROPERTY DEPENDS XRD1621.cbf)
@@ -1608,19 +1610,19 @@ set_tests_properties(testhdf5-cleanup PROPERTIES
 add_test(testtree ${VALGRIND_COMMAND} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/testtree)
 add_test(testulp ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/testulp)
 
-add_test(testflatin.cbf ${CMAKE_COMMAND} -E copy "${CBF_DATA_INPUT}/testflatin.cbf" ${CBF__DATA}/testflatin.cbf)
+add_test(testflatin.cbf ${CMAKE_COMMAND} -E copy "${data_input}/testflatin.cbf" ${CBF__DATA}/testflatin.cbf)
 add_test(NAME testflat COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/testflat WORKING_DIRECTORY ${CBF__DATA})
 set_property(TEST testflat APPEND PROPERTY DEPENDS testflatin.cbf)
 add_test(cmp-testflatin.cbf-testflatout.cbf ${CMAKE_COMMAND} -E compare_files ${CBF__DATA}/testflatin.cbf ${CBF__DATA}/testflatout.cbf)
 set_property(TEST cmp-testflatin.cbf-testflatout.cbf APPEND PROPERTY DEPENDS testflat)
 
-add_test(testflatpackedin.cbf ${CMAKE_COMMAND} -E copy "${CBF_DATA_INPUT}/testflatpackedin.cbf" ${CBF__DATA}/testflatpackedin.cbf)
+add_test(testflatpackedin.cbf ${CMAKE_COMMAND} -E copy "${data_input}/testflatpackedin.cbf" ${CBF__DATA}/testflatpackedin.cbf)
 add_test(NAME testflatpacked COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/testflatpacked WORKING_DIRECTORY ${CBF__DATA})
 set_property(TEST testflatpacked APPEND PROPERTY DEPENDS testflatpackedin.cbf)
 add_test(cmp-testflatpackedin.cbf-testflatpackedout.cbf ${CMAKE_COMMAND} -E compare_files ${CBF__DATA}/testflatpackedin.cbf ${CBF__DATA}/testflatpackedout.cbf)
 set_property(TEST cmp-testflatpackedin.cbf-testflatpackedout.cbf APPEND PROPERTY DEPENDS testflatpacked)
 
-add_test(testrealin.cbf ${CMAKE_COMMAND} -E copy "${CBF_DATA_INPUT}/testrealin.cbf" ${CBF__DATA}/testrealin.cbf)
+add_test(testrealin.cbf ${CMAKE_COMMAND} -E copy "${data_input}/testrealin.cbf" ${CBF__DATA}/testrealin.cbf)
 add_test(NAME testreals COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/testreals WORKING_DIRECTORY ${CBF__DATA})
 set_property(TEST testreals APPEND PROPERTY DEPENDS testrealin.cbf)
 add_test(cmp-testrealin.cbf-testrealout.cbf ${CMAKE_COMMAND} -E compare_files ${CBF__DATA}/testrealin.cbf ${CBF__DATA}/testrealout.cbf)
@@ -1637,7 +1639,7 @@ configure_file(${CBF__EXAMPLES}/testcell.cmake ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 # $(BIN)/testcell < testcell.dat > testcell.prt
 add_test(testcell ${CMAKE_COMMAND} -P ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/testcell.cmake)
 # -cmp testcell_orig.prt testcell.prt
-add_test(cmp-testcell_orig.prt-testcell.prt ${CMAKE_COMMAND} -E compare_files "${CBF_DATA_OUTPUT}/testcell_orig.prt" ${CBF__DATA}/testcell.prt)
+add_test(cmp-testcell_orig.prt-testcell.prt ${CMAKE_COMMAND} -E compare_files "${data_output}/testcell_orig.prt" ${CBF__DATA}/testcell.prt)
 set_property(TEST cmp-testcell_orig.prt-testcell.prt APPEND PROPERTY DEPENDS testcell)
 
 
@@ -1648,11 +1650,11 @@ set_property(TEST cmp-testcell_orig.prt-testcell.prt APPEND PROPERTY DEPENDS tes
 # generated and reference HDF5 files and use cbf_tail to strip off
 # some file names.
 set(_minicbf2nexus_files
-  "${CBF_DATA_INPUT}/X4_lots_M1S4_1_0001.cbf"
-  "${CBF_DATA_INPUT}/X4_lots_M1S4_1_0002.cbf"
-  "${CBF_DATA_INPUT}/X4_lots_M1S4_1_0003.cbf"
-  "${CBF_DATA_INPUT}/X4_lots_M1S4_1_0004.cbf"
-  "${CBF_DATA_INPUT}/X4_lots_M1S4_1_0005.cbf")
+  "${data_input}/X4_lots_M1S4_1_0001.cbf"
+  "${data_input}/X4_lots_M1S4_1_0002.cbf"
+  "${data_input}/X4_lots_M1S4_1_0003.cbf"
+  "${data_input}/X4_lots_M1S4_1_0004.cbf"
+  "${data_input}/X4_lots_M1S4_1_0005.cbf")
 add_test(NAME minicbf2nexus
   COMMAND minicbf2nexus -c zlib
     -C "${CBFlib_SOURCE_DIR}/minicbf_test/config" ${HDF5REGISTER}
@@ -1669,12 +1671,12 @@ set_tests_properties(minicbf2nexus-cleanup PROPERTIES
 
 add_test(NAME minicbf2nexus-orig
   COMMAND ${CMAKE_COMMAND}
-    "-Dinput-file=${CBF_DATA_OUTPUT}/minicbf_orig.h5"
+    "-Dinput-file=${data_output}/minicbf_orig.h5"
     "-Doutput-file=${CBF__DATA}/minicbf_orig.dump"
     -P "${PROJECT_BINARY_DIR}/h5dump-$<CONFIG>.cmake")
 set_tests_properties(minicbf2nexus-orig PROPERTIES
   FIXTURES_SETUP minicbf2nexus-orig
-  REQUIRED_FILES "${CBF_DATA_OUTPUT}/minicbf_orig.h5")
+  REQUIRED_FILES "${data_output}/minicbf_orig.h5")
 
 add_test(NAME minicbf2nexus-orig-cleanup
   COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/minicbf_orig.dump")
@@ -1712,10 +1714,10 @@ set_tests_properties(minicbf2nexus-cmp PROPERTIES
 add_test(NAME cbf2nexus-1
   COMMAND cbf2nexus -c zlib --list
     -o "${CBF__DATA}/i19-1.h5"
-    "${CBF_DATA_INPUT}/1191_00005.cbf")
+    "${data_input}/1191_00005.cbf")
 set_tests_properties(cbf2nexus-1 PROPERTIES
   FIXTURES_SETUP cbf2nexus-1
-  REQUIRED_FILES "${CBF_DATA_INPUT}/1191_00005.cbf")
+  REQUIRED_FILES "${data_input}/1191_00005.cbf")
 
 add_test(NAME cbf2nexus-1-cleanup
   COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/i19-1.h5")
