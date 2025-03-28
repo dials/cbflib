@@ -435,7 +435,6 @@ set(BIN       "${CBFlib_BINARY_DIR}/bin" CACHE STRING "")
 set(PYCBF     "${CBFlib_SOURCE_DIR}/pycbf" CACHE STRING "")
 set(EXAMPLES  "${CBFlib_SOURCE_DIR}/examples" CACHE STRING "" )
 set(DECTRIS_EXAMPLES "${EXAMPLES}/dectris_cbf_template_test" CACHE STRING "")
-set(MINICBF_TEST "${CBFlib_SOURCE_DIR}/minicbf_test" CACHE STRING "")
 set(GRAPHICS  "${CBFlib_SOURCE_DIR}/html_graphics" CACHE STRING "")
 
 if(CBF_DONT_USE_LONG_LONG)
@@ -1550,40 +1549,68 @@ add_test(testcell ${CMAKE_COMMAND} -P ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/testcell
 add_test(cmp-testcell_orig.prt-testcell.prt ${CMAKE_COMMAND} -E compare_files "${CBF_DATA_OUTPUT}/testcell_orig.prt" ${CBF__DATA}/testcell.prt)
 set_property(TEST cmp-testcell_orig.prt-testcell.prt APPEND PROPERTY DEPENDS testcell)
 
-# basic minicbf2nexus tests
-  
-# generate a hfd5 file from minicbf data
-add_test(
-	minicbf.h5
-	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/minicbf2nexus
-	-c zlib
-	-C ${CBFlib_SOURCE_DIR}/minicbf_test/config
-	${HDF5REGISTER}
-	-o ${CBF__DATA}/minicbf.h5
-	"${CBF_DATA_INPUT}/X4_lots_M1S4_1_0001.cbf"
-	"${CBF_DATA_INPUT}/X4_lots_M1S4_1_0002.cbf"
-	"${CBF_DATA_INPUT}/X4_lots_M1S4_1_0003.cbf"
-	"${CBF_DATA_INPUT}/X4_lots_M1S4_1_0004.cbf"
-	"${CBF_DATA_INPUT}/X4_lots_M1S4_1_0005.cbf"
-)
-  
-# dump the content of generated and reference hdf5 files & use 'cbf_tail' to strip off some file names
-add_test(NAME minicbf_original.dump
+
+#
+# minicbf2nexus
+#
+# Avoid file(GLOB ...) in the source tree.  Dump the content of
+# generated and reference HDF5 files and use cbf_tail to strip off
+# some file names.
+set(_minicbf2nexus_files
+  "${CBF_DATA_INPUT}/X4_lots_M1S4_1_0001.cbf"
+  "${CBF_DATA_INPUT}/X4_lots_M1S4_1_0002.cbf"
+  "${CBF_DATA_INPUT}/X4_lots_M1S4_1_0003.cbf"
+  "${CBF_DATA_INPUT}/X4_lots_M1S4_1_0004.cbf"
+  "${CBF_DATA_INPUT}/X4_lots_M1S4_1_0005.cbf")
+add_test(NAME minicbf2nexus
+  COMMAND minicbf2nexus -c zlib
+    -C "${CBFlib_SOURCE_DIR}/minicbf_test/config" ${HDF5REGISTER}
+    -o "${CBF__DATA}/minicbf.h5"
+    ${_minicbf2nexus_files})
+set_tests_properties(minicbf2nexus PROPERTIES
+  FIXTURES_SETUP minicbf2nexus
+  REQUIRED_FILES ${_minicbf2nexus_files})
+
+add_test(NAME minicbf2nexus-cleanup
+  COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/minicbf.h5")
+set_tests_properties(minicbf2nexus-cleanup PROPERTIES
+  FIXTURES_CLEANUP minicbf2nexus)
+
+add_test(NAME minicbf2nexus-orig
   COMMAND ${CMAKE_COMMAND}
-    "-Dinput-file=${CBF_DATA_OUTPUT}/minicbf_original.h5"
-    "-Doutput-file=${CBF__DATA}/minicbf_original.dump"
+    "-Dinput-file=${CBF_DATA_OUTPUT}/minicbf_orig.h5"
+    "-Doutput-file=${CBF__DATA}/minicbf_orig.dump"
     -P "${PROJECT_BINARY_DIR}/h5dump-$<CONFIG>.cmake")
-add_test(NAME minicbf.dump
+set_tests_properties(minicbf2nexus-orig PROPERTIES
+  FIXTURES_SETUP minicbf2nexus-orig
+  REQUIRED_FILES "${CBF_DATA_OUTPUT}/minicbf_orig.h5")
+
+add_test(NAME minicbf2nexus-orig-cleanup
+  COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/minicbf_orig.dump")
+set_tests_properties(minicbf2nexus-orig-cleanup PROPERTIES
+  FIXTURES_CLEANUP minicbf2nexus-orig)
+
+add_test(NAME minicbf2nexus-dump
   COMMAND ${CMAKE_COMMAND}
     "-Dinput-file=${CBF__DATA}/minicbf.h5"
     "-Doutput-file=${CBF__DATA}/minicbf.dump"
     -P "${PROJECT_BINARY_DIR}/h5dump-$<CONFIG>.cmake")
-set_property(TEST minicbf.dump APPEND PROPERTY DEPENDS minicbf.h5)
+set_tests_properties(minicbf2nexus-dump PROPERTIES
+  FIXTURES_REQUIRED minicbf2nexus
+  FIXTURES_SETUP minicbf2nexus-dump)
 
-# compare dumped hdf5 file content
-add_test(cmp-minicbf_original.dump-minicbf.dump ${CMAKE_COMMAND} -E compare_files ${CBF__DATA}/minicbf_original.dump ${CBF__DATA}/minicbf.dump)
-set_property(TEST cmp-minicbf_original.dump-minicbf.dump APPEND PROPERTY DEPENDS minicbf_original.dump)
-set_property(TEST cmp-minicbf_original.dump-minicbf.dump APPEND PROPERTY DEPENDS minicbf.dump)
+add_test(NAME minicbf2nexus-dump-cleanup
+  COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/minicbf.dump")
+set_tests_properties(minicbf2nexus-dump-cleanup PROPERTIES
+  FIXTURES_CLEANUP minicbf2nexus-dump)
+
+add_test(NAME minicbf2nexus-cmp
+  COMMAND ${CMAKE_COMMAND} -E compare_files
+    "${CBF__DATA}/minicbf_orig.dump"
+    "${CBF__DATA}/minicbf.dump")
+set_tests_properties(minicbf2nexus-cmp PROPERTIES
+  FIXTURES_REQUIRED "minicbf2nexus-orig;minicbf2nexus-dump")
+
 
 #
 # cbf2nexus/nexus2cbf
