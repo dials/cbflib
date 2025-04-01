@@ -2060,9 +2060,6 @@ extern "C" {
                                              free(array); free(narray); return CBF_OVERFLOW;
                                              }*/
 
-                                            if (valtemp > maxval) valtemp=maxval;
-                                            if (valtemp < minval) valtemp=minval;
-
                                             ((signed int *)narray)[icount] = (signed int)valtemp;
                                         }
 
