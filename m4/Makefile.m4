@@ -3120,7 +3120,7 @@ endif
 	makecbf.cbf cif2cbf_ehcn.cif
 	$(LDPREFIX)  $(TIME) $(BIN)/cif2cbf -e none -c flatpacked \
 	cif2cbf_ehcn.cif cif2cbf_encp.cbf; rm cif2cbf_ehcn.cif
-	-grep -av "X-Binary-Size-Third-Dimension: 1" cif2cbf_encp.cbf | diff -a - makecbf.cbf
+	-cmp cif2cbf_encp.cbf makecbf.cbf
 	$(LDPREFIX)  $(TIME) $(BIN)/cif2cbf -i 9ins.cif -o 9ins.cbf
 	-cat 9ins.cif |sed "1,1s/10/11/" | sed "2,2s/0.9.5/0.9.7/" | diff -a - 9ins.cbf
 	#-cmp 9ins.cif 9ins.cbf
