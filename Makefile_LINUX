@@ -576,7 +576,7 @@ ALLBUTONE = tail -n +2
 #
 # Diff 2 files, ignore version numbers
 #
-DIFF_IGNORE_VERSIONS = diff -a -I CBF: VERSION' -I 'written by CBFlib'
+DIFF_IGNORE_VERSIONS = diff -a -I 'CBF: VERSION' -I 'written by CBFlib'
 
 #
 # Extension for signatures of files
