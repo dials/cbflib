@@ -716,7 +716,7 @@ endif
 #
 # Set the compiler and flags
 #
-'
+
 #########################################################
 #
 #  Appropriate compiler definitions for MSYS2
