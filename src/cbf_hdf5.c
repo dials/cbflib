@@ -26849,6 +26849,7 @@ static int process_DiffrnScanAxisCache(cbf_node * const category,
                                             cbf_debug_print2("error: %s\n",cbf_strerror(CBF_ALLOC));
                                             error |= CBF_ALLOC;
                                         } else {
+                                            axes = newAxes;
                                             axes[nAxes-1] = axis;
                                         }
                                     }
@@ -26978,7 +26979,7 @@ static int process_DiffrnScanAxisCache(cbf_node * const category,
                                 /* write the offset */
                                 double offset[3] = {0.,0.,0.};
                                 const hsize_t dim[] = {3};
-                                double buf[] = {0};
+                                double buf[3] = {0.,0.,0.};
                                 if (3==axis_settings.nOffset) {
                                     CBF_CALL(cbf_apply_matrix(key->matrix,axis_settings.offset,offset));
                                 }
