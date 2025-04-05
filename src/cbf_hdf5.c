@@ -283,14 +283,6 @@ extern "C" {
 #include <assert.h>
 #include <errno.h>
 
-#if !defined(CBF_NO_REGEX)
-#ifdef CBF_REGEXLIB_REGEX
-#include <regex.h>
-#else
-#include <pcreposix.h>
-#endif
-#endif
-
     static int cbf_find_array_data_h5type
     (hid_t * const type,
      unsigned int bits,
@@ -21683,7 +21675,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
         {
             CBF_START_ARRAY(char, lcname,len+1);
 
-            for (ii=0; ii<len; ii++) lcname[ii] = tolower(name[ii]);
+            for (ii=0; ii<len+1; ii++) lcname[ii] = tolower(name[ii]);
 
             retval = cbf_match(lcname,(char *)pattern);
 

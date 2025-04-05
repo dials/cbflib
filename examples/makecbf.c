@@ -563,7 +563,7 @@ int main (int argc, char *argv [])
   cbf_failnez (cbf_set_integerarray_wdims_fs (cbf, CBF_PACKED|CBF_FLAT_IMAGE, 1,
                                  img_pixelptr (img, 0, 0), sizeof (int), 1,
                                  img_rows (img) * img_columns (img),
-                                 "little_endian",img_rows (img),img_columns (img),0,0 ))
+                                 "little_endian",img_rows (img),img_columns (img),1,0 ))
   
 
     /* Write the new file */

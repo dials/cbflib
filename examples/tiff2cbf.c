@@ -183,6 +183,9 @@
 #include <ctype.h>
 #include <time.h>
 
+size_t
+cbf_TIFFSNPrintDirectory(TIFF* tif, char * str, const size_t xstrlen, long flags);
+
 int local_exit(int);
 
 int local_exit(int status) {
@@ -212,9 +215,9 @@ int main (int argc, char *argv [])
     TIFF *tif;
     cbf_handle cbf;
     clock_t a,b;
-    uint32 width;
-    uint32 height;
-    uint32 npixels;
+    uint32_t width;
+    uint32_t height;
+    uint32_t npixels;
     unsigned char * raster;
     char * tiffile;
     char * cbffile;
@@ -327,7 +330,7 @@ int main (int argc, char *argv [])
         
     a = clock ();
     
-    if (!(tif=TIFFOpen(tiffile, "r"))) {
+    if (!(tif=TIFFOpen(tiffile, "rC"))) {
         
         fprintf(stderr,"tiff2cbf: unable to open tiff image %s, abort\n", tiffile);
         local_exit(-1);
@@ -366,7 +369,7 @@ int main (int argc, char *argv [])
         tstrip_t nstrips, strip;
         tsize_t stripsize;
         int elsize, elsign, real, plex, treturn;
-        uint16 sampleformat, samplesperpixel, bitspersample, planarconfig;
+        uint16_t sampleformat, samplesperpixel, bitspersample, planarconfig;
         size_t dimslow, dimmid, dimfast;
         
         plex = 1;
@@ -393,12 +396,12 @@ int main (int argc, char *argv [])
         cbf_failnez (cbf_require_column       (cbf, "binary_id"))
         cbf_failnez (cbf_set_integervalue     (cbf, imageno))
         cbf_failnez (cbf_require_column       (cbf, "header_contents"))
-        headsize = 1+TIFFSNPrintDirectory(tif,buffer,0,TIFFPRINT_COLORMAP|TIFFPRINT_CURVES);
+        headsize = 1+cbf_TIFFSNPrintDirectory(tif,buffer,0,TIFFPRINT_COLORMAP|TIFFPRINT_CURVES);
         headstring = (char *) _TIFFmalloc(headsize);
         if (!headstring) {
             cbf_failnez(CBF_ALLOC);
         }
-        nheadsize = TIFFSNPrintDirectory(tif,headstring,headsize-1,TIFFPRINT_COLORMAP|TIFFPRINT_CURVES);
+        nheadsize = cbf_TIFFSNPrintDirectory(tif,headstring,headsize-1,TIFFPRINT_COLORMAP|TIFFPRINT_CURVES);
         if (nheadsize > headsize-1) {
             _TIFFfree(headstring);
             cbf_failnez(CBF_ALLOC);

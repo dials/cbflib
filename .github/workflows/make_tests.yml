@@ -1,0 +1,41 @@
+name: Make build and tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - synchronize
+      - opened
+  workflow_dispatch:
+
+
+jobs:
+  build_test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: create conda environments
+      run: |
+        conda create -y -n build -c conda-forge python=3.11 python-build
+        conda create -y -n test -c conda-forge python=3.11 numpy matplotlib
+    - name: install extra dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libjpeg-dev liblzma-dev
+    - name: build
+      run: |
+        source /usr/share/miniconda/etc/profile.d/conda.sh
+        conda activate build
+        make all
+    - name: test
+      run: |
+        source /usr/share/miniconda/etc/profile.d/conda.sh
+        conda activate test
+        make tests 2>&1 | tee test.out
+    - name : check test output
+      run: |
+        ! grep -a ignored test.out

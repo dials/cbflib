@@ -363,7 +363,7 @@ endif
 
 
 
-
+#
 # Definitions to get a version of HDF5
 #
 
@@ -581,6 +581,10 @@ SIGNATURE ?= ( cat > md5tmp; cmake -E md5sum md5tmp| sed "s/ .*//")
 #
 ALLBUTONE = tail -n +2
 
+#
+# Diff 2 files, ignore version numbers
+#
+DIFF_IGNORE_VERSIONS = diff -a -I "CBF: VERSION" -I "written by CBFlib"
 
 #
 # Extension for signatures of files
@@ -609,7 +613,7 @@ DIFF = diff -u -b -a
 ifneq ($(CBFLIB_DONT_USE_LOCAL_SWIG),yes)
 SWIG := $(BIN)/swig
 else
-SWIG := 
+SWIG := swig
 endif
 
 ifneq ($(CBFLIB_DONT_USE_LOCAL_SWIG_FORTRAN),yes)
@@ -1411,7 +1415,7 @@ baseinstall:  all $(CBF_PREFIX) $(CBF_PREFIX)/lib $(CBF_PREFIX)/bin \
 	-cp $(CBF_PREFIX)/bin/test_cbf_airy_disk $(CBF_PREFIX)/bin/test_cbf_airy_disk_old
 	cp $(BIN)/test_cbf_airy_disk $(CBF_PREFIX)/bin/test_cbf_airy_disk
 	-cp $(CBF_PREFIX)/bin/test_cbf_airy_disk $(CBF_PREFIX)/bin/test_cbf_airy_disk_old
-	cp $(BIN)/`:test_cbf_airy_disk $(CBF_PREFIX)/bin/test_cbf_airy_disk
+	cp $(BIN)/test_cbf_airy_disk $(CBF_PREFIX)/bin/test_cbf_airy_disk
 	-cp $(CBF_PREFIX)/bin/testhdf5 $(CBF_PREFIX)/bin/testhdf5_old
 	cp $(BIN)/testhdf5 $(CBF_PREFIX)/bin/testhdf5
 ifneq ($(CBF_USE_ULP),)
@@ -2347,7 +2351,7 @@ $(BIN)/tiff2cbf: $(LIB)/libcbf.a $(EXAMPLES)/tiff2cbf.c $(EXAMPLES)/tif_sprint.c
 	$(GOPTLIB)	$(GOPTINC) $(TIFF)
 	mkdir -p $(BIN)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(MISCFLAG) $(CBF_REGEXFLAG) $(INCLUDES) $(WARNINGS) \
-	-I$(TIFF)/libtiff $(EXAMPLES)/tiff2cbf.c $(GOPTLIB) -L$(LIB) \
+	-I$(TIFF)/libtiff $(EXAMPLES)/tiff2cbf.c $(EXAMPLES)/tif_sprint.c $(GOPTLIB) -L$(LIB) \
 	-lcbf -L$(TIFF_PREFIX)/lib -ltiff $(REGEX_LIBS_STATIC) $(HDF5LIBS_LOCAL) $(EXTRALIBS) $(HDF5LIBS_SYSTEM) -limg -o $@
 
 #
@@ -2752,12 +2756,9 @@ basic:	$(BIN)/makecbf $(BIN)/img2cif $(BIN)/cif2cbf $(TESTINPUT_BASIC)
 	img2cif_canonical.cif cif2cbf_packed.cbf
 	$(LDPREFIX)  $(BIN)/cif2cbf -e none -c canonical \
 	img2cif_packed.cif cif2cbf_canonical.cbf
-	-grep -av "X-Binary-Size-Third-Dimension: 1" cif2cbf_packed.cbf | diff -a - makecbf.cbf
-	#-cmp cif2cbf_packed.cbf    makecbf.cbf
-	-grep -av "X-Binary-Size-Third-Dimension: 1" cif2cbf_packed.cbf | diff -a - img2cif_packed.cbf
-	#-cmp cif2cbf_packed.cbf    img2cif_packed.cbf
-	-grep -av "X-Binary-Size-Third-Dimension: 1" cif2cbf_canonical.cbf | diff -a - img2cif_canonical.cbf
-	#-cmp cif2cbf_canonical.cbf img2cif_canonical.cbf
+	-cmp cif2cbf_packed.cbf    makecbf.cbf
+	-cmp cif2cbf_packed.cbf    img2cif_packed.cbf
+	-cmp cif2cbf_canonical.cbf img2cif_canonical.cbf
 
 
 #
@@ -2796,27 +2797,22 @@ endif
 	makecbf.cbf cif2cbf_ehcn.cif
 	$(LDPREFIX)  $(TIME) $(BIN)/cif2cbf -e none -c flatpacked \
 	cif2cbf_ehcn.cif cif2cbf_encp.cbf; rm cif2cbf_ehcn.cif
-	-grep -av "X-Binary-Size-Third-Dimension: 1" cif2cbf_encp.cbf | diff -a - makecbf.cbf
+	-cmp cif2cbf_encp.cbf makecbf.cbf
 	$(LDPREFIX)  $(TIME) $(BIN)/cif2cbf -i 9ins.cif -o 9ins.cbf
-	-cat 9ins.cif |sed "1,1s/10/11/" | sed "2,2s/0.9.5/0.9.8/" | diff -a - 9ins.cbf
-	#-cmp 9ins.cif 9ins.cbf
+	-$(DIFF_IGNORE_VERSIONS) 9ins.cif 9ins.cbf
 	$(LDPREFIX)  $(TIME) $(BIN)/convert_image -p $(TEMPLATES)/template_mar345_2300x2300.cbf -F example.mar2300 converted_flat.cbf
-	-cat converted_flat_orig.cbf | sed "2,2s/0.9.6/0.9.8/" | diff -a - converted_flat.cbf
+	-$(DIFF_IGNORE_VERSIONS) converted_flat_orig.cbf converted_flat.cbf
 	#-cmp converted_flat.cbf converted_flat_orig.cbf
 	$(LDPREFIX)  $(TIME) $(BIN)/convert_image -p $(TEMPLATES)/template_mar345_2300x2300.cbf example.mar2300 converted.cbf
-	-cat converted_orig.cbf | sed "2,2s/0.9.6/0.9.8/" | diff -a - converted.cbf
-	#-cmp converted.cbf converted_orig.cbf
+	-$(DIFF_IGNORE_VERSIONS) converted_orig.cbf converted.cbf
 	-$(LDPREFIX)  $(TIME) $(BIN)/testcell < testcell.dat > testcell.prt
 	-cmp testcell.prt testcell_orig.prt
 	$(LDPREFIX)  $(TIME) $(BIN)/convert_image -p $(TEMPLATES)/template_adscquantum315_3072x3072.cbf -F -d adscquantum315 mb_LP_1_001.img adscconverted_flat.cbf
-	-cat adscconverted_flat_orig.cbf | sed "2,2s/0.9.6/0.9.8/" | diff -a - adscconverted_flat.cbf
-	#-cmp adscconverted_flat.cbf adscconverted_flat_orig.cbf
+	-$(DIFF_IGNORE_VERSIONS) adscconverted_flat_orig.cbf adscconverted_flat.cbf
 	$(LDPREFIX)  $(TIME) $(BIN)/convert_image -p $(TEMPLATES)/template_adscquantum315_3072x3072.cbf -d adscquantum315 mb_LP_1_001.img adscconverted.cbf
-	-cat adscconverted_orig.cbf | sed "2,2s/0.9.6/0.9.8/" | diff -a - adscconverted.cbf
-	#-cmp adscconverted.cbf adscconverted_orig.cbf
+	-$(DIFF_IGNORE_VERSIONS) adscconverted_orig.cbf adscconverted.cbf
 	$(LDPREFIX)  $(TIME) $(BIN)/adscimg2cbf --no_pad  --cbf_packed,flat mb_LP_1_001.img
-	-cat mb_LP_1_001_orig.cbf | sed "2,2s/0.9.6/0.9.8/" | diff -a - mb_LP_1_001.cbf
-	#-cmp mb_LP_1_001.cbf mb_LP_1_001_orig.cbf
+	-$(DIFF_IGNORE_VERSIONS) mb_LP_1_001_orig.cbf mb_LP_1_001.cbf
 ifneq ($(CLEANTESTS),)
 	mv mb_LP_1_001.cbf nmb_LP_1_001.cbf
 else
@@ -2829,11 +2825,9 @@ ifneq ($(CLEANTESTS),)
 	rm nmb_LP_1_001.img
 endif
 	$(LDPREFIX)  $(TIME) $(BIN)/convert_minicbf -p $(TEMPLATES)/template_pilatus6m_2463x2527.cbf -d pilatus6m -v 1 insulin_pilatus6m.cbf insulin_pilatus6mconverted.cbf
-	-cat insulin_pilatus6mconverted_orig.cbf | sed "1,1s/1.7.6/1.7.11/" | sed "2,2s/0.9.3/0.9.8/" | diff -a - insulin_pilatus6mconverted.cbf
-	#-cmp insulin_pilatus6mconverted.cbf insulin_pilatus6mconverted_orig.cbf
+	-$(DIFF_IGNORE_VERSIONS) insulin_pilatus6mconverted_orig.cbf insulin_pilatus6mconverted.cbf
 	-$(LDPREFIX)  $(TIME) $(BIN)/convert_minicbf -p $(TEMPLATES)/template_pilatus6m_2463x2527.cbf -d pilatus6m insulin_pilatus6m.cbf insulin_pilatus6mconverted_v2.cbf
-	-cat insulin_pilatus6mconverted_v2_orig.cbf | sed "2,2s/0.9.6/0.9.8/" | diff -a - insulin_pilatus6mconverted_v2.cbf
-	#-cmp insulin_pilatus6mconverted_v2.cbf insulin_pilatus6mconverted_v2_orig.cbf
+	-$(DIFF_IGNORE_VERSIONS) insulin_pilatus6mconverted_v2_orig.cbf insulin_pilatus6mconverted_v2.cbf
 	(CBF_CONVERT_MINICBF_PATH=$(BIN); export CBF_CONVERT_MINICBF_PATH; \
 	     $(LDPREFIX) $(EXAMPLES)/batch_convert_minicbf.sh "." "minicbf_test" \
 	    "X4_lots_M1S4_1_*.cbf"  $(TEMPLATES)/template_X4_lots_M1S4.cbf)
@@ -2910,18 +2904,14 @@ endif
 	-cd $(MINICBF_TEST); $(DIFF) i19-1.dump i19-2.dump
 	-cd $(MINICBF_TEST); $(DIFF) i19-1.cbf i19-2.cbf
 	$(LDPREFIX)  $(TIME) $(BIN)/testreals
-	-cat testrealin.cbf | sed "2,2s/0.9.6/0.9.8/" | diff -a - testrealout.cbf
-	#-cmp testrealin.cbf testrealout.cbf
+	-$(DIFF_IGNORE_VERSIONS) testrealin.cbf testrealout.cbf
 	$(LDPREFIX)  $(TIME) $(BIN)/testflat
-	-cat testflatin.cbf | sed "2,2s/0.9.6/0.9.8/" | diff -a - testflatout.cbf
-	#-cmp testflatin.cbf testflatout.cbf
+	-$(DIFF_IGNORE_VERSIONS) testflatin.cbf testflatout.cbf
 	$(LDPREFIX)  $(TIME) $(BIN)/testflatpacked
-	-cat testflatpackedin.cbf | sed "2,2s/0.9.6/0.9.8/" | diff -a - testflatpackedout.cbf
-	#-cmp testflatpackedin.cbf testflatpackedout.cbf
+	-$(DIFF_IGNORE_VERSIONS) testflatpackedin.cbf testflatpackedout.cbf
 ifneq ($(F90C),)
 	$(LDPREFIX)  $(TIME) (echo testflatout.cbf | $(BIN)/test_xds_binary > test_xds_bin_testflatout.out)
-	-cat test_xds_bin_testflatout_orig.out | sed "2,2s/0.9.6/0.9.8/" | $(DIFF) -a - test_xds_bin_testflatout.out
-	#-$(DIFF) test_xds_bin_testflatout.out test_xds_bin_testflatout_orig.out
+	-$(DIFF_IGNORE_VERSIONS) test_xds_bin_testflatout_orig.out test_xds_bin_testflatout.out
 	$(LDPREFIX)  $(TIME) (echo testflatpackedout.cbf | $(BIN)/test_xds_binary > test_xds_bin_testflatpackedout.out)
 	-$(DIFF) test_xds_bin_testflatpackedout.out test_xds_bin_testflatpackedout_orig.out
 	$(LDPREFIX)  $(TIME) (echo testflatout.cbf | $(BIN)/test_fcb_read_image  > test_fcb_read_testflatout.out)
@@ -2932,11 +2922,9 @@ endif
 	$(LDPREFIX)  $(TIME) $(BIN)/sauter_test
 	$(LDPREFIX)  $(TIME) $(BIN)/changtestcompression
 	$(LDPREFIX)  $(TIME) $(BIN)/tiff2cbf -cn XRD1621.tif XRD1621.cbf
-	-cat XRD1621_orig.cbf | sed "2,2s/0.9.6/0.9.8/" | diff -a - XRD1621.cbf
-	#-$(DIFF) XRD1621.cbf XRD1621_orig.cbf
+	-$(DIFF_IGNORE_VERSIONS) XRD1621_orig.cbf XRD1621.cbf
 	$(LDPREFIX)  $(TIME) $(BIN)/cif2cbf -I 4 -C 100. -L 0. -e n -c b -i XRD1621.cbf -o XRD1621_I4encbC100.cbf
-	-cat XRD1621_I4encbC100_orig.cbf | sed "2,2s/0.9.6/0.9.8/" | diff -a - XRD1621_I4encbC100.cbf
-	#-$(DIFF) XRD1621_I4encbC100.cbf XRD1621_I4encbC100_orig.cbf
+	-$(DIFF_IGNORE_VERSIONS) XRD1621_I4encbC100_orig.cbf XRD1621_I4encbC100.cbf
 
 
 ifneq ($(CBFLIB_DONT_USE_PY2CIFRW),yes)	
