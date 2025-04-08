@@ -308,7 +308,7 @@ int cbf_get_bintext (const cbf_node  *column, unsigned int row,
 
   char digest_text [25];
   
-  char byteorder_text [14];
+  char byteorder_text [15];
 
   const char *text;
 

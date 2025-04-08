@@ -43,7 +43,7 @@ for i in range(categories):
                 s=object.get_integerarray_as_string()
                 print(type(str(s)))
                 print(dir(str(s)))
-                print(len(str(s)))
+                print(len(s))
                 try:
                    import numpy 
                    d = numpy.frombuffer(bytes(s),numpy.uint32)

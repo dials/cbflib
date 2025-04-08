@@ -1,6 +1,15 @@
 name: Make build and tests
 
-on: push
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - synchronize
+      - opened
+  workflow_dispatch:
+
 
 jobs:
   build_test:
@@ -29,4 +38,4 @@ jobs:
         make tests 2>&1 | tee test.out
     - name : check test output
       run: |
-        ! grep ignored test.out
+        ! grep -a ignored test.out
