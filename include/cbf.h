@@ -1,12 +1,12 @@
 /**********************************************************************
  * cbf.h -- cbflib basic API functions                                *
  *                                                                    *
- * Version 0.9.7 13 June 2021                                         *
+ * Version 0.9.8 28 March                                             *
  *                                                                    *
  *                          Paul Ellis and                            *
  *         Herbert J. Bernstein (yaya@bernstein-plus-sons.com)        *
  *                                                                    *
- * (C) Copyright 2006, 2007 Herbert J. Bernstein                      *
+ * (C) Copyright 2006, 2007, 2025  Herbert J. Bernstein               *
  *                                                                    *
  **********************************************************************/
 
@@ -362,7 +362,7 @@ _CBF_STR(CBF_VERS_RELEASE) CBF_VERS_SUBRELEASE
 
   /* API version and assumed dictionary version */
   
-#define CBF_API_VERSION     "CBFlib v0.9.7"
+#define CBF_API_VERSION     "CBFlib v0.9.8"
 #define CBF_DIC_VERSION     "CBF: VERSION 1.7.11"
 
   /* Maximum line length */
