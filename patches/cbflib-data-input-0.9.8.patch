@@ -1,0 +1,37 @@
+--- a/9ins.cif
++++ b/9ins.cif
+@@ -1,5 +1,5 @@
+-###CBF: VERSION 1.7.10
+-# CIF file written by CBFlib v0.9.5
++###CBF: VERSION 1.7.11
++# CIF file written by CBFlib v0.9.7
+ 
+ data_9INS
+ 
+--- a/testflatin.cbf
++++ b/testflatin.cbf
+@@ -1,5 +1,5 @@
+ ###CBF: VERSION 1.7.11
+-# CBF file written by CBFlib v0.9.6
++# CBF file written by CBFlib v0.9.7
+ 
+ data_testflat
+ 
+--- a/testflatpackedin.cbf
++++ b/testflatpackedin.cbf
+@@ -1,5 +1,5 @@
+ ###CBF: VERSION 1.7.11
+-# CBF file written by CBFlib v0.9.6
++# CBF file written by CBFlib v0.9.7
+ 
+ data_testflat
+ 
+--- a/testrealin.cbf
++++ b/testrealin.cbf
+@@ -1,5 +1,5 @@
+ ###CBF: VERSION 1.7.11
+-# CBF file written by CBFlib v0.9.6
++# CBF file written by CBFlib v0.9.7
+ 
+ data_testreals
+ 
