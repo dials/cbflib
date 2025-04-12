@@ -110,9 +110,8 @@ ALT="[CBF/imgCIF]"></A>
 <CENTER>
 <b>An API for CBF/imgCIF<br />
 Crystallographic Binary Files with ASCII Support</b><br />
-Version 0.9.5<BR>
-27 April 2014<BR>
-rev 22 February 2015<br />
+Version 0.9.8<BR />
+3 April 2025<BR />/
 <p>
 </CENTER>
 </font><font color="#000000">
@@ -124,20 +123,20 @@ Stanford Synchrotron Radiation Laboratory<br />
 <p>
 and<br />
 Herbert J. Bernstein<br />
-Bernstein + Sons<br />
+Information Systems Consultant<br />
 <script language="javascript" type="text/javascript">
 <!--
-      var name = "yaya@";
-      var domain = "bernstein-plus-sons";
-      var domext = ".com";
+      var name = "hbernstein@";
+      var domain = "bnl";
+      var domext = ".gov";
       document.write ("<a href=\"mailto:" + name + domain + domext + "\">" + name + " <b>at</b> " + domain + " <b>dot</b> "+  domext+"</a>"); 
 // -->
 </script>
 <noscript>
-yaya <b>at</b> bernstein-plus-sons <b>dot</b> com
+hbernstein <b>at</b> bnl <b>dot</b> gov
 </noscript>
 <p>
-&#169; Copyright 2006, 2007, 2008, 2011, 2013, 2014 Herbert J. Bernstein
+&#169; Copyright 2006, 2007, 2008, 2011, 2013, 2014, 2025 Herbert J. Bernstein
 <P>
 <hr />
 <b>YOU MAY REDISTRIBUTE THE CBFLIB PACKAGE UNDER THE TERMS OF THE <a href=gpl.txt>GPL</a>.
@@ -156,17 +155,19 @@ for important disclaimers and the IUCr Policy
 information.
 </h3>
 <P>
-   Work on imgCIF and CBFlib supported in part by the U. S. Department of
-   Energy (DOE) under grants ER63601-1021466-0009501 and
-   ER64212-1027708-0011962, by the U. S. National Science Foundation (NSF)
-   under grants DBI-0610407, DBI-0315281 and EF-0312612, the U. S.
-   National Institutes of Health (NIH) under grants 1R15GM078077 from
-   NIGMS and 1R13RR023192 from NCRR and funding from the International
-   Union for Crystallographyn (IUCr). The content is solely the
-   responsibility of the authors and does not necessarily represent the
-   official views of DOE, NSF, NIH, NIGMS, NCRR or IUCr.
-    Recent work on integration among CBF, HDF5 and NeXus supported in part
-    by Pandata ODI (EU 7th Framework Programme)
+   Work on imgCIF and CBFlib currentlysupported in part by the 
+the National Institutes of Health under grant R24-GM154040-01
+and in the past by U. S. Department of Energy (DOE) under 
+grants ER63601-1021466-0009501 and ER64212-1027708-0011962, 
+by the U. S. National Science Foundation (NSF) under grants 
+DBI-0610407, DBI-0315281 and EF-0312612, the U. S. National 
+Institutes of Health (NIH) under grants 1R15GM078077 from
+NIGMS and 1R13RR023192 from NCRR and funding from the International
+Union for Crystallographyn (IUCr). The content is solely the
+responsibility of the authors and does not necessarily represent the
+official views of DOE, NSF, NIH, NIGMS, NCRR or IUCr.
+Recent work on integration among CBF, HDF5 and NeXus supported in part
+by Pandata ODI (EU 7th Framework Programme)
 <p>
 <hr />
 </font><font color="#0808A0">
@@ -438,63 +439,118 @@ default use of PyCifRW to avoid Fedora license issue.</td>
         <td valign="top">&nbsp;&nbsp;April 2014</td>
         <td valign="top">&nbsp;&nbsp;HJB</td>
         <td>&nbsp;&nbsp;This is a production release for single detector module
-        single crystal MX NeXus support.</td>
+        single crystal MX NeXus support. 
+</td>
     </tr>
+    <tr>
+        <td valign="top">&nbsp;&nbsp;<a href="ChangeLog.html#0.9.6">0.9.6</a></td>
+        <td valign="top">&nbsp;&nbsp;May 2020</td>
+        <td valign="top">&nbsp;&nbsp;HJB</td>
+        <td>&nbsp;&nbsp;This is the full release supporting the integration of CBF
+and NeXus, including support for the NeXus NXpdb embedding of CIF files in
+NeXus files. *** IMPORTANT: Because of the requirements of dynamic loading
+to support the compressions used by the Dectris NeXus/HDF5 format, all
+applications require setting of library and plugin paths. See the
+initialization file cbflib.ini, which should be sourced before running any
+applications ***..
+The changes from 0.9.5 to 0.9.6 are:
+<br />improve error reporting in examples/cbf2nexus.c
+<br />improve examples/cbf_standardize_numbers.c
+<br />add bslz4 compression option to hdf5 in cif2cbf
+<br />minor cleanup in examples/convert_minicbf.c
+<br />minor cleanup in examples/nexus2cbf.c
+<br />minor cleanup in examples/sequence_match.c
+<br />minor cleanup in include/cbf_context.h
+<br />add value clipping to cbf_copy
+<br />minor cleanuo in cbf_hdf5.h 
+</td>
+    </tr>
+    <tr>
+        <td valign="top">&nbsp;&nbsp;<a href="ChangeLog.html#0.9.7">0.9.7</a></td>
+        <td valign="top">&nbsp;&nbsp;June 2021</td>
+        <td valign="top">&nbsp;&nbsp;HJB</td>
+        <td>&nbsp;&nbsp;This is a production release with misc minor updates.  The changes
+from 0.9.6 to 0.9.7 are:
+<br />update the manual
+<br />cleanup minor bugs is examples/adscimg2cbf.c, adscimg2cbf_sub.c, cbf2adscimg_sub.c
+<br />fix examples/cbf_standardize_numbers.c
+<br />fix examples/testcbf.c
+<br />fix examples/testcbf.java
+<br />fix examples/testhdf5.c
+<br />fix include/cbf_hdf5.h
+<br />fix include/img.h
+<br />fix Java.txt
+<br />fix handling of hex to be int in fcblib_defines, fcb_next_binary, fcb_packed, fcb_read_bits,
+fcb_read_xds_i2
+<br />fix pycbf/cbf_autoscrolled_window.py, cbf_axis_text.py, various wrappers, bytestrings in tests,
+xmas/readmarheader.py, xmasheaders.py
+<br />fix cbf.c
+<br />fix cbf_context.c, cbf_copy.c, cbf_hdf5.c, cbf_hdf5_filter.c, cbf_simple.c, cbf_stx.c
+<br />fix fcb_atol_wcnt.f90, fcb_nblen_array.f90, fcb_read_line.f90, fcb_skip_whitespace.f90
+<br />fix img.c
+</td>
+    </tr>
+    <tr>
+        <td valign="top">&nbsp;&nbsp;<a href="ChangeLog.html#0.9.8">0.9.8</a></td>
+        <td valign="top">&nbsp;&nbsp;April 2025</td>
+        <td valign="top">&nbsp;&nbsp;DP, JH, ND,  HJB</td>
+        <td>&nbsp;&nbsp;This is a final CBFlib release prior to moving all future
+development under the auspices of the DIALS project.  In the past the main
+repository for CBFlib was at 
+<a http://github.com/yayahjb/cbflib target="_blank">http://github.com/yayahjb/cbflib</a>.
+In the future tha main repository for CBFlib will be at 
+<a http://github.com/dials/cbflib target="_blank">http://github.com/dials/cbflib</a>.
+For the convenience of users of legacy versions of CBFlib, there will be
+legacy fork of the repository frozen at the 0.9.8 revision level
+<a http://github.com/nsls-ii-mx/cbflib target="_blank">http://github.com/nsls-ii-mx/cbflib</a>
+The changes from 0.9.7 to 0.9.8 are:
+<br />in cif2cbf add -I-1, -I-2, -I-4, and -I-8 options for unsigned integers,
+--{sum|summing} sumrange option to sum images,
+and --xdsb2z|rotate-xds-beam-to-z  beamcentx,beamcenty,beamcentz
+ assume the beam is along [beamx, beamy, beamz] relative to the
+image and rotate the image so that the beam is along [0,0,-1]
+<br />split support for languages other than C/C++ to use the 2022 swig-fortran kit
+for fortran and a recent swig kit for python
+<br />update tiff2cbf for multiple compression options
+<br />update cbf_copy options and fix typos
+<br />drop all support for python2 in favor of python3
+<br />fix buffer overruns in examples/dectris_cbf_template_test/cbf_template_t.c
+<br />fix errors in examples/testcbf.java  
+<br />add zstd compression option for hdf5 files
+<br />update fcblib_defines
+<br />update pycbf wrappers
+<br />fix buffer overflow in cbf_binary.c
+<br />fix parens in cbf_codes.c
+<br />fix bug in cbf_nibble_offset.c 
+<br />fix tab definition in fcb_skip_whitespace.f90 
+<br />preliminary changes for move from make to cmake by J. Hattne
+<br />add third dimension in examples/img2cif.c, examples/makecbf.c, examples/nexus2cbf.c
+<br />fix bugs in examples/tiff2cbf.c examples/tif_sprint.c
+<br />make handling of version number changes in tests data general
+<br />fix typoi in test_cbf_airy_disk call
+<br />fix bug in pycbf_test1.py
+<br />fix regex dependency handling in cbf_hdf5.c
+</td>
+    </tr>
+
 </TABLE>
 
 <hr />
 </font><font color="#0808A0">
 <h2 ALIGN=CENTER>Known Problems</H2>
-</font><font color="#000000">
-<P>
-The example program tiff2cbf needs the enviroment variable LD_LIBRARY_PATH
-set to the location of the lib directory in CBFlib_0.9.2.11, unless
-a system install of tiff-3.9.4-rev-6Feb11 has been done.
-<p>
-Due to license issues, PyCifRW is not included with default releases
-of CBFlib.  Users can download PyCifRW separately.
-<p>
-There are some issues with Peter Chang's lastest java wrapper under
-the CBFlib 0.9.2.11 release.  Until
-they are resolved, the CBFlib 0.8.1 release should be used
-for Java applications.
-<p>
-This version does not have support for predictor compression.
-<p>
-Code is needed to support array sub-sections.
-</font><font color="#0808A0">
 <h2 ALIGN=CENTER>Foreword</H2>
 </font><font color="#000000">
 <p>
 In order to work with CBFlib, you need:
-<P>
-<ul>
-<li>the source code, in the form
-of a &quot;gzipped&quot; tar,
-<A HREF="http://downloads.sf.net/cbflib/CBFlib_0.9.5.tar.gz">CBFlib_0.9.5.tar.gz</A>; and
-<li>the test data:
-<ul>
-<li><A HREF="http://downloads.sf.net/cbflib/CBFlib_0.9.5_Data_Files_Input.tar.gz">CBFlib_0.9.5_Data_Files_Input.tar.gz</a>
-(17 MB) a "gzipped" tar of the input data files needed to test the API;
-<li><A HREF="http://downloads.sf.net/cbflib/CBFlib_0.9.5_Data_Files_Output.tar.gz">CBFlib_0.9.5_Data_Files_Output.tar.gz</a>
-(36 MB) a "gzipped" tar of the output data files needed to test the API, or, if space is at a premium;
-<li><A HREF="http://downloads.sf.net/cbflib/CBFlib_0.9.5_Data_Files_Output_Sigs_Only.tar.gz">CBFlib_0.9.5_Data_Files_Output_Sigs_Only.tar.gz</a>
-(1 KB) is a "gzipped" tar of only the MD5 signatures of the output data files needed to test the API.
-</ul>
+the source code from github by downloadng a release or the lastest code
+from
+<a href="http://github.com/dials/cbflib" target="_blank">http://github.com/dials/cbflib</a>
 </ul>
 <P>
-If your system has the program wget, you only need the source code.  The download of the other tar balls will be
-handled automatically.
 <P>
-<b>Be careful about space.  A full build and test can use 450 MB or more.  If space is tight, be sure to read the
-instructions below on using only the signatures of the test files.</b>
+<b>Be careful about space.  A full build and test can use 2GB or more.
+</b>
 <P>
-Uncompress and unpack :
-<P>
-<ul>
-<li>gunzip &lt; CBFlib_0.9.5.tar.gz | tar xvf -
-</ul>
-<P>   
 <p>
 To run the test programs, you will also need 
 Paul Ellis's sample MAR345 image,
@@ -505,19 +561,14 @@ insulin_pilatus6m, as sample data.  In addition there are
 is a PDB mmCIF file, 9ins.cif, and 3 special test files
 testflatin.cbf, testflatpackedin.cbf and testrealin.cbf.
  All these files will be
-dowloaded and extracted by the Makefile from CBFlib_0.9.2.11_Data_Files_Input.  Do
+dowloaded and extracted by the Makefile from CBFlib_0.9.8_Data_Files_Input.  Do
 not download copies into the top level directory.
 <P>
 In addition, the kit will need tiff and hdf5 libraries.
 <p>
 
-Thare are various sample Makefiles for common
-configurations.  The Makefile_OSX
-samples is for systems with gfortran from prior to
-the release of gcc 4.2.  For the most recent gfortran,
-use Makefile_OSX_gcc42.  All
-the Makefiles are generated from m4/Makefile.m4.
-For newer OS X systems, the default Makefile should work.
+Future versions of CBFlib will use the cmake build system. Version 0.9.8 is
+the last Makefile build,
 <p>
 <B>The Makefiles use GNU make constructs, such as ifeq
 and ifneq.  If you need to use a different version of
@@ -566,12 +617,6 @@ for your Fortan-90/95 compilers, and then
 <p>
 <b>make all</b><br />
 <b>make tests</b>
-<P>
-or, if space is at a premium:
-<p>
-<p>
-<b>make all</b><br />
-<b>make tests_sigs_only</b>
 <P>
 If you do not have a fortran compiler, you will need
 edit the Makefile or to define the variable NOFORTRAN, either in the Makefile
@@ -738,7 +783,7 @@ http://downloads.sf.net/cbflib/tiff-3.9.4-rev-6Feb11.tar.gz</a>
 	    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#2.4.26">cbf_get_real_3d_image, cbf_get_real_3d_image_fs, cbf_get_real_3d_image_sf</a>
 	  <LI><A HREF="#2.4.27">2.4.27 cbf_set_image, cbf_set_image_fs, cbf_set_image_sf,</a><br />
 	    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#2.4.27">cbf_set_real_image, cbf_set_real_image_fs, cbf_set_real_image_sf,</a><br />
-	    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#2.4.27">cbf_set_3d_image, cbf_set_3d_image, cbf_set_3d_image,</a><br>
+	    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#2.4.27">cbf_set_3d_image, cbf_set_3d_image, cbf_set_3d_image,</a><br >
 	    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#2.4.27">cbf_set_real_3d_image, cbf_set_real_3d_image_fs, cbf_set_real_3d_image_sf</a>
           <LI><A HREF="#2.4.28">2.4.28 cbf_get_axis_ancestor,
               cbf_get_axis_depends_on,
@@ -5177,7 +5222,7 @@ The parameter <i>reserved</i> is presently unused and should be set to 0.
 <p><hr /><P>
 <h4><A NAME="2.4.27">2.4.27 cbf_set_image, cbf_set_image_fs, cbf_set_image_sf,</a><br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cbf_set_real_image, cbf_set_real_image_fs, cbf_set_real_image_sf,<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cbf_set_3d_image, cbf_set_3d_image_fs, cbf_set_3d_image_sf,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cbf_set_3d_image, cbf_set_3d_image_fs, cbf_set_3d_image_sf,<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cbf_set_real_3d_image, cbf_set_real_3d_image_fs, cbf_set_real_3d_image_sf</h4>
 <p><b>PROTOTYPE</b>
 <p>#include "cbf_simple.h"

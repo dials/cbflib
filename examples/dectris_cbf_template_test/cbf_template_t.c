@@ -206,6 +206,7 @@ return mx_params_list[idx].cmnd;
 
 /* Note that CBF_TXT_HEADER_SIZE must fit within CBF_HEADER_SIZE in cbftvx.c */
 #define CBF_TXT_HEADER_SIZE 8000
+#define LINE_SIZE 2051
 #define MAX_NODES 30
 
 static char cbf_template[CBF_TXT_HEADER_SIZE];
@@ -225,7 +226,7 @@ int setup_cbf_template(char *msg)
 {
 int i, len, m, nidx=0, count;
 FILE *ifp;
-char line[120], *p, *q, *sub=NULL, substr[30], *txt=NULL, *ptxt=NULL;
+char line[LINE_SIZE], *p, *q, *sub=NULL, substr[30], *txt=NULL, *ptxt=NULL;
 MX_PARAMS_CMND cmnd;
 struct CBF_NODE *tnode, *rnode;
 
@@ -246,23 +247,33 @@ if ( !(ifp=fopen(cbf_template_file, "r")) )
    ensure that lines end in CRLF (a CBF standard) */
 cbf_template[0]='\0';
 m=0;
-while( (fgets(line, sizeof(line), ifp)) )
+while( (fgets(line, LINE_SIZE-3, ifp)) )
 	{
 	/* if we find a mini-header, discard it */
+        line[LINE_SIZE-3]=line[LINE_SIZE-2]=line[LINE_SIZE-1]='0';
 	if(strstr(line, "--CIF-BINARY-FORMAT-SECTION--"))
 		break;
 	len = strlen(line);
-	if (len > -4+sizeof(line))
+	if (len > -4+LINE_SIZE)
 		{
 		fclose(ifp);
 		strcpy(msg, "Line too long in CBF template");
 		printf("%s\n", msg);
 		return -1;
 		}
-	p = line+strlen(line);
-	while (p>=line && (*p=='\n' || *p=='\r' || *p=='\0'))	/* cut off ending */
+	p = line+strlen(line)-1;
+	while (p>line && (*p=='\n' || *p=='\r' || *p=='\0'))	/* cut off ending */
 		p--;
-	strcpy(p+1, "\r\n");		/* CRLF is the correct line ending for CBF */
+        if (p==line && (*p=='\n' || *p=='\r' || *p=='\0')) {
+          *p++ = '\r';
+          *p++ = '\n';
+          *p++ = '\0';
+        } else {
+          p++;
+          *p++ = '\r';
+          *p++ = '\n';
+          *p++ = '\0';
+        }
 	p = line;
 	while(!ptxt && (*p==' ' || *p=='\t'))	/* in case of leading space */
 		p++;

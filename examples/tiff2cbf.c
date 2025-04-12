@@ -241,6 +241,7 @@ int main (int argc, char *argv [])
     verbose = 0;
     errflg = 0;
     tiffile=0;
+
     cbffile=0;
     compression=0;
     cbf_compression=CBF_NONE;
@@ -292,6 +293,7 @@ int main (int argc, char *argv [])
     /* interpret the compression */
 
     if (!compression) {
+        compression = "b";
         cbf_compression=CBF_BYTE_OFFSET;
     } else {
        errflg = 0;
