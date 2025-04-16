@@ -2218,3 +2218,119 @@ add_test(NAME dectris-cmp
 set_tests_properties(dectris-cmp PROPERTIES
   FIXTURES_REQUIRED dectris
   REQUIRED_FILES "${CBFlib_SOURCE_DIR}/templates/cbf_test_orig.out")
+
+
+#
+# Fortran tests
+#
+# test_fcb_read_image and test_xds_binary expect the name of the input
+# file on stdin and write to stdout.  The input file cannot have any
+# directory components.
+if(CBF_ENABLE_FORTRAN)
+  #
+  # xds_binary-flat
+  add_test(NAME xds_binary-flat
+    COMMAND ${CMAKE_COMMAND}
+      "-Dcommand=$<TARGET_FILE:test_xds_binary>"
+      "-Dinput=testflatin.cbf"
+      "-Doutput-file=${CBF__DATA}/test_xds_bin_testflatout.out"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake"
+    WORKING_DIRECTORY "${data_input}")
+  set_tests_properties(xds_binary-flat PROPERTIES
+    FIXTURES_SETUP xds_binary-flat
+    REQUIRED_FILES "${data_input}/testflatin.cbf")
+
+  add_test(NAME xds_binary-flat-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/test_xds_bin_testflatout.out")
+  set_tests_properties(xds_binary-flat-cleanup PROPERTIES
+    FIXTURES_CLEANUP xds_binary-flat)
+
+  add_test(NAME xds_binary-flat-cmp
+    COMMAND ${CMAKE_COMMAND} -E compare_files
+      "${data_output}/test_xds_bin_testflatout_orig.out"
+      "${CBF__DATA}/test_xds_bin_testflatout.out")
+  set_tests_properties(xds_binary-flat-cmp PROPERTIES
+    FIXTURES_REQUIRED xds_binary-flat
+    REQUIRED_FILES "${data_output}/test_xds_bin_testflatout_orig.out")
+
+
+  #
+  # xds_binary-flatpacked
+  add_test(NAME xds_binary-flatpacked
+    COMMAND ${CMAKE_COMMAND}
+      "-Dcommand=$<TARGET_FILE:test_xds_binary>"
+      "-Dinput=testflatpackedin.cbf"
+      "-Doutput-file=${CBF__DATA}/test_xds_bin_testflatpackedout.out"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake"
+    WORKING_DIRECTORY "${data_input}")
+  set_tests_properties(xds_binary-flatpacked PROPERTIES
+    FIXTURES_SETUP xds_binary-flatpacked
+    REQUIRED_FILES "${data_input}/testflatpackedin.cbf")
+
+  add_test(NAME xds_binary-flatpacked-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/test_xds_bin_testflatpackedout.out")
+  set_tests_properties(xds_binary-flatpacked-cleanup PROPERTIES
+    FIXTURES_CLEANUP xds_binary-flatpacked)
+
+  add_test(NAME xds_binary-flatpacked-cmp
+    COMMAND ${CMAKE_COMMAND} -E compare_files
+      "${data_output}/test_xds_bin_testflatpackedout_orig.out"
+      "${CBF__DATA}/test_xds_bin_testflatpackedout.out")
+  set_tests_properties(xds_binary-flatpacked-cmp PROPERTIES
+    FIXTURES_REQUIRED xds_binary-flatpacked
+    REQUIRED_FILES "${data_output}/test_xds_bin_testflatpackedout_orig.out")
+
+
+  #
+  # fcb_read_image-flat
+  add_test(NAME fcb_read_image-flat
+    COMMAND ${CMAKE_COMMAND}
+      "-Dcommand=$<TARGET_FILE:test_fcb_read_image>"
+      "-Dinput=testflatin.cbf"
+      "-Doutput-file=${CBF__DATA}/test_fcb_read_testflatout.out"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake"
+    WORKING_DIRECTORY "${data_input}")
+  set_tests_properties(fcb_read_image-flat PROPERTIES
+    FIXTURES_SETUP fcb_read_image-flat
+    REQUIRED_FILES "${data_input}/testflatin.cbf")
+
+  add_test(NAME fcb_read_image-flat-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/test_fcb_read_testflatout.out")
+  set_tests_properties(fcb_read_image-flat-cleanup PROPERTIES
+    FIXTURES_CLEANUP fcb_read_image-flat)
+
+  add_test(NAME fcb_read_image-flat-cmp
+    COMMAND ${CMAKE_COMMAND} -E compare_files
+      "${data_output}/test_fcb_read_testflatout_orig.out"
+      "${CBF__DATA}/test_fcb_read_testflatout.out")
+  set_tests_properties(fcb_read_image-flat-cmp PROPERTIES
+    FIXTURES_REQUIRED fcb_read_image-flat
+    REQUIRED_FILES "${data_output}/test_fcb_read_testflatout_orig.out")
+
+
+  #
+  # fcb_read_image-flatpacked
+  add_test(NAME fcb_read_image-flatpacked
+    COMMAND ${CMAKE_COMMAND}
+      "-Dcommand=$<TARGET_FILE:test_fcb_read_image>"
+      "-Dinput=testflatpackedin.cbf"
+      "-Doutput-file=${CBF__DATA}/test_fcb_read_testflatpackedout.out"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake"
+    WORKING_DIRECTORY "${data_input}")
+  set_tests_properties(fcb_read_image-flatpacked PROPERTIES
+    FIXTURES_SETUP fcb_read_image-flatpacked
+    REQUIRED_FILES "${data_input}/testflatpackedin.cbf")
+
+  add_test(NAME fcb_read_image-flatpacked-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/test_fcb_read_testflatpackedout.out")
+  set_tests_properties(fcb_read_image-flatpacked-cleanup PROPERTIES
+    FIXTURES_CLEANUP fcb_read_image-flatpacked)
+
+  add_test(NAME fcb_read_image-flatpacked-cmp
+    COMMAND ${CMAKE_COMMAND} -E compare_files
+      "${data_output}/test_fcb_read_testflatpackedout_orig.out"
+      "${CBF__DATA}/test_fcb_read_testflatpackedout.out")
+  set_tests_properties(fcb_read_image-flatpacked-cmp PROPERTIES
+    FIXTURES_REQUIRED fcb_read_image-flatpacked
+    REQUIRED_FILES "${data_output}/test_fcb_read_testflatpackedout_orig.out")
+endif()
