@@ -820,7 +820,8 @@ set_target_properties(img PROPERTIES LINKER_LANGUAGE C)
 
 
 #
-# Build all Fortran sources and the fcb library.
+# Build all Fortran sources and libraries.  The f90cbf library is not
+# installed.
 if(CBF_ENABLE_FORTRAN)
   find_program(M4 m4 REQUIRED)
   set(M4FLAGS "-Dfcb_bytes_in_rec=4096" CACHE STRING
@@ -851,26 +852,32 @@ if(CBF_ENABLE_FORTRAN)
       COMMENT "Generating ${f90bldsrc}")
   endforeach()
 
-  set(CBF_F90_BUILT_SOURCES
+  add_library(fcb
     "${CMAKE_CURRENT_BINARY_DIR}/src/fcb_exit_binary.f90"
     "${CMAKE_CURRENT_BINARY_DIR}/src/fcb_next_binary.f90"
     "${CMAKE_CURRENT_BINARY_DIR}/src/fcb_open_cifin.f90"
     "${CMAKE_CURRENT_BINARY_DIR}/src/fcb_packed.f90"
     "${CMAKE_CURRENT_BINARY_DIR}/src/fcb_read_bits.f90"
     "${CMAKE_CURRENT_BINARY_DIR}/src/fcb_read_image.f90"
-    "${CMAKE_CURRENT_BINARY_DIR}/src/fcb_read_xds_i2.f90")
-
-  set(CBF_F90_SOURCES
+    "${CMAKE_CURRENT_BINARY_DIR}/src/fcb_read_xds_i2.f90"
     "${CBF__SRC}/fcb_atol_wcnt.f90"
     "${CBF__SRC}/fcb_ci_strncmparr.f90"
     "${CBF__SRC}/fcb_nblen_array.f90"
     "${CBF__SRC}/fcb_read_byte.f90"
     "${CBF__SRC}/fcb_read_line.f90"
     "${CBF__SRC}/fcb_skip_whitespace.f90")
-
-  add_library(fcb ${CBF_F90_BUILT_SOURCES};${CBF_F90_SOURCES})
   set_target_properties(fcb PROPERTIES OUTPUT_NAME "fcb")
   set_target_properties(fcb PROPERTIES LINKER_LANGUAGE C)
+  install(TARGETS fcb DESTINATION lib)
+
+
+  # Use the pre-generated SWIG wrapper, because current SWIG does not
+  # support Fortran.
+  add_library(f90cbf
+    "${CMAKE_CURRENT_SOURCE_DIR}/f90cbf/f90cbf.f90"
+    "${CMAKE_CURRENT_SOURCE_DIR}/f90cbf/f90cbf_wrap.c")
+  target_link_libraries(f90cbf
+    cbf)
 endif()
 
 
@@ -913,6 +920,9 @@ add_executable(cbf2adscimg
 target_link_libraries(cbf2adscimg
   cbf
   "${libm}")
+
+add_executable(convert_f90_swig_wrap
+  "${CBF__EXAMPLES}/convert_f90_swig_wrap.cpp")
 
 add_executable(convert_image
   "${CBF__EXAMPLES}/convert_image.c")
@@ -1017,8 +1027,7 @@ target_link_libraries(testreals
 
 
 #
-#  F90 examples
-#
+# F90 examples.  Only for testing, not installed.
 if(CBF_ENABLE_FORTRAN)
   add_executable(test_fcb_read_image
     "${CMAKE_CURRENT_BINARY_DIR}/src/test_fcb_read_image.f90")
@@ -1054,10 +1063,6 @@ install (TARGETS sauter_test DESTINATION bin)
 install (TARGETS sequence_match DESTINATION bin)
 install (TARGETS tiff2cbf DESTINATION bin)
 install(TARGETS cbf DESTINATION lib)
-
-if(CBF_ENABLE_FORTRAN)
-  install(TARGETS fcb DESTINATION lib)
-endif()
 
 install(TARGETS img DESTINATION lib)
 install (DIRECTORY ${CBF__INCLUDE}/ DESTINATION include/cbflib FILES_MATCHING PATTERN "*.h")
