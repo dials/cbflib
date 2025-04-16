@@ -1032,14 +1032,12 @@ if(CBF_ENABLE_FORTRAN)
   add_executable(test_fcb_read_image
     "${CMAKE_CURRENT_BINARY_DIR}/src/test_fcb_read_image.f90")
   target_link_libraries(test_fcb_read_image
-    fcb
-    hdf5)
+    fcb)
 
   add_executable(test_xds_binary
     "${CMAKE_CURRENT_BINARY_DIR}/src/test_xds_binary.f90")
   target_link_libraries(test_xds_binary
-    fcb
-    hdf5)
+    fcb)
 endif()
 
 
