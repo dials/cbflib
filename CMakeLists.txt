@@ -295,9 +295,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
 
-set(CBF_F90FLAGS_ENV $ENV{F90FLAGS})
-set(CBF_M4FLAGS_ENV $ENV{M4FLAGS})
-
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 
 option(CBF_ENABLE_FORTRAN "Enable Fortran 90" ON)
@@ -319,24 +316,6 @@ set (CBF_CMAKE_DEBUG "ON")
 #
 #  User setable parameters
 #
-
-if (CBF_M4FLAGS_ENV)
-  set(CBF_M4FLAGS ${CBF_M4FLAGS_ENV})
-else (CBF_M4FLAGS_ENV)
-  set(CBF_M4FLAGS "-Dfcb_bytes_in_rec=4096")
-endif (CBF_M4FLAGS_ENV)
-
-if(CBF_ENABLE_FORTRAN)
-
-if (CBF_F90FLAGS_ENV)
-  set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} ${CBF_F90FLAGS_ENV}")
-  set(CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG}   ${CBF_F90FLAGS_ENV}")
-else (CBF_F90FLAGS_ENV)
-  set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -fno-range-check")
-  set(CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG}   -fno-range-check")
-endif (CBF_F90FLAGS_ENV)
-
-endif()
 
 # make sure that the default is a RELEASE
 if (NOT CMAKE_BUILD_TYPE)
@@ -711,30 +690,6 @@ set(
     ${CBF__SRC}/img.c
 )
 
-if(CBF_ENABLE_FORTRAN)
-
-set(
-	CBF_F90_BUILT_SOURCES 
-			${CBF__BLDSRC}/fcb_exit_binary.f90
-			${CBF__BLDSRC}/fcb_next_binary.f90
-			${CBF__BLDSRC}/fcb_open_cifin.f90
-			${CBF__BLDSRC}/fcb_packed.f90
-			${CBF__BLDSRC}/fcb_read_bits.f90
-			${CBF__BLDSRC}/fcb_read_image.f90
-	${CBF__BLDSRC}/fcb_read_xds_i2.f90
-)
-            
-set(
-	CBF_F90_SOURCES
-	${CBF__SRC}/fcb_atol_wcnt.f90
-			${CBF__SRC}/fcb_ci_strncmparr.f90
-			${CBF__SRC}/fcb_nblen_array.f90
-			${CBF__SRC}/fcb_read_byte.f90
-			${CBF__SRC}/fcb_read_line.f90
-	${CBF__SRC}/fcb_skip_whitespace.f90
-)
-
-endif()
 
 # use, i.e. don't skip the full RPATH for the build tree
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
@@ -799,38 +754,6 @@ set(
 if(CBF_ENABLE_ULP)
   list(APPEND CBF_HEADERS
     "${CBF__INCLUDE}/cbf_ulp.h")
-endif()
-
-
-if(CBF_ENABLE_FORTRAN)
-
-#
-# m4 FCB library macro files
-#
-set(
-	CBF_M4_FCB_DEFINES
-	${CBF__M4}/fcblib_defines.m4
-)
-
-set(
-	CBF_M4_FCB_FILES 
-			${CBF__M4}/fcb_exit_binary.m4
-			${CBF__M4}/fcb_next_binary.m4
-			${CBF__M4}/fcb_open_cifin.m4
-			${CBF__M4}/fcb_packed.m4
-			${CBF__M4}/fcb_read_bits.m4
-			${CBF__M4}/fcb_read_image.m4
-	${CBF__M4}/fcb_read_xds_i2.m4
-)
-#
-# m4 F90 examples macro files
-#
-set(
-	CBF_M4_F90_EXAMPLES
-            ${CBF__M4}/test_fcb_read_image.m4
-	${CBF__M4}/test_xds_binary.m4
-)
-
 endif()
 
 
@@ -901,32 +824,62 @@ set_target_properties(img PROPERTIES OUTPUT_NAME "img")
 set_target_properties(img PROPERTIES LINKER_LANGUAGE C)
 
 
+#
+# Build Fortran library and example sources and the fcb library.
 if(CBF_ENABLE_FORTRAN)
+  find_program(M4 m4 REQUIRED)
+  set(M4FLAGS "-Dfcb_bytes_in_rec=4096" CACHE STRING
+    "Flags used by the M4 macro processor during Fortran build")
+  mark_as_advanced(M4FLAGS)
 
-#
-# Build the f90 library sources
-#
-find_program(M4 m4)
-foreach(f90src IN LISTS CBF_F90_BUILT_SOURCES)
-  get_filename_component(filename "${f90src}" NAME_WE )
-  set(f90bldsrc "${CBF__BLDSRC}/${filename}.f90")
-  set(f90srcm4 "${CBF__M4}/${filename}.m4")
-	add_custom_command(
-		OUTPUT "${f90bldsrc}"
-    WORKING_DIRECTORY "${CBF__M4}"
-    COMMAND ${M4} -P "${CBF_M4FLAGS}" "${f90srcm4}" > "${f90bldsrc}"
-    DEPENDS ${CBF_M4_FCB_DEFINES} ${f90srcm4}
-		COMMENT "Generating ${f90bldsrc}"
-	)
-endforeach(f90src)
+  set(CBF_F90_BUILT_SOURCES
+    "${CBF__BLDSRC}/fcb_exit_binary.f90"
+    "${CBF__BLDSRC}/fcb_next_binary.f90"
+    "${CBF__BLDSRC}/fcb_open_cifin.f90"
+    "${CBF__BLDSRC}/fcb_packed.f90"
+    "${CBF__BLDSRC}/fcb_read_bits.f90"
+    "${CBF__BLDSRC}/fcb_read_image.f90"
+    "${CBF__BLDSRC}/fcb_read_xds_i2.f90")
 
+  set(CBF_F90_SOURCES
+    "${CBF__SRC}/fcb_atol_wcnt.f90"
+    "${CBF__SRC}/fcb_ci_strncmparr.f90"
+    "${CBF__SRC}/fcb_nblen_array.f90"
+    "${CBF__SRC}/fcb_read_byte.f90"
+    "${CBF__SRC}/fcb_read_line.f90"
+    "${CBF__SRC}/fcb_skip_whitespace.f90")
 
-#
-# Build the fcb libraries
-#
-add_library(fcb ${CBF_F90_BUILT_SOURCES};${CBF_F90_SOURCES})
-set_target_properties(fcb PROPERTIES OUTPUT_NAME "fcb")
-set_target_properties(fcb PROPERTIES LINKER_LANGUAGE C)
+  set(CBF_M4_FCB_DEFINES
+    "${CBF__M4}/fcblib_defines.m4")
+
+  set(CBF_M4_FCB_FILES
+    "${CBF__M4}/fcb_exit_binary.m4"
+    "${CBF__M4}/fcb_next_binary.m4"
+    "${CBF__M4}/fcb_open_cifin.m4"
+    "${CBF__M4}/fcb_packed.m4"
+    "${CBF__M4}/fcb_read_bits.m4"
+    "${CBF__M4}/fcb_read_image.m4"
+    "${CBF__M4}/fcb_read_xds_i2.m4")
+
+  set(CBF_M4_F90_EXAMPLES
+    "${CBF__M4}/test_fcb_read_image.m4"
+    "${CBF__M4}/test_xds_binary.m4")
+
+  foreach(f90src IN LISTS CBF_F90_BUILT_SOURCES)
+    get_filename_component(filename "${f90src}" NAME_WE )
+    set(f90bldsrc "${CBF__BLDSRC}/${filename}.f90")
+    set(f90srcm4 "${CBF__M4}/${filename}.m4")
+    add_custom_command(
+      OUTPUT "${f90bldsrc}"
+      WORKING_DIRECTORY "${CBF__M4}"
+      COMMAND ${M4} -P "${M4FLAGS}" "${f90srcm4}" > "${f90bldsrc}"
+      DEPENDS ${CBF_M4_FCB_DEFINES} ${f90srcm4}
+      COMMENT "Generating ${f90bldsrc}")
+  endforeach(f90src)
+
+  add_library(fcb ${CBF_F90_BUILT_SOURCES};${CBF_F90_SOURCES})
+  set_target_properties(fcb PROPERTIES OUTPUT_NAME "fcb")
+  set_target_properties(fcb PROPERTIES LINKER_LANGUAGE C)
 endif()
 
 
@@ -1078,12 +1031,12 @@ target_link_libraries(testreals
 if(CBF_ENABLE_FORTRAN)
   add_custom_command(OUTPUT "${CBF__BLDEXMP}/test_fcb_read_image.f90"
     WORKING_DIRECTORY "${CBF__M4}"
-    COMMAND ${M4} -P "${CBF_M4FLAGS}" "${CBF__M4}/test_fcb_read_image.m4" > "${CBF__BLDEXMP}/test_fcb_read_image.f90"
+    COMMAND ${M4} -P "${M4FLAGS}" "${CBF__M4}/test_fcb_read_image.m4" > "${CBF__BLDEXMP}/test_fcb_read_image.f90"
     DEPENDS ${CBF_M4_FCB_DEFINES} "${CBF__M4}/test_fcb_read_image.m4"
     COMMENT "Generating ${test_fcb_read_image.f90}")
   add_custom_command(OUTPUT "${CBF__BLDEXMP}/test_xds_binary.f90"
     WORKING_DIRECTORY "${CBF__M4}"
-    COMMAND ${M4} -P "${CBF_M4FLAGS}" "${CBF__M4}/test_xds_binary.m4" > "${CBF__BLDEXMP}/test_xds_binary.f90"
+    COMMAND ${M4} -P "${M4FLAGS}" "${CBF__M4}/test_xds_binary.m4" > "${CBF__BLDEXMP}/test_xds_binary.f90"
     DEPENDS ${CBF_M4_FCB_DEFINES} "${CBF__M4}/test_xds_binary.m4"
     COMMENT "Generating ${test_xds_binary.f90}")
 
