@@ -2,12 +2,6 @@ name: Cmake build and tests
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    types:
-      - synchronize
-      - opened
   workflow_dispatch:
 
 jobs:
