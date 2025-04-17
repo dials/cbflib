@@ -1,0 +1,25 @@
+name: Cmake build and tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - synchronize
+      - opened
+  workflow_dispatch:
+
+jobs:
+  build_test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: build
+      run: |
+        cmake .
+        make -j4
+    - name: test
+      run: |
+        ctest -j4
