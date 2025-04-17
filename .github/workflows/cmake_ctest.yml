@@ -10,6 +10,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: install extra dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libtiff-dev
     - name: build
       run: |
         cmake .
