@@ -16,9 +16,6 @@ RUN source /usr/share/miniconda/etc/profile.d/conda.sh && \
   conda create -y -n build -c conda-forge python=3.11 python-build && \
   conda create -y -n test -c conda-forge python=3.11 numpy matplotlib
 
-RUN apt-get update && \
-  apt-get install -y libjpeg-dev m4 automake libpcre2-dev byacc liblzma-dev rsync gfortran libz-dev
-
 RUN cd /app/cbflib && \
   source /usr/share/miniconda/etc/profile.d/conda.sh && \
   conda activate build && \
