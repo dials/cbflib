@@ -619,9 +619,10 @@ if(CBF_WITH_PCRE)
   fetchcontent_makeavailable(pcreposix)
 
 
-  # Always use the pcreposix.h from ${pcreposix_SOURCE_DIR} rather
-  # than a system-supplied header.
-  target_include_directories(pcreposix BEFORE PUBLIC "${pcreposix_SOURCE_DIR}")
+  # Always use pcreposix.h from ${pcreposix_SOURCE_DIR} rather than a
+  # system-supplied header.
+  target_include_directories(pcreposix PUBLIC
+    "$<BUILD_INTERFACE:${pcreposix_SOURCE_DIR}>")
 
 elseif(HAVE_REGCOMP)
   add_library(pcreposix INTERFACE IMPORTED)
@@ -656,6 +657,15 @@ if(CBF_WITH_LIBTIFF)
   set(tiff-tests OFF CACHE INTERNAL "Build TIFF tests")
   set(tiff-tools OFF CACHE INTERNAL "Build TIFF tools")
   fetchcontent_makeavailable(tiff)
+
+
+  # Always use tiffconf.h and tiffio.h from ${tiff_BUILD_DIR}/libtiff
+  # and ${tiff_SOURCE_DIR}/libtiff, respectively, rather than
+  # system-supplied headers.
+  target_include_directories(tiff PUBLIC
+    "$<BUILD_INTERFACE:${tiff_BINARY_DIR}/libtiff>"
+    "$<BUILD_INTERFACE:${tiff_SOURCE_DIR}/libtiff>")
+
 else()
   # find_package(TIFF) appears to miss the dependencies (Lerc, jbig,
   # etc) for a static LibTIFF.  pkg_check_modules(... IMPORTED_TARGET
