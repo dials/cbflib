@@ -2452,3 +2452,45 @@ if(CBF_ENABLE_FORTRAN)
     FIXTURES_REQUIRED fcb_read_image-flatpacked
     REQUIRED_FILES "${data_output}/test_fcb_read_testflatpackedout_orig.out")
 endif()
+
+
+#
+# Java tests
+if(CBF_ENABLE_JAVA)
+  add_test(NAME java-setup-c
+    COMMAND ${CMAKE_COMMAND}
+      "-Dcommand=$<TARGET_FILE:ctestcbf>"
+      "-Doutput-file=${CBF__DATA}/testcbfc.txt"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  set_tests_properties(java-setup-c PROPERTIES
+    FIXTURES_SETUP java-setup-c
+    REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/examples/template_pilatus6m_2463x2527.cbf")
+
+  add_test(NAME java-cleanup-c
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/testcbfc.txt")
+  set_tests_properties(java-cleanup-c PROPERTIES
+    FIXTURES_CLEANUP java-setup-c)
+
+  add_test(NAME java-setup-java
+    COMMAND ${CMAKE_COMMAND}
+      "-Dcommand=${Java_JAVA_EXECUTABLE};-Djava.library.path=${CMAKE_BINARY_DIR}/lib/;-cp;$<TARGET_PROPERTY:cbflib,JAR_FILE>:$<TARGET_PROPERTY:testcbf,JAR_FILE>;testcbf"
+      "-Doutput-file=${CBF__DATA}/testcbfj.txt"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  set_tests_properties(java-setup-java PROPERTIES
+    FIXTURES_SETUP java-setup-java
+    REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/examples/template_pilatus6m_2463x2527.cbf")
+
+  add_test(NAME java-cleanup-java
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/testcbfj.txt")
+  set_tests_properties(java-cleanup-java PROPERTIES
+    FIXTURES_CLEANUP java-setup-java)
+
+  add_test(NAME java-cmp
+    COMMAND ${CMAKE_COMMAND} -E compare_files
+      "${CBF__DATA}/testcbfc.txt"
+      "${CBF__DATA}/testcbfj.txt")
+  set_tests_properties(java-cmp PROPERTIES
+    FIXTURES_REQUIRED "java-setup-c;java-setup-java")
+endif()
