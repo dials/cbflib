@@ -1148,6 +1148,20 @@ endif()
 
 
 #
+# Java examples
+if(CBF_ENABLE_JAVA)
+  add_executable(ctestcbf
+    "${CBF__EXAMPLES}/testcbf.c")
+  target_link_libraries(ctestcbf
+    cbf)
+
+  add_jar(testcbf
+    "${CBF__EXAMPLES}/testcbf.java"
+    INCLUDE_JARS cbflib)
+endif()
+
+
+#
 # install
 #
 install (TARGETS makecbf DESTINATION bin)
