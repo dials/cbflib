@@ -314,6 +314,17 @@ set (CBF_CMAKE_DEBUG "ON")
 
 
 #
+# Java bindings
+#
+# The Java module can only be built when BUILD_SHARED_LIBS is set.  On
+# Debian, Java should only require openjdk-17-jdk-headless but AWT
+# requires openjdk-17-jdk?
+if(BUILD_SHARED_LIBS)
+  option(CBF_ENABLE_JAVA "Enable Java" ON)
+endif()
+
+
+#
 #  User setable parameters
 #
 
@@ -398,8 +409,6 @@ list(GET _cra 2 _age)
 math(EXPR SOVERSION "${_current} - ${_age}")
 
 
-set(JCBF      "${CBFlib_SOURCE_DIR}/jcbf" CACHE STRING "")
-set(JAVADIR   "${CBFlib_SOURCE_DIR}/java" CACHE STRING "")
 set(BIN       "${CBFlib_BINARY_DIR}/bin" CACHE STRING "")
 set(PYCBF     "${CBFlib_SOURCE_DIR}/pycbf" CACHE STRING "")
 set(EXAMPLES  "${CBFlib_SOURCE_DIR}/examples" CACHE STRING "" )
@@ -905,6 +914,76 @@ if(CBF_ENABLE_FORTRAN)
     "${CMAKE_CURRENT_SOURCE_DIR}/f90cbf/f90cbf_wrap.c")
   target_link_libraries(f90cbf
     cbf)
+endif()
+
+
+#
+# Java bindings
+if(CBF_ENABLE_JAVA)
+  # In CMake 3.24, COMPONENTS could be set to "JVM" for FindJNI.
+  find_package(Java COMPONENTS Development REQUIRED)
+  find_package(JNI REQUIRED)
+  find_package(SWIG COMPONENTS java REQUIRED)
+  include(UseJava)
+  include(UseSWIG)
+
+
+  # Generate ${CMAKE_CURRENT_BINARY_DIR}/jcbf/jcbfJAVA_wrap.c and
+  # ${_java_files_generated}.  Cannot use file(GLOB ...) for
+  # ${_java_files_generated}, because it would be executed at
+  # configuration time, when ${CMAKE_CURRENT_BINARY_DIR}/jcbf may not
+  # exist.  get_property(... SWIG_SUPPORT_FILES) only returns
+  # "jcbf/cbf.java" and "jcbf/cbfJNI.java".
+  #
+  # CMake 3.19 and earlier may not automatically regenerate
+  # ${CMAKE_CURRENT_BINARY_DIR}/jcbf for Makefile Generators unless
+  # ${CBF__SRC}/jcbf.i is touched.
+  set_property(SOURCE "${CBF__SRC}/jcbf.i" PROPERTY
+    INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  set_property(SOURCE "${CBF__SRC}/jcbf.i" PROPERTY
+    USE_SWIG_DEPENDENCIES TRUE)
+
+  swig_add_library(cbf_wrap
+    LANGUAGE Java
+    OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/jcbf"
+    SOURCES "${CBF__SRC}/jcbf.i")
+  set_property(TARGET cbf_wrap PROPERTY
+    SWIG_COMPILE_OPTIONS -package org.iucr.cbflib)
+  target_include_directories(cbf_wrap
+    PRIVATE "${JAVA_INCLUDE_PATH}"
+            "${JAVA_INCLUDE_PATH2}")
+  target_link_libraries(cbf_wrap
+    cbf)
+
+  set(_java_files_generated
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/CBF_NODETYPE.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_FILE.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_cbf_context.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_cbf_file.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_double.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_int.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_long.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_p__cbf_handle_struct.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_p_cbf_node_struct.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_p_char.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_size_t.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_unsigned_int.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_void.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/cbf.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/cbfConstants.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/cbfJNI.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/cbf_handle_struct.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/cbf_node.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/doubleP.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/intP.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/sizetP.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/uintP.java")
+
+  add_jar(cbflib
+    "${_java_files_generated}"
+    VERSION "${PROJECT_VERSION}")
+  add_dependencies(cbflib
+    cbf_wrap)
 endif()
 
 
