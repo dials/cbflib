@@ -18,5 +18,5 @@ $ docker run -it cbflib_cmct
 Notes:
 
 - These Dockerfiles typically install more dependencies than the corresponding
-Actions workflows. Github's Ubuntu image provides most basic dependencies (e.g.
+Actions workflows. Github's Ubuntu image provides many basic dependencies (e.g.
 build tools).
