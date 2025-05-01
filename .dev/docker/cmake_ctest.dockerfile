@@ -9,7 +9,7 @@ RUN apt-get update && \
 
 RUN cd /app/cbflib && \
   cmake . && \
-  make -j4
+  cmake --build . --parallel 4
 
 RUN cd /app/cbflib && \
   ctest -j4
