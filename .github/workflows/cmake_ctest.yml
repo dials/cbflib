@@ -25,4 +25,4 @@ jobs:
         cmake --build . --parallel 4
     - name: test
       run: |
-        ctest -j4
+        ctest --parallel 4
