@@ -509,9 +509,10 @@ endif()
 #
 # HDF5
 #
-# See hdf5's root CMakeLists.txt and config/cmake/HDFLibMacros.cmake.
-# Set _h5dump_executable to the path to h5dump and _hdf5_target to the
-# real (unaliased) HDF5 target.
+# See hdf5's root CMakeLists.txt and config/cmake/HDFLibMacros.cmake;
+# {LIBAEC,ZLIB}_TGZ_{NAME,ORIGPATH} values taken from
+# CMakePresets.json.  Set _h5dump_executable to the path to h5dump and
+# _hdf5_target to the real (unaliased) HDF5 target.
 set(CBF_WITH_HDF5 ON CACHE BOOL
   "Link against internally built HDF5 library")
 mark_as_advanced(CBF_WITH_HDF5)
@@ -523,8 +524,24 @@ mark_as_advanced(HDF5REGISTER)
 if(CBF_WITH_HDF5)
   set(BUILD_TESTING OFF CACHE INTERNAL
     "Build HDF5 unit testing")
+  set(HDF5_ALLOW_EXTERNAL_SUPPORT "TGZ" CACHE INTERNAL
+    "Allow external library building (NO GIT TGZ)")
   set(HDF5_EXTERNALLY_CONFIGURED ON CACHE INTERNAL
     "HDF5 configured externally")
+  set(HDF_PACKAGE_NAMESPACE "hdf5::" CACHE INTERNAL
+    "Name for HDF package namespace (can be empty)")
+  set(LIBAEC_TGZ_NAME "libaec-1.0.6.tar.gz" CACHE INTERNAL
+    "Use SZIP AEC from compressed file")
+  set(LIBAEC_TGZ_ORIGPATH
+    "https://github.com/MathisRosenhauer/libaec/releases/download/v1.0.6"
+    CACHE INTERNAL
+    "Use LIBAEC from original location")
+  set(ZLIB_TGZ_NAME "zlib-1.3.tar.gz" CACHE INTERNAL
+    "Use HDF5_ZLib from compressed file")
+  set(ZLIB_TGZ_ORIGPATH
+    "https://github.com/madler/zlib/releases/download/v1.3"
+    CACHE INTERNAL
+    "Use zlib from original location")
   fetchcontent_makeavailable(hdf5)
 
   set(_h5dump_executable
