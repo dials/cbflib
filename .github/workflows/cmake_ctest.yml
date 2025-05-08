@@ -10,7 +10,7 @@ on:
       - opened
   workflow_dispatch:
   schedule:
-    - cron: '1 0 * * 0'  # Sunday 12:01am UTC
+    - cron: '0 18 * * 4'  # Thursday 18:00 UTC
 
 jobs:
   build_test:
