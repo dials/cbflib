@@ -314,6 +314,17 @@ set (CBF_CMAKE_DEBUG "ON")
 
 
 #
+# Java bindings
+#
+# The Java module can only be built when BUILD_SHARED_LIBS is set.  On
+# Debian, Java should only require openjdk-17-jdk-headless but AWT
+# requires openjdk-17-jdk?
+if(BUILD_SHARED_LIBS)
+  option(CBF_ENABLE_JAVA "Enable Java" ON)
+endif()
+
+
+#
 #  User setable parameters
 #
 
@@ -398,8 +409,6 @@ list(GET _cra 2 _age)
 math(EXPR SOVERSION "${_current} - ${_age}")
 
 
-set(JCBF      "${CBFlib_SOURCE_DIR}/jcbf" CACHE STRING "")
-set(JAVADIR   "${CBFlib_SOURCE_DIR}/java" CACHE STRING "")
 set(BIN       "${CBFlib_BINARY_DIR}/bin" CACHE STRING "")
 set(PYCBF     "${CBFlib_SOURCE_DIR}/pycbf" CACHE STRING "")
 set(EXAMPLES  "${CBFlib_SOURCE_DIR}/examples" CACHE STRING "" )
@@ -909,6 +918,76 @@ endif()
 
 
 #
+# Java bindings
+if(CBF_ENABLE_JAVA)
+  # In CMake 3.24, COMPONENTS could be set to "JVM" for FindJNI.
+  find_package(Java COMPONENTS Development REQUIRED)
+  find_package(JNI REQUIRED)
+  find_package(SWIG COMPONENTS java REQUIRED)
+  include(UseJava)
+  include(UseSWIG)
+
+
+  # Generate ${CMAKE_CURRENT_BINARY_DIR}/jcbf/jcbfJAVA_wrap.c and
+  # ${_java_files_generated}.  Cannot use file(GLOB ...) for
+  # ${_java_files_generated}, because it would be executed at
+  # configuration time, when ${CMAKE_CURRENT_BINARY_DIR}/jcbf may not
+  # exist.  get_property(... SWIG_SUPPORT_FILES) only returns
+  # "jcbf/cbf.java" and "jcbf/cbfJNI.java".
+  #
+  # CMake 3.19 and earlier may not automatically regenerate
+  # ${CMAKE_CURRENT_BINARY_DIR}/jcbf for Makefile Generators unless
+  # ${CBF__SRC}/jcbf.i is touched.
+  set_property(SOURCE "${CBF__SRC}/jcbf.i" PROPERTY
+    INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  set_property(SOURCE "${CBF__SRC}/jcbf.i" PROPERTY
+    USE_SWIG_DEPENDENCIES TRUE)
+
+  swig_add_library(cbf_wrap
+    LANGUAGE Java
+    OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/jcbf"
+    SOURCES "${CBF__SRC}/jcbf.i")
+  set_property(TARGET cbf_wrap PROPERTY
+    SWIG_COMPILE_OPTIONS -package org.iucr.cbflib)
+  target_include_directories(cbf_wrap
+    PRIVATE "${JAVA_INCLUDE_PATH}"
+            "${JAVA_INCLUDE_PATH2}")
+  target_link_libraries(cbf_wrap
+    cbf)
+
+  set(_java_files_generated
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/CBF_NODETYPE.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_FILE.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_cbf_context.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_cbf_file.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_double.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_int.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_long.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_p__cbf_handle_struct.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_p_cbf_node_struct.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_p_char.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_size_t.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_unsigned_int.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/SWIGTYPE_p_void.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/cbf.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/cbfConstants.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/cbfJNI.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/cbf_handle_struct.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/cbf_node.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/doubleP.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/intP.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/sizetP.java"
+    "${CMAKE_CURRENT_BINARY_DIR}/jcbf/uintP.java")
+
+  add_jar(cbflib
+    "${_java_files_generated}"
+    VERSION "${PROJECT_VERSION}")
+  add_dependencies(cbflib
+    cbf_wrap)
+endif()
+
+
+#
 #  C and C++ examples
 #
 add_executable(tiff2cbf
@@ -1065,6 +1144,20 @@ if(CBF_ENABLE_FORTRAN)
     "${CMAKE_CURRENT_BINARY_DIR}/src/test_xds_binary.f90")
   target_link_libraries(test_xds_binary
     fcb)
+endif()
+
+
+#
+# Java examples
+if(CBF_ENABLE_JAVA)
+  add_executable(ctestcbf
+    "${CBF__EXAMPLES}/testcbf.c")
+  target_link_libraries(ctestcbf
+    cbf)
+
+  add_jar(testcbf
+    "${CBF__EXAMPLES}/testcbf.java"
+    INCLUDE_JARS cbflib)
 endif()
 
 
@@ -2358,4 +2451,46 @@ if(CBF_ENABLE_FORTRAN)
   set_tests_properties(fcb_read_image-flatpacked-cmp PROPERTIES
     FIXTURES_REQUIRED fcb_read_image-flatpacked
     REQUIRED_FILES "${data_output}/test_fcb_read_testflatpackedout_orig.out")
+endif()
+
+
+#
+# Java tests
+if(CBF_ENABLE_JAVA)
+  add_test(NAME java-setup-c
+    COMMAND ${CMAKE_COMMAND}
+      "-Dcommand=$<TARGET_FILE:ctestcbf>"
+      "-Doutput-file=${CBF__DATA}/testcbfc.txt"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  set_tests_properties(java-setup-c PROPERTIES
+    FIXTURES_SETUP java-setup-c
+    REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/examples/template_pilatus6m_2463x2527.cbf")
+
+  add_test(NAME java-cleanup-c
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/testcbfc.txt")
+  set_tests_properties(java-cleanup-c PROPERTIES
+    FIXTURES_CLEANUP java-setup-c)
+
+  add_test(NAME java-setup-java
+    COMMAND ${CMAKE_COMMAND}
+      "-Dcommand=${Java_JAVA_EXECUTABLE};-Djava.library.path=${CMAKE_BINARY_DIR}/lib/;-cp;$<TARGET_PROPERTY:cbflib,JAR_FILE>:$<TARGET_PROPERTY:testcbf,JAR_FILE>;testcbf"
+      "-Doutput-file=${CBF__DATA}/testcbfj.txt"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  set_tests_properties(java-setup-java PROPERTIES
+    FIXTURES_SETUP java-setup-java
+    REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/examples/template_pilatus6m_2463x2527.cbf")
+
+  add_test(NAME java-cleanup-java
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/testcbfj.txt")
+  set_tests_properties(java-cleanup-java PROPERTIES
+    FIXTURES_CLEANUP java-setup-java)
+
+  add_test(NAME java-cmp
+    COMMAND ${CMAKE_COMMAND} -E compare_files
+      "${CBF__DATA}/testcbfc.txt"
+      "${CBF__DATA}/testcbfj.txt")
+  set_tests_properties(java-cmp PROPERTIES
+    FIXTURES_REQUIRED "java-setup-c;java-setup-java")
 endif()
