@@ -314,13 +314,14 @@ set (CBF_CMAKE_DEBUG "ON")
 
 
 #
-# Java bindings
+# Java and Python bindings
 #
-# The Java module can only be built when BUILD_SHARED_LIBS is set.  On
-# Debian, Java should only require openjdk-17-jdk-headless but AWT
-# requires openjdk-17-jdk?
+# The Java and Python modules can only be built when BUILD_SHARED_LIBS
+# is set.  On Debian, Java should only require openjdk-17-jdk-headless
+# but AWT requires openjdk-17-jdk?
 if(BUILD_SHARED_LIBS)
   option(CBF_ENABLE_JAVA "Enable Java" ON)
+  option(CBF_ENABLE_PYTHON "Enable Python" ON)
 endif()
 
 
@@ -834,8 +835,10 @@ include_directories(BEFORE SYSTEM
 # includes hdf5.h.
 add_library(cbf ${CBF_C_SOURCES})
 if(CBF_ENABLE_ULP)
-  target_compile_definitions(cbf PUBLIC CBF_USE_ULP)
-  target_sources(cbf PRIVATE "${CBF__SRC}/cbf_ulp.c")
+  target_compile_definitions(cbf
+    PUBLIC CBF_USE_ULP)
+  target_sources(cbf
+    PRIVATE "${CBF__SRC}/cbf_ulp.c")
 endif()
 
 set_target_properties(cbf PROPERTIES OUTPUT_NAME "cbf")
@@ -875,13 +878,14 @@ if(CBF_ENABLE_FORTRAN)
     "${CMAKE_CURRENT_SOURCE_DIR}/m4/test_fcb_read_image.m4"
     "${CMAKE_CURRENT_SOURCE_DIR}/m4/test_xds_binary.m4")
 
-  file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/src")
   foreach(f90srcm4 IN LISTS f90_sources_m4)
     get_filename_component(filename "${f90srcm4}" NAME_WE)
     set(f90bldsrc "${CMAKE_CURRENT_BINARY_DIR}/src/${filename}.f90")
     add_custom_command(
       OUTPUT "${f90bldsrc}"
       WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/m4"
+      COMMAND ${CMAKE_COMMAND} -E make_directory
+        "${CMAKE_CURRENT_BINARY_DIR}/src"
       COMMAND ${M4} -P ${M4FLAGS} "${f90srcm4}" > "${f90bldsrc}"
       DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/m4/fcblib_defines.m4"
               "${f90srcm4}"
@@ -984,6 +988,72 @@ if(CBF_ENABLE_JAVA)
     VERSION "${PROJECT_VERSION}")
   add_dependencies(cbflib
     cbf_wrap)
+endif()
+
+
+#
+# Python bindings
+if(CBF_ENABLE_PYTHON)
+  # As per Makefile, want links (not lynx) to reduce the diffs against
+  # versioned CBFlib.txt.  Need SWIG 4.0.0 or later.  For Python 3,
+  # Makefile also adds "# coding=utf-8" to the top of pycbf.py.
+  find_program(BROWSER_DUMP_TOOL NAMES links lynx elinks)
+  find_package(Python COMPONENTS Development Interpreter REQUIRED)
+  find_package(SWIG COMPONENTS python REQUIRED)
+  include(UseSWIG)
+
+  add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/pycbf/CBFlib.txt"
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+      "${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    COMMAND ${CMAKE_COMMAND}
+      "-Dcommand=${BROWSER_DUMP_TOOL};-dump;${CMAKE_CURRENT_SOURCE_DIR}/doc/CBFlib.html"
+      "-Doutput-file=${CMAKE_CURRENT_BINARY_DIR}/pycbf/CBFlib.txt"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/doc/CBFlib.html"
+    VERBATIM)
+
+
+  # Generate the SWIG interfaces from CBFlib.txt (so really no need to
+  # keep those under version control).
+  add_custom_command(
+    OUTPUT
+      "${CMAKE_CURRENT_BINARY_DIR}/pycbf/cbfdetectorwrappers.i"
+      "${CMAKE_CURRENT_BINARY_DIR}/pycbf/cbfgenericwrappers.i"
+      "${CMAKE_CURRENT_BINARY_DIR}/pycbf/cbfgoniometerwrappers.i"
+      "${CMAKE_CURRENT_BINARY_DIR}/pycbf/cbfhandlewrappers.i"
+      "${CMAKE_CURRENT_BINARY_DIR}/pycbf/cbfpositionerwrappers.i"
+    COMMAND Python::Interpreter
+      "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/make_pycbf.py"
+      -o "${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+      "${CMAKE_CURRENT_BINARY_DIR}/pycbf/CBFlib.txt"
+    DEPENDS
+      "${CMAKE_CURRENT_BINARY_DIR}/pycbf/CBFlib.txt"
+      "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/make_pycbf.py"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pycbf")
+
+  set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf.i" PROPERTY
+    DEPENDS
+      "${CMAKE_CURRENT_BINARY_DIR}/pycbf/cbfdetectorwrappers.i"
+      "${CMAKE_CURRENT_BINARY_DIR}/pycbf/cbfgenericwrappers.i"
+      "${CMAKE_CURRENT_BINARY_DIR}/pycbf/cbfgoniometerwrappers.i"
+      "${CMAKE_CURRENT_BINARY_DIR}/pycbf/cbfhandlewrappers.i")
+  swig_add_library(pycbf
+    SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf.i"
+    LANGUAGE Python
+    OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/pycbf")
+  set_target_properties(pycbf PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pycbf")
+  target_compile_definitions(pycbf
+    PRIVATE SWIG_PYTHON_STRICT_BYTE_CHAR)
+  target_link_libraries(pycbf
+    cbf
+    Python::Module)
+
+  install(
+    TARGETS pycbf
+    COMPONENT "Runtime"
+    DESTINATION "${Python_SITEARCH}")
 endif()
 
 
