@@ -4621,10 +4621,7 @@ when you build CBFlib, hence that file is hardwired in.
 \mbox{}\verb@                typeofvalue=object.get_typeofvalue()@\\
 \mbox{}\verb@                print("type:",typeofvalue,file=f)@\\
 \mbox{}\verb@                if typeofvalue.find(b"bnry") > -1:@\\
-\mbox{}\verb@                    print("Found the binary!!", end=' ', file=f)@\\
 \mbox{}\verb@                    s=object.get_integerarray_as_string()@\\
-\mbox{}\verb@                    print(type(str(s)), file=f)@\\
-\mbox{}\verb@                    print(dir(str(s)), file=f)@\\
 \mbox{}\verb@                    print(len(s), file=f)@\\
 \mbox{}\verb@                    try:@\\
 \mbox{}\verb@                       import numpy@\\
@@ -4645,7 +4642,6 @@ when you build CBFlib, hence that file is hardwired in.
 \mbox{}\verb@        print(file=f)@\\
 \mbox{}\verb@    del(object)@\\
 \mbox{}\verb@    #@\\
-\mbox{}\verb@    print(dir(), file=f)@\\
 \mbox{}\verb@    #object.free_handle(handle)@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
@@ -4795,10 +4791,7 @@ It appears to work - eventually. Surprising
 \mbox{}\verb@                typeofvalue=object.get_typeofvalue()@\\
 \mbox{}\verb@                print("type:",typeofvalue,file=f)@\\
 \mbox{}\verb@                if typeofvalue.find(b"bnry") > -1:@\\
-\mbox{}\verb@                    print("Found the binary!!",end=' ',file=f)@\\
 \mbox{}\verb@                    s=object.get_integerarray_as_string()@\\
-\mbox{}\verb@                    print(type(s), file=f)@\\
-\mbox{}\verb@                    print(dir(s), file=f)@\\
 \mbox{}\verb@                    print(len(s), file=f)@\\
 \mbox{}\verb@                    (compression, binaryid, elsize, elsigned, \@\\
 \mbox{}\verb@                        elunsigned, elements, minelement, maxelement, \@\\
@@ -4848,7 +4841,6 @@ It appears to work - eventually. Surprising
 \mbox{}\verb@    newobject.write_widefile(argv[3].encode(),pycbf.CBF,\@\\
 \mbox{}\verb@        pycbf.MIME_HEADERS|pycbf.MSG_DIGEST|pycbf.PAD_4K,0)@\\
 \mbox{}\verb@    #@\\
-\mbox{}\verb@    print(dir(), file=f)@\\
 \mbox{}\verb@    #object.free_handle(handle)@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}

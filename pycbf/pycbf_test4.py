@@ -47,10 +47,7 @@ with open(argv[2],'w',newline='\n') as f:
                 typeofvalue=object.get_typeofvalue()
                 print("type:",typeofvalue,file=f)
                 if typeofvalue.find(b"bnry") > -1:
-                    print("Found the binary!!",end=' ',file=f)
                     s=object.get_integerarray_as_string()
-                    print(type(s), file=f)
-                    print(dir(s), file=f)
                     print(len(s), file=f)
                     (compression, binaryid, elsize, elsigned, \
                         elunsigned, elements, minelement, maxelement, \
@@ -100,5 +97,4 @@ with open(argv[2],'w',newline='\n') as f:
     newobject.write_widefile(argv[3].encode(),pycbf.CBF,\
         pycbf.MIME_HEADERS|pycbf.MSG_DIGEST|pycbf.PAD_4K,0)
     #
-    print(dir(), file=f)
     #object.free_handle(handle)

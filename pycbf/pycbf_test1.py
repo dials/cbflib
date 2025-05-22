@@ -40,10 +40,7 @@ with open(argv[2],'w',newline='\n') as f:
                 typeofvalue=object.get_typeofvalue()
                 print("type:",typeofvalue,file=f)
                 if typeofvalue.find(b"bnry") > -1:
-                    print("Found the binary!!", end=' ', file=f)
                     s=object.get_integerarray_as_string()
-                    print(type(str(s)), file=f)
-                    print(dir(str(s)), file=f)
                     print(len(s), file=f)
                     try:
                        import numpy
@@ -64,5 +61,4 @@ with open(argv[2],'w',newline='\n') as f:
         print(file=f)
     del(object)
     #
-    print(dir(), file=f)
     #object.free_handle(handle)
