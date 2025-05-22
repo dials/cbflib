@@ -1,4 +1,3 @@
-
 import pycbf, unittest
 class GenericTests(unittest.TestCase):
 
@@ -23,4 +22,3 @@ class GenericTests(unittest.TestCase):
                            24.0)
 if __name__=="__main__":
     unittest.main()
-
