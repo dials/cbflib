@@ -337,9 +337,14 @@ if (NOT CMAKE_BUILD_TYPE)
 endif (NOT CMAKE_BUILD_TYPE)
 
 
-# Check for missing functions: regcomp(3) is in POSIX.1-2001,
-# POSIX.1-2008.
+# Check for missing functions: fgetln(3) is in 4.4BSD; regcomp(3) is
+# in POSIX.1-2001, POSIX.1-2008.
 include(CheckSymbolExists)
+check_symbol_exists(fgetln "stdio.h" HAVE_FGETLN)
+if(HAVE_FGETLN)
+  add_compile_definitions("HAVE_FGETLN")
+endif()
+
 check_symbol_exists(regcomp "regex.h" HAVE_REGCOMP)
 
 
@@ -411,7 +416,6 @@ math(EXPR SOVERSION "${_current} - ${_age}")
 
 
 set(BIN       "${CBFlib_BINARY_DIR}/bin" CACHE STRING "")
-set(PYCBF     "${CBFlib_SOURCE_DIR}/pycbf" CACHE STRING "")
 set(EXAMPLES  "${CBFlib_SOURCE_DIR}/examples" CACHE STRING "" )
 set(DECTRIS_EXAMPLES "${EXAMPLES}/dectris_cbf_template_test" CACHE STRING "")
 set(GRAPHICS  "${CBFlib_SOURCE_DIR}/html_graphics" CACHE STRING "")
@@ -1114,6 +1118,15 @@ add_executable(makecbf
   "${CBF__EXAMPLES}/makecbf.c")
 target_link_libraries(makecbf
   cbf)
+
+add_executable(cbf_standardize_numbers
+  "${CBF__EXAMPLES}/cbf_standardize_numbers.c")
+target_link_libraries(cbf_standardize_numbers
+  cbf
+  "${libm}")
+if(NOT HAVE_FGETLN)
+  target_sources(cbf_standardize_numbers PRIVATE "${CBF__SRC}/fgetln.c")
+endif()
 
 add_executable(cbf_tail
   "${CBF__EXAMPLES}/cbf_tail.c")
@@ -2563,4 +2576,256 @@ if(CBF_ENABLE_JAVA)
       "${CBF__DATA}/testcbfj.txt")
   set_tests_properties(java-cmp PROPERTIES
     FIXTURES_REQUIRED "java-setup-c;java-setup-java")
+endif()
+
+
+#
+# Python tests
+if(CBF_ENABLE_PYTHON)
+  add_test(NAME pycbf-test1
+    COMMAND Python::Interpreter
+      "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_test1.py"
+      "${CBF__DATA}/img2cif_packed.cif"
+      "${CBF__DATA}/pycbf_test1.raw")
+  set_tests_properties(pycbf-test1 PROPERTIES
+    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    FIXTURES_REQUIRED "img2cif-flatpacked-cif"
+    FIXTURES_SETUP pycbf-test1
+    REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_test1.py")
+
+  add_test(NAME pycbf-test1-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/pycbf_test1.raw")
+  set_tests_properties(pycbf-test1-cleanup PROPERTIES
+    FIXTURES_CLEANUP pycbf-test1)
+
+  add_test(NAME pycbf-test1-standardize-numbers
+    COMMAND ${CMAKE_COMMAND}
+      "-Dcommand=$<TARGET_FILE:cbf_standardize_numbers>;-;4"
+      "-Dinput-file=${CBF__DATA}/pycbf_test1.raw"
+      "-Doutput-file=${CBF__DATA}/pycbf_test1.out"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake")
+  set_tests_properties(pycbf-test1-standardize-numbers PROPERTIES
+    FIXTURES_REQUIRED pycbf-test1
+    FIXTURES_SETUP pycbf-test1-standardize-numbers)
+
+  add_test(NAME pycbf-test1-standardize-numbers-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/pycbf_test1.out")
+  set_tests_properties(pycbf-test1-standardize-numbers-cleanup PROPERTIES
+    FIXTURES_CLEANUP pycbf-test1-standardize-numbers)
+
+  add_test(NAME pycbf-test1-cmp
+    COMMAND ${CMAKE_COMMAND} -E compare_files
+      "${data_output}/pycbf_test1_orig.out"
+      "${CBF__DATA}/pycbf_test1.out")
+  set_tests_properties(pycbf-test1-cmp PROPERTIES
+    FIXTURES_REQUIRED pycbf-test1-standardize-numbers
+    REQUIRED_FILES "${data_output}/pycbf_test1_orig.out")
+
+
+  add_test(NAME pycbf-test2
+    COMMAND Python::Interpreter
+      "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_test2.py"
+      "${CBF__DATA}/adscconverted.cbf"
+      "${CBF__DATA}/pycbf_test2.raw")
+  set_tests_properties(pycbf-test2 PROPERTIES
+    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    FIXTURES_REQUIRED "convert_image-adscimg"
+    FIXTURES_SETUP pycbf-test2
+    REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_test2.py")
+
+  add_test(NAME pycbf-test2-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/pycbf_test2.raw")
+  set_tests_properties(pycbf-test2-cleanup PROPERTIES
+    FIXTURES_CLEANUP pycbf-test2)
+
+  add_test(NAME pycbf-test2-standardize-numbers
+    COMMAND ${CMAKE_COMMAND}
+      "-Dcommand=$<TARGET_FILE:cbf_standardize_numbers>;-;4"
+      "-Dinput-file=${CBF__DATA}/pycbf_test2.raw"
+      "-Doutput-file=${CBF__DATA}/pycbf_test2.out"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake")
+  set_tests_properties(pycbf-test2-standardize-numbers PROPERTIES
+    FIXTURES_REQUIRED pycbf-test2
+    FIXTURES_SETUP pycbf-test2-standardize-numbers)
+
+  add_test(NAME pycbf-test2-standardize-numbers-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/pycbf_test2.out")
+  set_tests_properties(pycbf-test2-standardize-numbers-cleanup PROPERTIES
+    FIXTURES_CLEANUP pycbf-test2-standardize-numbers)
+
+  add_test(NAME pycbf-test2-cmp
+    COMMAND ${CMAKE_COMMAND} -E compare_files
+      "${data_output}/pycbf_test2_orig.out"
+      "${CBF__DATA}/pycbf_test2.out")
+  set_tests_properties(pycbf-test2-cmp PROPERTIES
+    FIXTURES_REQUIRED pycbf-test2-standardize-numbers
+    REQUIRED_FILES "${data_output}/pycbf_test2_orig.out")
+
+
+  add_test(NAME pycbf-test3
+    COMMAND Python::Interpreter
+      "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_test3.py")
+  set_tests_properties(pycbf-test3 PROPERTIES
+    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_test3.py")
+
+
+  add_test(NAME pycbf-test4
+    COMMAND Python::Interpreter
+      "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_test4.py"
+      "${CBF__DATA}/img2cif_packed.cif"
+      "${CBF__DATA}/pycbf_test4.raw"
+      "${CBF__DATA}/newtest1.cbf")
+  set_tests_properties(pycbf-test4 PROPERTIES
+    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    FIXTURES_REQUIRED "img2cif-flatpacked-cif"
+    FIXTURES_SETUP pycbf-test4
+    REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_test4.py")
+
+  add_test(NAME pycbf-test4-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm
+      "${CBF__DATA}/pycbf_test4.raw"
+      "${CBF__DATA}/newtest1.cbf")
+  set_tests_properties(pycbf-test4-cleanup PROPERTIES
+    FIXTURES_CLEANUP pycbf-test4)
+
+  add_test(NAME pycbf-test4-standardize-numbers
+    COMMAND ${CMAKE_COMMAND}
+      "-Dcommand=$<TARGET_FILE:cbf_standardize_numbers>;-;4"
+      "-Dinput-file=${CBF__DATA}/pycbf_test4.raw"
+      "-Doutput-file=${CBF__DATA}/pycbf_test4.out"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake")
+  set_tests_properties(pycbf-test4-standardize-numbers PROPERTIES
+    FIXTURES_REQUIRED pycbf-test4
+    FIXTURES_SETUP pycbf-test4-standardize-numbers)
+
+  add_test(NAME pycbf-test4-standardize-numbers-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/pycbf_test4.out")
+  set_tests_properties(pycbf-test4-standardize-numbers-cleanup PROPERTIES
+    FIXTURES_CLEANUP pycbf-test4-standardize-numbers)
+
+  add_test(NAME pycbf-test4-cmp
+    COMMAND ${CMAKE_COMMAND} -E compare_files
+      "${data_output}/pycbf_test4_orig.out"
+      "${CBF__DATA}/pycbf_test4.out")
+  set_tests_properties(pycbf-test4-cmp PROPERTIES
+    FIXTURES_REQUIRED pycbf-test4-standardize-numbers
+    REQUIRED_FILES "${data_output}/pycbf_test4_orig.out")
+
+
+  add_test(NAME pycbf-fel1
+    COMMAND Python::Interpreter
+      "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_testfelaxes.py"
+      "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/fel_test1.cbf"
+      "${CBF__DATA}/fel_test1.raw")
+  set_tests_properties(pycbf-fel1 PROPERTIES
+    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    FIXTURES_SETUP pycbf-fel1
+    REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/fel_test1.cbf")
+
+  add_test(NAME pycbf-fel1-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/fel_test1.raw")
+  set_tests_properties(pycbf-fel1-cleanup PROPERTIES
+    FIXTURES_CLEANUP pycbf-fel1)
+
+  add_test(NAME pycbf-fel1-standardize-numbers
+    COMMAND ${CMAKE_COMMAND}
+      "-Dcommand=$<TARGET_FILE:cbf_standardize_numbers>;-;4"
+      "-Dinput-file=${CBF__DATA}/fel_test1.raw"
+      "-Doutput-file=${CBF__DATA}/fel_test1.out"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake")
+  set_tests_properties(pycbf-fel1-standardize-numbers PROPERTIES
+    FIXTURES_REQUIRED pycbf-fel1
+    FIXTURES_SETUP pycbf-fel1-standardize-numbers)
+
+  add_test(NAME pycbf-fel1-standardize-numbers-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/fel_test1.out")
+  set_tests_properties(pycbf-fel1-standardize-numbers-cleanup PROPERTIES
+    FIXTURES_CLEANUP pycbf-fel1-standardize-numbers)
+
+  add_test(NAME pycbf-fel1-cmp
+    COMMAND ${CMAKE_COMMAND} -E compare_files
+      "${data_output}/fel_test1_orig.out"
+      "${CBF__DATA}/fel_test1.out")
+  set_tests_properties(pycbf-fel1-cmp PROPERTIES
+    FIXTURES_REQUIRED pycbf-fel1-standardize-numbers
+    REQUIRED_FILES "${data_output}/fel_test1_orig.out")
+
+
+  add_test(NAME pycbf-fel2
+    COMMAND Python::Interpreter
+      "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_testfelaxes.py"
+      "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/fel_test2.cbf"
+      "${CBF__DATA}/fel_test2.raw")
+  set_tests_properties(pycbf-fel2 PROPERTIES
+    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    FIXTURES_SETUP pycbf-fel2
+    REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/fel_test2.cbf")
+
+  add_test(NAME pycbf-fel2-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/fel_test2.raw")
+  set_tests_properties(pycbf-fel2-cleanup PROPERTIES
+    FIXTURES_CLEANUP pycbf-fel2)
+
+  add_test(NAME pycbf-fel2-standardize-numbers
+    COMMAND ${CMAKE_COMMAND}
+      "-Dcommand=$<TARGET_FILE:cbf_standardize_numbers>;-;4"
+      "-Dinput-file=${CBF__DATA}/fel_test2.raw"
+      "-Doutput-file=${CBF__DATA}/fel_test2.out"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake")
+  set_tests_properties(pycbf-fel2-standardize-numbers PROPERTIES
+    FIXTURES_REQUIRED pycbf-fel2
+    FIXTURES_SETUP pycbf-fel2-standardize-numbers)
+
+  add_test(NAME pycbf-fel2-standardize-numbers-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/fel_test2.out")
+  set_tests_properties(pycbf-fel2-standardize-numbers-cleanup PROPERTIES
+    FIXTURES_CLEANUP pycbf-fel2-standardize-numbers)
+
+  add_test(NAME pycbf-fel2-cmp
+    COMMAND ${CMAKE_COMMAND} -E compare_files
+      "${data_output}/fel_test2_orig.out"
+      "${CBF__DATA}/fel_test2.out")
+  set_tests_properties(pycbf-fel2-cmp PROPERTIES
+    FIXTURES_REQUIRED pycbf-fel2-standardize-numbers
+    REQUIRED_FILES "${data_output}/fel_test2_orig.out")
+
+
+  add_test(NAME pycbf-fel3
+    COMMAND Python::Interpreter
+      "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_testfelaxes.py"
+      "${data_input}/hit-20140306005258847.cbf"
+      "${CBF__DATA}/fel_test3.raw")
+  set_tests_properties(pycbf-fel3 PROPERTIES
+    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    FIXTURES_SETUP pycbf-fel3
+    REQUIRED_FILES "${data_input}/hit-20140306005258847.cbf")
+
+  add_test(NAME pycbf-fel3-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/fel_test3.raw")
+  set_tests_properties(pycbf-fel3-cleanup PROPERTIES
+    FIXTURES_CLEANUP pycbf-fel3)
+
+  add_test(NAME pycbf-fel3-standardize-numbers
+    COMMAND ${CMAKE_COMMAND}
+      "-Dcommand=$<TARGET_FILE:cbf_standardize_numbers>;-;4"
+      "-Dinput-file=${CBF__DATA}/fel_test3.raw"
+      "-Doutput-file=${CBF__DATA}/fel_test3.out"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake")
+  set_tests_properties(pycbf-fel3-standardize-numbers PROPERTIES
+    FIXTURES_REQUIRED pycbf-fel3
+    FIXTURES_SETUP pycbf-fel3-standardize-numbers)
+
+  add_test(NAME pycbf-fel3-standardize-numbers-cleanup
+    COMMAND ${CMAKE_COMMAND} -E rm "${CBF__DATA}/fel_test3.out")
+  set_tests_properties(pycbf-fel3-standardize-numbers-cleanup PROPERTIES
+    FIXTURES_CLEANUP pycbf-fel3-standardize-numbers)
+
+  add_test(NAME pycbf-fel3-cmp
+    COMMAND ${CMAKE_COMMAND} -E compare_files
+      "${data_output}/fel_test3_orig.out"
+      "${CBF__DATA}/fel_test3.out")
+  set_tests_properties(pycbf-fel3-cmp PROPERTIES
+    FIXTURES_REQUIRED pycbf-fel3-standardize-numbers
+    REQUIRED_FILES "${data_output}/fel_test3_orig.out")
 endif()
