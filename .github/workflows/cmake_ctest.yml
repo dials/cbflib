@@ -21,10 +21,11 @@ jobs:
     - name: install extra dependencies
       run: |
         sudo apt-get update
+        sudo apt-get install -y python3-numpy-dev
     - name: build
       run: |
         cmake .
-        cmake --build . --parallel 4
+        cmake --build . --parallel `nproc`
     - name: test
       run: |
-        ctest --parallel 4
+        ctest --parallel `nproc`
