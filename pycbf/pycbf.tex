@@ -4579,73 +4579,70 @@ when you build CBFlib, hence that file is hardwired in.
 \NWtarget{nuweb14}{} \verb@"pycbf_test1.py"@\nobreak\ {\footnotesize {14}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
+\mbox{}\verb@from sys import argv@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@import pycbf@\\
 \mbox{}\verb@object = pycbf.cbf_handle_struct() # FIXME@\\
-\mbox{}\verb@object.read_file(b"../img2cif_packed.cif",pycbf.MSG_DIGEST)@\\
+\mbox{}\verb@object.read_file(argv[1].encode(),pycbf.MSG_DIGEST)@\\
 \mbox{}\verb@object.rewind_datablock()@\\
-\mbox{}\verb@print("Found",object.count_datablocks(),"blocks")@\\
-\mbox{}\verb@object.select_datablock(0)@\\
-\mbox{}\verb@print("Zeroth is named",object.datablock_name())@\\
-\mbox{}\verb@object.rewind_category()@\\
-\mbox{}\verb@categories = object.count_categories()@\\
-\mbox{}\verb@for i in range(categories):@\\
-\mbox{}\verb@    print("Category:",i, end=' ')@\\
-\mbox{}\verb@    object.select_category(i)@\\
-\mbox{}\verb@    category_name = object.category_name()@\\
-\mbox{}\verb@    print("Name:",category_name, end=' ')@\\
-\mbox{}\verb@    rows=object.count_rows()@\\
-\mbox{}\verb@    print("Rows:",rows, end=' ')@\\
-\mbox{}\verb@    cols = object.count_columns()@\\
-\mbox{}\verb@    print("Cols:",cols)@\\
-\mbox{}\verb@    loop=1@\\
-\mbox{}\verb@    object.rewind_column()@\\
-\mbox{}\verb@    while loop==1:@\\
-\mbox{}\verb@        column_name = object.column_name()@\\
-\mbox{}\verb@        print("column name \"",column_name,"\"", end=' ')@\\
-\mbox{}\verb@        try:@\\
-\mbox{}\verb@           object.next_column()@\\
-\mbox{}\verb@        except:@\\
-\mbox{}\verb@           break@\\
-\mbox{}\verb@    print@\\
-\mbox{}\verb@    for j in range(rows):@\\
-\mbox{}\verb@        object.select_row(j)@\\
+\mbox{}\verb@with open(argv[2],'w',newline='\n') as f:@\\
+\mbox{}\verb@    print("Found",object.count_datablocks(),"blocks",file=f)@\\
+\mbox{}\verb@    object.select_datablock(0)@\\
+\mbox{}\verb@    print("Zeroth is named",object.datablock_name(),file=f)@\\
+\mbox{}\verb@    object.rewind_category()@\\
+\mbox{}\verb@    categories = object.count_categories()@\\
+\mbox{}\verb@    for i in range(categories):@\\
+\mbox{}\verb@        print("Category:",i, end=' ', file=f)@\\
+\mbox{}\verb@        object.select_category(i)@\\
+\mbox{}\verb@        category_name = object.category_name()@\\
+\mbox{}\verb@        print("Name:",category_name, end=' ', file=f)@\\
+\mbox{}\verb@        rows=object.count_rows()@\\
+\mbox{}\verb@        print("Rows:",rows, end=' ', file=f)@\\
+\mbox{}\verb@        cols = object.count_columns()@\\
+\mbox{}\verb@        print("Cols:",cols,file=f)@\\
+\mbox{}\verb@        loop=1@\\
 \mbox{}\verb@        object.rewind_column()@\\
-\mbox{}\verb@        if j==0: print()@\\
-\mbox{}\verb@        print("row:",j)@\\
-\mbox{}\verb@        for k in range(cols):@\\
-\mbox{}\verb@            name=object.column_name()@\\
-\mbox{}\verb@            print("col:",name, end=' ')@\\
-\mbox{}\verb@            object.select_column(k)@\\
-\mbox{}\verb@            typeofvalue=object.get_typeofvalue()@\\
-\mbox{}\verb@            print("type:",typeofvalue)@\\
-\mbox{}\verb@            if typeofvalue.find(b"bnry") > -1:@\\
-\mbox{}\verb@                print("Found the binary!!", end=' ')@\\
-\mbox{}\verb@                s=object.get_integerarray_as_string()@\\
-\mbox{}\verb@                print(type(str(s)))@\\
-\mbox{}\verb@                print(dir(str(s)))@\\
-\mbox{}\verb@                print(len(s))@\\
-\mbox{}\verb@                try:@\\
-\mbox{}\verb@                   import numpy @\\
-\mbox{}\verb@                   d = numpy.frombuffer(bytes(s),numpy.uint32)@\\
-\mbox{}\verb@                   # Hard wired Unsigned Int32@\\
-\mbox{}\verb@                   print(d.shape)@\\
-\mbox{}\verb@                   print(d[0:10],d[int(d.shape[0]/2)],d[len(d)-1])@\\
-\mbox{}\verb@                   print(d[int(d.shape[0]/3):int(d.shape[0]/3+20)])@\\
-\mbox{}\verb@                   d=numpy.reshape(d,(2300,2300))@\\
-\mbox{}\verb@#                   from matplotlib import pylab@\\
-\mbox{}\verb@#                   pylab.imshow(d,vmin=0,vmax=1000)@\\
-\mbox{}\verb@#                   pylab.show()@\\
-\mbox{}\verb@                except ImportError:@\\
-\mbox{}\verb@                   print("You need to get numpy and matplotlib to see the data")@\\
-\mbox{}\verb@            else:@\\
-\mbox{}\verb@                value=object.get_value()@\\
-\mbox{}\verb@                print("Val:",value,i)@\\
-\mbox{}\verb@    print()@\\
-\mbox{}\verb@del(object)@\\
-\mbox{}\verb@#@\\
-\mbox{}\verb@print(dir())@\\
-\mbox{}\verb@#object.free_handle(handle)@\\
+\mbox{}\verb@        while loop==1:@\\
+\mbox{}\verb@            column_name = object.column_name()@\\
+\mbox{}\verb@            print("column name \"",column_name,"\"", end=' ', file=f)@\\
+\mbox{}\verb@            try:@\\
+\mbox{}\verb@               object.next_column()@\\
+\mbox{}\verb@            except:@\\
+\mbox{}\verb@               break@\\
+\mbox{}\verb@        for j in range(rows):@\\
+\mbox{}\verb@            object.select_row(j)@\\
+\mbox{}\verb@            object.rewind_column()@\\
+\mbox{}\verb@            if j==0: print(file=f)@\\
+\mbox{}\verb@            print("row:",j,file=f)@\\
+\mbox{}\verb@            for k in range(cols):@\\
+\mbox{}\verb@                name=object.column_name()@\\
+\mbox{}\verb@                print("col:",name, end=' ', file=f)@\\
+\mbox{}\verb@                object.select_column(k)@\\
+\mbox{}\verb@                typeofvalue=object.get_typeofvalue()@\\
+\mbox{}\verb@                print("type:",typeofvalue,file=f)@\\
+\mbox{}\verb@                if typeofvalue.find(b"bnry") > -1:@\\
+\mbox{}\verb@                    s=object.get_integerarray_as_string()@\\
+\mbox{}\verb@                    print(len(s), file=f)@\\
+\mbox{}\verb@                    try:@\\
+\mbox{}\verb@                       import numpy@\\
+\mbox{}\verb@                       d = numpy.frombuffer(bytes(s),numpy.uint32)@\\
+\mbox{}\verb@                       # Hard wired Unsigned Int32@\\
+\mbox{}\verb@                       print(d.shape, file=f)@\\
+\mbox{}\verb@                       print(d[0:10],d[int(d.shape[0]/2)],d[len(d)-1],file=f)@\\
+\mbox{}\verb@                       print(d[int(d.shape[0]/3):int(d.shape[0]/3+20)], file=f)@\\
+\mbox{}\verb@                       d=numpy.reshape(d,(2300,2300))@\\
+\mbox{}\verb@    #                   from matplotlib import pylab@\\
+\mbox{}\verb@    #                   pylab.imshow(d,vmin=0,vmax=1000)@\\
+\mbox{}\verb@    #                   pylab.show()@\\
+\mbox{}\verb@                    except ImportError:@\\
+\mbox{}\verb@                       print("You need to get numpy and matplotlib to see the data", file=f)@\\
+\mbox{}\verb@                else:@\\
+\mbox{}\verb@                    value=object.get_value()@\\
+\mbox{}\verb@                    print("Val:",value,i,file=f)@\\
+\mbox{}\verb@        print(file=f)@\\
+\mbox{}\verb@    del(object)@\\
+\mbox{}\verb@    #@\\
+\mbox{}\verb@    #object.free_handle(handle)@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1.5ex}
@@ -4671,18 +4668,20 @@ a single member function.
 \NWtarget{nuweb15a}{} \verb@"pycbf_test2.py"@\nobreak\ {\footnotesize {15a}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
+\mbox{}\verb@from sys import argv@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@import pycbf@\\
 \mbox{}\verb@obj = pycbf.cbf_handle_struct()@\\
-\mbox{}\verb@obj.read_file(b"../adscconverted.cbf",0)@\\
+\mbox{}\verb@obj.read_file(argv[1].encode(),0)@\\
 \mbox{}\verb@obj.select_datablock(0)@\\
 \mbox{}\verb@g = obj.construct_goniometer()@\\
-\mbox{}\verb@print("Rotation axis is",g.get_rotation_axis())@\\
-\mbox{}\verb@d = obj.construct_detector(0)@\\
-\mbox{}\verb@print("Beam center is",d.get_beam_center())@\\
-\mbox{}\verb@print("Detector slow axis is", d.get_detector_axis_slow())@\\
-\mbox{}\verb@print("Detector fast axis is", d.get_detector_axis_fast())@\\
-\mbox{}\verb@print("Detector axes (fast, slow) are", d.get_detector_axes_fs())@\\
+\mbox{}\verb@with open(argv[2],'w',newline='\n') as f:@\\
+\mbox{}\verb@    print("Rotation axis is",g.get_rotation_axis(),file=f)@\\
+\mbox{}\verb@    d = obj.construct_detector(0)@\\
+\mbox{}\verb@    print("Beam center is",d.get_beam_center(),file=f)@\\
+\mbox{}\verb@    print("Detector slow axis is", d.get_detector_axis_slow(), file=f)@\\
+\mbox{}\verb@    print("Detector fast axis is", d.get_detector_axis_fast(), file=f)@\\
+\mbox{}\verb@    print("Detector axes (fast, slow) are", d.get_detector_axes_fs(), file=f)@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1.5ex}
@@ -4702,7 +4701,6 @@ It appears to work - eventually. Surprising
 \NWtarget{nuweb15b}{} \verb@"pycbf_test3.py"@\nobreak\ {\footnotesize {15b}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\\
 \mbox{}\verb@import pycbf, unittest@\\
 \mbox{}\verb@class GenericTests(unittest.TestCase):@\\
 \mbox{}\verb@@\\
@@ -4727,7 +4725,6 @@ It appears to work - eventually. Surprising
 \mbox{}\verb@                           24.0)@\\
 \mbox{}\verb@if __name__=="__main__":@\\
 \mbox{}\verb@    unittest.main()@\\
-\mbox{}\verb@@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1.5ex}
@@ -4745,108 +4742,106 @@ It appears to work - eventually. Surprising
 \NWtarget{nuweb17}{} \verb@"pycbf_test4.py"@\nobreak\ {\footnotesize {17}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
+\mbox{}\verb@from sys import argv@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@# version of pycbf_test1 with write logic added@\\
 \mbox{}\verb@import pycbf@\\
 \mbox{}\verb@object = pycbf.cbf_handle_struct()@\\
 \mbox{}\verb@newobject = pycbf.cbf_handle_struct()@\\
-\mbox{}\verb@object.read_file(b"../img2cif_packed.cif",pycbf.MSG_DIGEST)@\\
+\mbox{}\verb@object.read_file(argv[1].encode(),pycbf.MSG_DIGEST)@\\
 \mbox{}\verb@object.rewind_datablock()@\\
-\mbox{}\verb@print("Found",object.count_datablocks(),"blocks")@\\
-\mbox{}\verb@object.select_datablock(0)@\\
-\mbox{}\verb@print("Zeroth is named",object.datablock_name())@\\
-\mbox{}\verb@newobject.force_new_datablock(object.datablock_name());@\\
-\mbox{}\verb@object.rewind_category()@\\
-\mbox{}\verb@categories = object.count_categories()@\\
-\mbox{}\verb@for i in range(categories):@\\
-\mbox{}\verb@    print("Category:",i, end= ' ')@\\
-\mbox{}\verb@    object.select_category(i)@\\
-\mbox{}\verb@    category_name = object.category_name()@\\
-\mbox{}\verb@    print("Name:",category_name, end=' ')@\\
-\mbox{}\verb@    newobject.new_category(category_name)@\\
-\mbox{}\verb@    rows=object.count_rows()@\\
-\mbox{}\verb@    print("Rows:",rows, end=' ')@\\
-\mbox{}\verb@    cols = object.count_columns()@\\
-\mbox{}\verb@    print("Cols:",cols)@\\
-\mbox{}\verb@    loop=1@\\
-\mbox{}\verb@    object.rewind_column()@\\
-\mbox{}\verb@    while loop==1:@\\
-\mbox{}\verb@        column_name = object.column_name()@\\
-\mbox{}\verb@        print("column name \"",column_name,"\"", end=' ')@\\
-\mbox{}\verb@        newobject.new_column(column_name)@\\
-\mbox{}\verb@        try:@\\
-\mbox{}\verb@           object.next_column()@\\
-\mbox{}\verb@        except:@\\
-\mbox{}\verb@            break@\\
-\mbox{}\verb@    print()@\\
-\mbox{}\verb@    for j in range(rows):@\\
-\mbox{}\verb@        object.select_row(j)@\\
-\mbox{}\verb@        newobject.new_row()@\\
+\mbox{}\verb@with open(argv[2],'w',newline='\n') as f:@\\
+\mbox{}\verb@    print("Found",object.count_datablocks(),"blocks",file=f)@\\
+\mbox{}\verb@    object.select_datablock(0)@\\
+\mbox{}\verb@    print("Zeroth is named",object.datablock_name(),file=f)@\\
+\mbox{}\verb@    newobject.force_new_datablock(object.datablock_name());@\\
+\mbox{}\verb@    object.rewind_category()@\\
+\mbox{}\verb@    categories = object.count_categories()@\\
+\mbox{}\verb@    for i in range(categories):@\\
+\mbox{}\verb@        print("Category:",i, end= ' ', file=f)@\\
+\mbox{}\verb@        object.select_category(i)@\\
+\mbox{}\verb@        category_name = object.category_name()@\\
+\mbox{}\verb@        print("Name:",category_name, end=' ', file=f)@\\
+\mbox{}\verb@        newobject.new_category(category_name)@\\
+\mbox{}\verb@        rows=object.count_rows()@\\
+\mbox{}\verb@        print("Rows:",rows, end=' ', file=f)@\\
+\mbox{}\verb@        cols = object.count_columns()@\\
+\mbox{}\verb@        print("Cols:",cols,file=f)@\\
+\mbox{}\verb@        loop=1@\\
 \mbox{}\verb@        object.rewind_column()@\\
-\mbox{}\verb@        print("row:",j)@\\
-\mbox{}\verb@        for k in range(cols):@\\
-\mbox{}\verb@            name=object.column_name()@\\
-\mbox{}\verb@            print("col:",name, end=' ')@\\
-\mbox{}\verb@            object.select_column(k)@\\
-\mbox{}\verb@            newobject.select_column(k)@\\
-\mbox{}\verb@            typeofvalue=object.get_typeofvalue()@\\
-\mbox{}\verb@            print("type:",typeofvalue)@\\
-\mbox{}\verb@            if typeofvalue.find(b"bnry") > -1:@\\
-\mbox{}\verb@                print("Found the binary!!",end=' ')@\\
-\mbox{}\verb@                s=object.get_integerarray_as_string()@\\
-\mbox{}\verb@                print(type(s))@\\
-\mbox{}\verb@                print(dir(s))@\\
-\mbox{}\verb@                print(len(s))@\\
-\mbox{}\verb@                (compression, binaryid, elsize, elsigned, \@\\
-\mbox{}\verb@                    elunsigned, elements, minelement, maxelement, \@\\
-\mbox{}\verb@                    byteorder,dimfast,dimmid,dimslow,padding) = \@\\
-\mbox{}\verb@                    object.get_integerarrayparameters_wdims_fs()@\\
-\mbox{}\verb@                if dimfast==0:@\\
-\mbox{}\verb@                    dimfast = 1@\\
-\mbox{}\verb@                if dimmid==0:@\\
-\mbox{}\verb@                    dimmid = 1@\\
-\mbox{}\verb@                if dimslow == 0:@\\
-\mbox{}\verb@                    dimslow = 1@\\
-\mbox{}\verb@                print("compression: ",compression)@\\
-\mbox{}\verb@                print("binaryid", binaryid)@\\
-\mbox{}\verb@                print("elsize", elsize)@\\
-\mbox{}\verb@                print("elsigned", elsigned)@\\
-\mbox{}\verb@                print("elunsigned",elunsigned)@\\
-\mbox{}\verb@                print("elements", elements)@\\
-\mbox{}\verb@                print("minelement", minelement)@\\
-\mbox{}\verb@                print("maxelement", maxelement)@\\
-\mbox{}\verb@                print("byteorder", byteorder)@\\
-\mbox{}\verb@                print("dimfast", dimfast)@\\
-\mbox{}\verb@                print("dimmid", dimmid)@\\
-\mbox{}\verb@                print("dimslow",dimslow)@\\
-\mbox{}\verb@                print("padding", padding)@\\
-\mbox{}\verb@                newobject.set_integerarray_wdims_fs(\@\\
-\mbox{}\verb@                  pycbf.CBF_BYTE_OFFSET,binaryid,s,elsize,elsigned,\@\\
-\mbox{}\verb@                  elements,byteorder,dimfast,dimmid,dimslow,padding)@\\
-\mbox{}\verb@                try:@\\
-\mbox{}\verb@                   import numpy@\\
-\mbox{}\verb@                   d = numpy.frombuffer(s,numpy.uint32)@\\
-\mbox{}\verb@                   # Hard wired Unsigned Int32@\\
-\mbox{}\verb@                   print(d.shape)@\\
-\mbox{}\verb@                   print(d[0:10],d[int(d.shape[0]/2)],d[len(d)-1])@\\
-\mbox{}\verb@                   print(d[int(d.shape[0]/3):int(d.shape[0]/3+20)])@\\
-\mbox{}\verb@                   d=numpy.reshape(d,(2300,2300))@\\
-\mbox{}\verb@#                   from matplotlib import pylab@\\
-\mbox{}\verb@#                   pylab.imshow(d,vmin=0,vmax=1000)@\\
-\mbox{}\verb@#                   pylab.show()@\\
-\mbox{}\verb@                except ImportError:@\\
-\mbox{}\verb@                   print("You need to get numpy and matplotlib to see the data")@\\
-\mbox{}\verb@            else:@\\
-\mbox{}\verb@                value=object.get_value()@\\
-\mbox{}\verb@                newobject.set_value(value)@\\
-\mbox{}\verb@                print("Val:",value,i)@\\
-\mbox{}\verb@    print()@\\
-\mbox{}\verb@del(object)@\\
-\mbox{}\verb@newobject.write_widefile(b"newtest1.cbf",pycbf.CBF,\@\\
-\mbox{}\verb@    pycbf.MIME_HEADERS|pycbf.MSG_DIGEST|pycbf.PAD_4K,0)@\\
-\mbox{}\verb@#@\\
-\mbox{}\verb@print(dir())@\\
-\mbox{}\verb@#object.free_handle(handle)@\\
+\mbox{}\verb@        while loop==1:@\\
+\mbox{}\verb@            column_name = object.column_name()@\\
+\mbox{}\verb@            print("column name \"",column_name,"\"", end=' ', file=f)@\\
+\mbox{}\verb@            newobject.new_column(column_name)@\\
+\mbox{}\verb@            try:@\\
+\mbox{}\verb@               object.next_column()@\\
+\mbox{}\verb@            except:@\\
+\mbox{}\verb@                break@\\
+\mbox{}\verb@        print(file=f)@\\
+\mbox{}\verb@        for j in range(rows):@\\
+\mbox{}\verb@            object.select_row(j)@\\
+\mbox{}\verb@            newobject.new_row()@\\
+\mbox{}\verb@            object.rewind_column()@\\
+\mbox{}\verb@            print("row:",j,file=f)@\\
+\mbox{}\verb@            for k in range(cols):@\\
+\mbox{}\verb@                name=object.column_name()@\\
+\mbox{}\verb@                print("col:",name, end=' ', file=f)@\\
+\mbox{}\verb@                object.select_column(k)@\\
+\mbox{}\verb@                newobject.select_column(k)@\\
+\mbox{}\verb@                typeofvalue=object.get_typeofvalue()@\\
+\mbox{}\verb@                print("type:",typeofvalue,file=f)@\\
+\mbox{}\verb@                if typeofvalue.find(b"bnry") > -1:@\\
+\mbox{}\verb@                    s=object.get_integerarray_as_string()@\\
+\mbox{}\verb@                    print(len(s), file=f)@\\
+\mbox{}\verb@                    (compression, binaryid, elsize, elsigned, \@\\
+\mbox{}\verb@                        elunsigned, elements, minelement, maxelement, \@\\
+\mbox{}\verb@                        byteorder,dimfast,dimmid,dimslow,padding) = \@\\
+\mbox{}\verb@                        object.get_integerarrayparameters_wdims_fs()@\\
+\mbox{}\verb@                    if dimfast==0:@\\
+\mbox{}\verb@                        dimfast = 1@\\
+\mbox{}\verb@                    if dimmid==0:@\\
+\mbox{}\verb@                        dimmid = 1@\\
+\mbox{}\verb@                    if dimslow == 0:@\\
+\mbox{}\verb@                        dimslow = 1@\\
+\mbox{}\verb@                    print("compression: ",compression,file=f)@\\
+\mbox{}\verb@                    print("binaryid", binaryid, file=f)@\\
+\mbox{}\verb@                    print("elsize", elsize, file=f)@\\
+\mbox{}\verb@                    print("elsigned", elsigned, file=f)@\\
+\mbox{}\verb@                    print("elunsigned",elunsigned,file=f)@\\
+\mbox{}\verb@                    print("elements", elements, file=f)@\\
+\mbox{}\verb@                    print("minelement", minelement, file=f)@\\
+\mbox{}\verb@                    print("maxelement", maxelement, file=f)@\\
+\mbox{}\verb@                    print("byteorder", byteorder, file=f)@\\
+\mbox{}\verb@                    print("dimfast", dimfast, file=f)@\\
+\mbox{}\verb@                    print("dimmid", dimmid, file=f)@\\
+\mbox{}\verb@                    print("dimslow",dimslow,file=f)@\\
+\mbox{}\verb@                    print("padding", padding, file=f)@\\
+\mbox{}\verb@                    newobject.set_integerarray_wdims_fs(\@\\
+\mbox{}\verb@                      pycbf.CBF_BYTE_OFFSET,binaryid,s,elsize,elsigned,\@\\
+\mbox{}\verb@                      elements,byteorder,dimfast,dimmid,dimslow,padding)@\\
+\mbox{}\verb@                    try:@\\
+\mbox{}\verb@                       import numpy@\\
+\mbox{}\verb@                       d = numpy.frombuffer(s,numpy.uint32)@\\
+\mbox{}\verb@                       # Hard wired Unsigned Int32@\\
+\mbox{}\verb@                       print(d.shape, file=f)@\\
+\mbox{}\verb@                       print(d[0:10],d[int(d.shape[0]/2)],d[len(d)-1],file=f)@\\
+\mbox{}\verb@                       print(d[int(d.shape[0]/3):int(d.shape[0]/3+20)], file=f)@\\
+\mbox{}\verb@                       d=numpy.reshape(d,(2300,2300))@\\
+\mbox{}\verb@    #                   from matplotlib import pylab@\\
+\mbox{}\verb@    #                   pylab.imshow(d,vmin=0,vmax=1000)@\\
+\mbox{}\verb@    #                   pylab.show()@\\
+\mbox{}\verb@                    except ImportError:@\\
+\mbox{}\verb@                       print("You need to get numpy and matplotlib to see the data", file=f)@\\
+\mbox{}\verb@                else:@\\
+\mbox{}\verb@                    value=object.get_value()@\\
+\mbox{}\verb@                    newobject.set_value(value)@\\
+\mbox{}\verb@                    print("Val:",value,i,file=f)@\\
+\mbox{}\verb@        print(file=f)@\\
+\mbox{}\verb@    del(object)@\\
+\mbox{}\verb@    newobject.write_widefile(argv[3].encode(),pycbf.CBF,\@\\
+\mbox{}\verb@        pycbf.MIME_HEADERS|pycbf.MSG_DIGEST|pycbf.PAD_4K,0)@\\
+\mbox{}\verb@    #@\\
+\mbox{}\verb@    #object.free_handle(handle)@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1.5ex}
@@ -4864,7 +4859,6 @@ It appears to work - eventually. Surprising
 \NWtarget{nuweb18}{} \verb@"pycbf_testfelaxes.py"@\nobreak\ {\footnotesize {18}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
-\mbox{}\verb@@\\
 \mbox{}\verb@import pycbf, sys@\\
 \mbox{}\verb@from decimal import Decimal, ROUND_HALF_UP@\\
 \mbox{}\verb@@\\
@@ -4873,41 +4867,42 @@ It appears to work - eventually. Surprising
 \mbox{}\verb@cbf = pycbf.cbf_handle_struct()@\\
 \mbox{}\verb@cbf.read_widefile(image_file, pycbf.MSG_DIGEST)@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@for element in range(64):@\\
-\mbox{}\verb@    d = cbf.construct_detector(element)@\\
-\mbox{}\verb@    print("element:", element)@\\
+\mbox{}\verb@with open(sys.argv[2],'w',newline='\n') as f:@\\
+\mbox{}\verb@    for element in range(64):@\\
+\mbox{}\verb@        d = cbf.construct_detector(element)@\\
+\mbox{}\verb@        print("element:", element, file=f)@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@    v00 = d.get_pixel_coordinates(0, 0)@\\
-\mbox{}\verb@    v01 = d.get_pixel_coordinates(0, 1)@\\
-\mbox{}\verb@    v10 = d.get_pixel_coordinates(1, 0)@\\
-\mbox{}\verb@    v11 = d.get_pixel_coordinates(1, 1)@\\
-\mbox{}\verb@    prec = Decimal('1.000000000')@\\
+\mbox{}\verb@        v00 = d.get_pixel_coordinates(0, 0)@\\
+\mbox{}\verb@        v01 = d.get_pixel_coordinates(0, 1)@\\
+\mbox{}\verb@        v10 = d.get_pixel_coordinates(1, 0)@\\
+\mbox{}\verb@        v11 = d.get_pixel_coordinates(1, 1)@\\
+\mbox{}\verb@        prec = Decimal('1.000000000')@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@    print('(0, 0) v00 [ %.9f %.9f %.9f ]' %(round(v00[0],9), round(v00[1],9), round(v00[2],9)))@\\
-\mbox{}\verb@    print('(0, 1) v01 [ %.9g %.9g %.9g ]' %(round(v01[0],9), round(v01[1],9), round(v01[2],9)))@\\
-\mbox{}\verb@    print('(1, 0) v10 [ %.9g %.9g %.9g ]' %(round(v10[0],9), round(v10[1],9), round(v10[2],9)))@\\
-\mbox{}\verb@    print('(1, 1) v11 [ %.9g %.9g %.9g ]' %(round(v11[0],9), round(v11[1],9), round(v11[2],9)))@\\
+\mbox{}\verb@        print('(0, 0) v00 [ %.9f %.9f %.9f ]' %(round(v00[0],9), round(v00[1],9), round(v00[2],9)), file=f)@\\
+\mbox{}\verb@        print('(0, 1) v01 [ %.9g %.9g %.9g ]' %(round(v01[0],9), round(v01[1],9), round(v01[2],9)), file=f)@\\
+\mbox{}\verb@        print('(1, 0) v10 [ %.9g %.9g %.9g ]' %(round(v10[0],9), round(v10[1],9), round(v10[2],9)), file=f)@\\
+\mbox{}\verb@        print('(1, 1) v11 [ %.9g %.9g %.9g ]' %(round(v11[0],9), round(v11[1],9), round(v11[2],9)), file=f)@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@    print("surface axes:",  d.get_detector_surface_axes(0), d.get_detector_surface_axes(1))@\\
+\mbox{}\verb@        print("surface axes:",  d.get_detector_surface_axes(0), d.get_detector_surface_axes(1), file=f)@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@    print(d.get_detector_surface_axes(0), "has", cbf.count_axis_ancestors(d.get_detector_surface_axes(0)), "ancestors")@\\
-\mbox{}\verb@    print(d.get_detector_surface_axes(1), "has", cbf.count_axis_ancestors(d.get_detector_surface_axes(1)), "ancestors")@\\
+\mbox{}\verb@        print(d.get_detector_surface_axes(0), "has", cbf.count_axis_ancestors(d.get_detector_surface_axes(0)), "ancestors", file=f)@\\
+\mbox{}\verb@        print(d.get_detector_surface_axes(1), "has", cbf.count_axis_ancestors(d.get_detector_surface_axes(1)), "ancestors", file=f)@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@    cur_axis = d.get_detector_surface_axes(0)@\\
-\mbox{}\verb@    count = cbf.count_axis_ancestors(cur_axis)@\\
+\mbox{}\verb@        cur_axis = d.get_detector_surface_axes(0)@\\
+\mbox{}\verb@        count = cbf.count_axis_ancestors(cur_axis)@\\
 \mbox{}\verb@@\\
-\mbox{}\verb@    for index in range(count):@\\
-\mbox{}\verb@        print("axis", cur_axis, "index: ", index)@\\
-\mbox{}\verb@        print("    equipment", cbf.get_axis_equipment(cur_axis))@\\
-\mbox{}\verb@        print("    depends_on", cbf.get_axis_depends_on(cur_axis))@\\
-\mbox{}\verb@        print("    equipment_component", cbf.get_axis_equipment_component(cur_axis))@\\
-\mbox{}\verb@        vector = cbf.get_axis_vector(cur_axis)@\\
-\mbox{}\verb@        print("    vector [ %.8g %.8g %.8g ]" % (round(vector[0],7), round(vector[1],7), round(vector[2],7)))@\\
-\mbox{}\verb@        offset = cbf.get_axis_offset(cur_axis)@\\
-\mbox{}\verb@        print("    offset [ %.8g %.8g %.8g ]" % (round(offset[0],7), round(offset[1],7), round(offset[2],7)))@\\
-\mbox{}\verb@        print("    rotation", cbf.get_axis_rotation(cur_axis))@\\
-\mbox{}\verb@        print("    rotation_axis", cbf.get_axis_rotation_axis(cur_axis))@\\
-\mbox{}\verb@        cur_axis = cbf.get_axis_depends_on(cur_axis)@\\
+\mbox{}\verb@        for index in range(count):@\\
+\mbox{}\verb@            print("axis", cur_axis, "index: ", index, file=f)@\\
+\mbox{}\verb@            print("    equipment", cbf.get_axis_equipment(cur_axis), file=f)@\\
+\mbox{}\verb@            print("    depends_on", cbf.get_axis_depends_on(cur_axis), file=f)@\\
+\mbox{}\verb@            print("    equipment_component", cbf.get_axis_equipment_component(cur_axis), file=f)@\\
+\mbox{}\verb@            vector = cbf.get_axis_vector(cur_axis)@\\
+\mbox{}\verb@            print("    vector [ %.8g %.8g %.8g ]" % (round(vector[0],7), round(vector[1],7), round(vector[2],7)), file=f)@\\
+\mbox{}\verb@            offset = cbf.get_axis_offset(cur_axis)@\\
+\mbox{}\verb@            print("    offset [ %.8g %.8g %.8g ]" % (round(offset[0],7), round(offset[1],7), round(offset[2],7)), file=f)@\\
+\mbox{}\verb@            print("    rotation", cbf.get_axis_rotation(cur_axis), file=f)@\\
+\mbox{}\verb@            print("    rotation_axis", cbf.get_axis_rotation_axis(cur_axis), file=f)@\\
+\mbox{}\verb@            cur_axis = cbf.get_axis_depends_on(cur_axis)@\\
 \mbox{}\verb@@{\NWsep}
 \end{list}
 \vspace{-1.5ex}
