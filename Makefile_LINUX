@@ -374,10 +374,8 @@ endif
 
 ifneq ("$(CBFLIB_DONT_USE_LOCAL_HDF5)","yes")
   HDF5_PREFIX ?= $(PWD)
-  HDF5 ?= hdf5-1.14.4-2
-  ifeq ("$(HDF5)","hdf5-1.14.4-2")
-    HDF5CFLAGS=-DH5_USE_110_API
-  endif
+  HDF5 ?= hdf5-1.14.6
+  HDF5CFLAGS=-DH5_USE_110_API
   HDF5dep = $(HDF5)
   HDF5_INSTALL = $(HDF5)_INSTALL
   ifneq ("$(MSYS2)","yes")
@@ -783,7 +781,7 @@ PY3PLYURL       = http://downloads.sf.net/cbflib/$(PY3PLY).tar.gz
 endif
 REGEX_URL	?= http://downloads.sf.net/cbflib/$(REGEX).tar.gz
 TIFF_URL	?= http://downloads.sf.net/cbflib/$(TIFF).tar.gz
-HDF5_URL	?= http://downloads.sf.net/cbflib/$(HDF5).tar.gz
+HDF5_URL	?= https://github.com/HDFGroup/hdf5/releases/download/hdf5_1.14.6/$(HDF5).tar.gz
 ifneq ($(CBFLIB_DONT_USE_LOCAL_NUWEB),yes)
 NUWEB_URL	?= http://downloads.sf.net/cbflib/$(NUWEB_DEP).tar.gz
 endif
@@ -1051,7 +1049,7 @@ default:
 	@echo '   NUWEB_DEP = $(NUWEB_DEP)'
 	@echo '   NUWEB_DEP2 = $(NUWEB_DEP2)'
 	@echo ' '
-	@echo ' You will need either a system HDF5 1.12 or it to be installed here.'
+	@echo ' You will need either a system HDF5 >=1.10 or it to be installed here.'
 	@echo ' Check that CBFLIB_DONT_USE_LOCAL_HDF5 and HDF5 are defined correctly :'
 	@echo ' '
 	@echo ' The current values are:'

@@ -454,8 +454,8 @@ fetchcontent_declare(data_output
     -N -i "${CMAKE_CURRENT_SOURCE_DIR}/patches/cbflib-data-output-${PROJECT_VERSION}.patch" -p 1 -t --binary)
 
 fetchcontent_declare(hdf5
-  URL "http://downloads.sf.net/cbflib/hdf5-1.14.4-2.tar.gz"
-  URL_HASH MD5=1791c5f70660bf4ec2e05fc15526c181)
+  URL "https://github.com/HDFGroup/hdf5/releases/download/hdf5_1.14.6/hdf5-1.14.6.tar.gz"
+  URL_HASH MD5=63426c8e24086634eaf9179a8c5fe9e5)
 
 fetchcontent_declare(pcreposix
   URL "http://downloads.sf.net/cbflib/pcre-8.38.tar.gz"
@@ -544,16 +544,16 @@ if(CBF_WITH_HDF5)
     "HDF5 configured externally")
   set(HDF_PACKAGE_NAMESPACE "hdf5::" CACHE INTERNAL
     "Name for HDF package namespace (can be empty)")
-  set(LIBAEC_TGZ_NAME "libaec-1.0.6.tar.gz" CACHE INTERNAL
+  set(LIBAEC_TGZ_NAME "libaec-1.1.3.tar.gz" CACHE INTERNAL
     "Use SZIP AEC from compressed file")
   set(LIBAEC_TGZ_ORIGPATH
-    "https://github.com/MathisRosenhauer/libaec/releases/download/v1.0.6"
+    "https://github.com/MathisRosenhauer/libaec/releases/download/v1.1.3"
     CACHE INTERNAL
     "Use LIBAEC from original location")
-  set(ZLIB_TGZ_NAME "zlib-1.3.tar.gz" CACHE INTERNAL
+  set(ZLIB_TGZ_NAME "zlib-1.3.1.tar.gz" CACHE INTERNAL
     "Use HDF5_ZLib from compressed file")
   set(ZLIB_TGZ_ORIGPATH
-    "https://github.com/madler/zlib/releases/download/v1.3"
+    "https://github.com/madler/zlib/releases/download/v1.3.1"
     CACHE INTERNAL
     "Use zlib from original location")
   fetchcontent_makeavailable(hdf5)
@@ -566,15 +566,10 @@ if(CBF_WITH_HDF5)
     set(_hdf5_target hdf5-static)
   endif()
 else()
-  if(NOT BUILD_SHARED_LIBS)
-    # HDF5_USE_STATIC_LIBRARIES does not seem to do what it is
-    # supposed to, see
-    # https://gitlab.kitware.com/cmake/cmake/-/issues/24613.
-    set(HDF5_USE_STATIC_LIBRARIES TRUE)
-  endif()
-  find_package(HDF5 REQUIRED)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(hdf5 REQUIRED IMPORTED_TARGET hdf5>=1.10)
   find_program(_h5dump_executable h5dump REQUIRED)
-  set(_hdf5_target hdf5::hdf5)
+  set(_hdf5_target PkgConfig::hdf5)
 endif()
 
 
@@ -589,6 +584,7 @@ endif()
 
 # CBFlib must be compiled with H5_USE_110_API.  With MSVC, also need
 # H5_BUILT_AS_DYNAMIC_LIB if HDF5 is a dynamic library.
+# target_compile_definitions cannot be used on an ALIAS target.
 add_library(hdf5 ALIAS ${_hdf5_target})
 target_compile_definitions(${_hdf5_target}
   INTERFACE H5_USE_110_API)
