@@ -24,4 +24,6 @@ RUN cd /app/cbflib && \
 RUN cd /app/cbflib && \
   source /usr/share/miniconda/etc/profile.d/conda.sh && \
   conda activate test && \
-  make tests
+  make tests 2>&1 | tee test.out
+
+RUN ! grep -a ignored /app/cbflib/test.out

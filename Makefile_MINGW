@@ -570,7 +570,7 @@ RANLIB  = /usr/bin/ranlib
 #
 #SIGNATURE ?= /usr/bin/openssl dgst -md5
 #SIGNATURE ?= (/usr/bin/openssl dgst -md5 | sed "s/^.*= //")
-SIGNATURE ?= ( cat > md5tmp; cmake -E md5sum md5tmp| sed "s/ .*//")
+SIGNATURE ?= ( cat > md5tmp; md5sum md5tmp| sed "s/ .*//")
 
 #
 # Pipe command to extract all but the first line of a text file
