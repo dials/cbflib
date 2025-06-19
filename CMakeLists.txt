@@ -604,9 +604,9 @@ set(CBF_WITH_PCRE2 ON CACHE BOOL
 mark_as_advanced(CBF_WITH_PCRE2)
 
 if(CBF_WITH_PCRE2)
+  set(PCRE2_BUILD_PCRE2GREP OFF CACHE INTERNAL "Build pcre2grep")
   set(PCRE2_BUILD_TESTS OFF CACHE INTERNAL "Build the tests")
   fetchcontent_makeavailable(pcre2)
-
 
 elseif(HAVE_REGEX)
   add_library(pcre2-posix INTERFACE IMPORTED)
