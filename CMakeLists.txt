@@ -345,7 +345,10 @@ if(HAVE_FGETLN)
   add_compile_definitions("HAVE_FGETLN")
 endif()
 
-check_symbol_exists(regcomp "regex.h" HAVE_REGCOMP)
+check_symbol_exists(regcomp "regex.h" HAVE_REGEX)
+if(HAVE_REGEX)
+  add_compile_definitions("HAVE_REGEX")
+endif()
 
 
 #
@@ -457,9 +460,9 @@ fetchcontent_declare(hdf5
   URL "https://github.com/HDFGroup/hdf5/releases/download/hdf5_1.14.6/hdf5-1.14.6.tar.gz"
   URL_HASH MD5=63426c8e24086634eaf9179a8c5fe9e5)
 
-fetchcontent_declare(pcreposix
-  URL "http://downloads.sf.net/cbflib/pcre-8.38.tar.gz"
-  URL_HASH MD5=8a353fe1450216b6655dfcf3561716d9)
+fetchcontent_declare(pcre2
+  URL "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.45/pcre2-10.45.tar.gz"
+  URL_HASH MD5=88fe01e3f2ec144912ebecf7ef5cd595)
 
 fetchcontent_declare(tiff
   URL "http://downloads.sf.net/cbflib/tiff-4.0.6_rev_3Nov16.tar.gz"
@@ -595,45 +598,25 @@ endif()
 
 
 #
-# PCRE
-#
-# Linking against an external PCRE1 library (no longer maintained)
-# with a libc that has the regex functions will define regcomp(3),
-# regerror(3), regexec(3), and regfree(3) twice: do not set
-# CBF_WITH_PCRE if libc has the regexec functions.  PCRE2 does it
-# differently: it defines the regex functions prefixed with pcre2_ and
-# maps them onto the unprefixed names with preprocessor directives.
-set(CBF_WITH_PCRE OFF CACHE BOOL
+# PCRE2
+set(CBF_WITH_PCRE2 ON CACHE BOOL
   "Link against internally built Perl-compatible regular expressions library")
-mark_as_advanced(CBF_WITH_PCRE)
+mark_as_advanced(CBF_WITH_PCRE2)
 
-if(CBF_WITH_PCRE)
-  # Do not try to link pcretest against readline, because the PCRE
-  # build system does not catch the libtinfo dependency (for tputs and
-  # friends).  Note that PCRE-8.38 is not using GNUInstallDirs; later
-  # versions may.
-  #
-  # PCRE 8.38 reads the DEBUG_LOCATION property of the pcregrep and
-  # pcretest targets--disable both targets.
-  set(PCRE_BUILD_PCREGREP OFF CACHE INTERNAL "Bulid pcregrep")
-  set(PCRE_BUILD_TESTS OFF CACHE INTERNAL "Build the tests")
-  fetchcontent_makeavailable(pcreposix)
+if(CBF_WITH_PCRE2)
+  set(PCRE2_BUILD_TESTS OFF CACHE INTERNAL "Build the tests")
+  fetchcontent_makeavailable(pcre2)
 
 
-  # Always use pcreposix.h from ${pcreposix_SOURCE_DIR} rather than a
-  # system-supplied header.
-  target_include_directories(pcreposix PUBLIC
-    "$<BUILD_INTERFACE:${pcreposix_SOURCE_DIR}>")
-
-elseif(HAVE_REGCOMP)
-  add_library(pcreposix INTERFACE IMPORTED)
-  target_compile_definitions(pcreposix
+elseif(HAVE_REGEX)
+  add_library(pcre2-posix INTERFACE IMPORTED)
+  target_compile_definitions(pcre2-posix
     INTERFACE CBF_REGEXLIB_REGEX)
 
 else()
   find_package(PkgConfig REQUIRED)
-  pkg_check_modules(pcreposix REQUIRED IMPORTED_TARGET libpcreposix)
-  add_library(pcreposix ALIAS PkgConfig::pcreposix)
+  pkg_check_modules(pcre2-posix REQUIRED IMPORTED_TARGET libpcre2-posix)
+  add_library(pcre2-posix ALIAS PkgConfig::pcre2-posix)
 endif()
 
 
@@ -846,7 +829,7 @@ set_target_properties(cbf PROPERTIES LINKER_LANGUAGE C)
 set_target_properties(cbf PROPERTIES SOVERSION "${SOVERSION}")
 target_link_libraries(cbf
   PUBLIC hdf5
-  PRIVATE pcreposix
+  PRIVATE pcre2-posix
   PRIVATE ${libm})
 
 

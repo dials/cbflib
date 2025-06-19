@@ -268,10 +268,10 @@ extern "C" {
     
 
 #if !defined(CBF_NO_REGEX)
-#ifdef CBF_REGEXLIB_REGEX
+#ifdef HAVE_REGEX
 #include <regex.h>
 #else
-#include <pcreposix.h>
+#include <pcre2posix.h>
 #endif
 #endif
     

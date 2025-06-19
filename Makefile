@@ -516,16 +516,15 @@ endif
 
 REGEX_LIBDIR ?= $(REGEX_PREFIX)/lib
 ifneq ($(CBFLIB_DONT_USE_LOCAL_REGEX),yes)
-REGEX ?= pcre-8.38
+REGEX ?= pcre2-10.45
 REGEXDEP = $(REGEX)
 REGEX_INSTALL = $(REGEX)_INSTALL
-REGEX_LIB ?= pcreposix
-REGEX_LIB2 ?= pcre
+REGEX_LIB ?= pcre2-posix
 ifneq ($(MSYS2),yes)
-REGEX_LIBS ?= -L $(REGEX_LIBDIR) -l$(REGEX_LIB) -l$(REGEX_LIB2)
-REGEX_LIBS_STATIC = $(LIB)/libpcreposix.a $(LIB)/libpcre.a
+REGEX_LIBS ?= -L $(REGEX_LIBDIR) -l$(REGEX_LIB)
+REGEX_LIBS_STATIC = $(LIB)/libpcre2-posix.a $(LIB)/libpcre2-8.a
 else
-REGEX_LIBS ?= -L $(REGEX_LIBDIR) -l$(REGEX_LIB) -l$(REGEX_LIB).dll -l$(REGEX_LIB2) -l$(REGEX_LIB2).dll
+REGEX_LIBS ?= -L $(REGEX_LIBDIR) -l$(REGEX_LIB) -l$(REGEX_LIB).dll
 REGEX_LIBS_STATIC = $(REGEX_LIBS)
 endif
 REGEX_INCLUDES ?= -I $(REGEX_PREFIX)
@@ -534,7 +533,6 @@ REGEX =
 REGEXDEP =
 REGEX_INSTALL =
 REGEX_LIB ?=
-REGEX_LIB2 ?=
 REGEX_LIBS ?=
 REGEX_INCLUDES ?=
 endif
@@ -667,7 +665,7 @@ endif
 ifneq ($(CBF_NO_REGEX),)
 CBF_REGEXFLAG = -DCBF_NO_REGEX
 else
-CBF_REGEXFLAG = -DCBF_REGEXLIB_REGEX
+CBF_REGEXFLAG = -DHAVE_REGEX
 endif
 
 ifneq ($(CBF_USE_ULP),)
@@ -783,7 +781,7 @@ ifneq ($(CBFLIB_DONT_USE_PY3CIFRW),yes)
 PY3CIFRWURL     = http://downloads.sf.net/cbflib/$(PY3CIFRW).tar.gz
 PY3PLYURL       = http://downloads.sf.net/cbflib/$(PY3PLY).tar.gz
 endif
-REGEX_URL	?= http://downloads.sf.net/cbflib/$(REGEX).tar.gz
+REGEX_URL	?= https://github.com/PCRE2Project/pcre2/releases/download/$(REGEX)/$(REGEX).tar.gz
 TIFF_URL	?= http://downloads.sf.net/cbflib/$(TIFF).tar.gz
 HDF5_URL	?= https://github.com/HDFGroup/hdf5/releases/download/hdf5_1.14.6/$(HDF5).tar.gz
 ifneq ($(CBFLIB_DONT_USE_LOCAL_NUWEB),yes)
@@ -1609,13 +1607,13 @@ $(REGEX):   build_regex
 	(cd $(REGEX); \
 	prefix=$(REGEX_PREFIX); export prefix; \
 	./configure --prefix=$(REGEX_PREFIX); make install)
-	@-cp $(REGEX_PREFIX)/include/pcreposix.h $(REGEX_PREFIX)/include/regex.h
+	@-cp $(REGEX_PREFIX)/include/pcre2posix.h $(REGEX_PREFIX)/include/regex.h
 $(REGEX)_INSTALL:   $(REGEX)
 	-rm -rf $(REGEX)_install
 	rsync -avz $(REGEX)/ $(REGEX)_install
 	(cd $(REGEX)_install; prefix=$(CBF_PREFIX); export prefix; \
 	make distclean; ./configure --prefix=$(CBF_PREFIX); make install )
-	@-cp $(CBF_PREFIX)/include/pcreposix.h $(CBF_PREFIX)/include/regex.h
+	@-cp $(CBF_PREFIX)/include/pcre2posix.h $(CBF_PREFIX)/include/regex.h
 
 #
 # TIFF
@@ -1973,12 +1971,12 @@ $(PY2CBF)/py2cbfuserinstall: $(PY2CBF)/pycbf.py
 	(cd $(PY2CBF); $(PYTHON2) $(PY2INSTALLSETUP_PY) install $(PY2CBFIOPT) --user)
 
 $(PY2CBF)/py2setup.py: $(PY2CBF)/py2setup_py.m4
-	(m4 -P -Dregexlib=$(REGEX_LIB) -Dregexlib2=$(REGEX_LIB2) \
+	(m4 -P -Dregexlib=$(REGEX_LIB) \
 	   -Dregexlibdir=$(REGEX_LIBDIR) -Dhdf5_prefix=$(HDF5_PREFIX) \
 	   $(PY2CBF)/py2setup_py.m4 > $@)
 
 $(PY2CBF)/py2setup_MINGW.py: $(PY2CBF)/setup_py.m4
-	   (m4 -P -Dregexlib=$(REGEX_LIB) -Dregexlib2=$(REGEX_LIB2) \
+	   (m4 -P -Dregexlib=$(REGEX_LIB) \
 	   -Dregexlibdir=$(REGEX_LIBDIR) -Dhdf5_prefix=$(HDF5_PREFIX) \
 	   $(PY2CBF)/py2setup_py.m4 > $@)
 
@@ -2046,12 +2044,12 @@ $(PY3CBF)/py3cbfuserinstall: $(PY3CBF)/pycbf.py
 	(cd $(PY3CBF); $(PYTHON3) $(PY3INSTALLSETUP_PY) install $(PY3CBFIOPT) --user)
 
 $(PY3CBF)/py3setup.py: $(PY3CBF)/py3setup_py.m4
-	(m4 -P -Dregexlib=$(REGEX_LIB) -Dregexlib2=$(REGEX_LIB2) \
+	(m4 -P -Dregexlib=$(REGEX_LIB) \
 	   -Dregexlibdir=$(REGEX_LIBDIR) -Dhdf5_prefix=$(HDF5_PREFIX) \
 	   $(PY3CBF)/py3setup_py.m4 > $@)
 
 $(PY3CBF)/py3setup_MINGW.py: $(PY3CBF)/py3setup_py.m4
-	   (m4 -P -Dregexlib=$(REGEX_LIB) -Dregexlib2=$(REGEX_LIB2) \
+	   (m4 -P -Dregexlib=$(REGEX_LIB) \
 	   -Dregexlibdir=$(REGEX_LIBDIR) -Dhdf5_prefix=$(HDF5_PREFIX) \
 	   $(PY3CBF)/py3setup_py.m4 > $@)
 
@@ -3138,7 +3136,7 @@ endif
 	@-rm -f include/pcre_stringpiece.h
 	@-rm -f include/pcrecpp.h
 	@-rm -f include/pcrecpparg.h
-	@-rm -f include/pcreposix.h
+	@-rm -f include/pcre2posix.h
 	@-rm -f include/regex.h
 	@-rm -f minicbf_test/X4_lots_M1S4_1_0001.cbf
 	@-rm -f minicbf_test/X4_lots_M1S4_1_0002.cbf

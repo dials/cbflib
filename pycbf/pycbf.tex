@@ -4390,7 +4390,7 @@ pull in all of the library for now. We use the distutils approach.
 \mbox{}\verb@              sources = ["pycbf_wrap.c","../src/cbf_simple.c"],@\\
 \mbox{}\verb@         extra_compile_args=["-g", "-DSWIG_PYTHON_STRICT_BYTE_CHAR"],@\\
 \mbox{}\verb@         'm4_ifelse(regexlibdir,`NOREGEXLIBDIR',`library_dirs=["../solib/","../lib/"],',`library_dirs=["../solib/","../lib/","'regexlibdir`"],')`@\\
-\mbox{}\verb@         'm4_ifelse(regexlib,`',`libraries=["cbf"],', `m4_ifelse(regexlib2,`',`libraries=["cbf","'regexlib`"],',`libraries=["cbf","'regexlib`","'regexlib2`"],')'  )`@\\
+\mbox{}\verb@         'm4_ifelse(regexlib,`NOREGEXLIB',`libraries=["cbf"],',`libraries=["cbf","'regexlib`"],')`@\\
 \mbox{}\verb@         include_dirs = ["../include","'hdf5_prefix`/include"] )@\\
 \mbox{}\verb@            @\\
 \mbox{}\verb@# Build it@\\
