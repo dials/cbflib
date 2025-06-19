@@ -337,7 +337,7 @@ endif
 #
 # Definition to get a version of tifflib to support tiff2cbf
 #
-TIFF ?= tiff-4.0.6_rev_3Nov16
+TIFF ?= tiff-4.7.0
 TIFF_PREFIX ?= $(PWD)
 TIFF_INSTALL = $(TIFF)_INSTALL
 
@@ -792,7 +792,7 @@ PY3CIFRWURL     = http://downloads.sf.net/cbflib/$(PY3CIFRW).tar.gz
 PY3PLYURL       = http://downloads.sf.net/cbflib/$(PY3PLY).tar.gz
 endif
 REGEX_URL	?= https://github.com/PCRE2Project/pcre2/releases/download/$(REGEX)/$(REGEX).tar.gz
-TIFF_URL	?= http://downloads.sf.net/cbflib/$(TIFF).tar.gz
+TIFF_URL	?= https://download.osgeo.org/libtiff/$(TIFF).tar.gz
 HDF5_URL	?= https://github.com/HDFGroup/hdf5/releases/download/hdf5_1.14.6/$(HDF5).tar.gz
 ifneq ($(CBFLIB_DONT_USE_LOCAL_NUWEB),yes)
 NUWEB_URL	?= http://downloads.sf.net/cbflib/$(NUWEB_DEP).tar.gz

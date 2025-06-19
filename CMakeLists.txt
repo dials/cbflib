@@ -465,8 +465,8 @@ fetchcontent_declare(pcre2
   URL_HASH MD5=88fe01e3f2ec144912ebecf7ef5cd595)
 
 fetchcontent_declare(tiff
-  URL "http://downloads.sf.net/cbflib/tiff-4.0.6_rev_3Nov16.tar.gz"
-  URL_HASH MD5=594d1811ce715f7d5ec586bf5e0c4732)
+  URL "https://download.osgeo.org/libtiff/tiff-4.7.0.tar.gz"
+  URL_HASH MD5=3a0fa4a270a4a192b08913f88d0cfbdd)
 
 
 #
@@ -630,25 +630,21 @@ set(CBF_WITH_LIBTIFF ON CACHE BOOL
 mark_as_advanced(CBF_WITH_LIBTIFF)
 
 if(CBF_WITH_LIBTIFF)
-  # The first LibTIFF at https://gitlab.com/libtiff/libtiff with
+  # The first LibTIFF at https://download.osgeo.org/libtiff with
   # native CMake support seems to be 4.0.5.  The first version that
   # builds on current MSYS2 is 4.0.9.
   #
   # 4.0.3-rev-29Sep13 appears to have CMakeLists.txt patched in but
   # fails on MSYS2: multiple definition of ua_wcsicmp.
+  #
+  # 4.0.6_rev_3Nov16 fails on MSYS2: _FILE_OFFSET_BITS not defined
+  #
+  # 4.0.8 fails on MSYS2: _FILE_OFFSET_BITS
   set(tiff-contrib OFF CACHE INTERNAL "Build TIFF contrib")
   set(tiff-docs OFF CACHE INTERNAL "Build TIFF documentation")
   set(tiff-tests OFF CACHE INTERNAL "Build TIFF tests")
   set(tiff-tools OFF CACHE INTERNAL "Build TIFF tools")
   fetchcontent_makeavailable(tiff)
-
-
-  # Always use tiffconf.h and tiffio.h from ${tiff_BUILD_DIR}/libtiff
-  # and ${tiff_SOURCE_DIR}/libtiff, respectively, rather than
-  # system-supplied headers.
-  target_include_directories(tiff PUBLIC
-    "$<BUILD_INTERFACE:${tiff_BINARY_DIR}/libtiff>"
-    "$<BUILD_INTERFACE:${tiff_SOURCE_DIR}/libtiff>")
 
 else()
   # find_package(TIFF) appears to miss the dependencies (Lerc, jbig,
@@ -661,7 +657,7 @@ else()
   # cmake_pkg_config(), because e.g. Debian does not ship CMake config
   # files in their dev packages.
   find_package(PkgConfig REQUIRED)
-  pkg_check_modules(tiff REQUIRED IMPORTED_TARGET libtiff-4)
+  pkg_check_modules(tiff REQUIRED IMPORTED_TARGET libtiff-4>=4.0.10)
   add_library(tiff ALIAS PkgConfig::tiff)
 endif()
 
