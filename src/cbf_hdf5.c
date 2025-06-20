@@ -26460,6 +26460,10 @@ static int process_DiffrnScanAxisCache(cbf_node * const category,
         const hsize_t max[] = {1};
         const hsize_t cnk[] = {1};
         hsize_t buf[] = {0};
+#ifdef CBF_USE_ULP
+        cmp_double_param_t cmp_double_params;
+        void * cmp_params = &cmp_double_params;
+#endif
 
 
         if (!handle || !h5handle || !matrix) return CBF_ARGUMENT;
