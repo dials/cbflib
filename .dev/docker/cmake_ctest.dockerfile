@@ -9,7 +9,7 @@ RUN apt-get update && \
 
 RUN cd /app/cbflib && \
   cmake . && \
-  cmake --build . --parallel 4
+  cmake --build . --parallel `nproc`
 
 RUN cd /app/cbflib && \
-  ctest --parallel 4
+  ctest --parallel `nproc`

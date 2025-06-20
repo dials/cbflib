@@ -545,11 +545,6 @@ REGEX_INCLUDES ?=
 endif
 
 
-# Program to use to retrieve a URL
-
-DOWNLOAD ?= wget -N
-#DOWNLOAD   ?= curl -O -L
-
 # Flag to control symlinks versus copying
 
 SLFLAGS = --use_ln
@@ -738,7 +733,6 @@ endif
 #########################################################
 #
 #  Appropriate compiler definitions for MAC OS X
-#  Also change defintion of DOWNLOAD
 #
 #########################################################
 CC	= gcc
@@ -757,14 +751,12 @@ RUNLDPREFIX = DYLD_LIBRARY_PATH=$(CBF_PREFIX)/lib:$$DYLD_LIBRARY_PATH;export DYL
 EXTRALIBS = -lm
 M4FLAGS = -Dfcb_bytes_in_rec=131072
 TIME = time
-DOWNLOAD = /sw/bin/wget -N
 SO_EXT = dylib',
 cbf_system,`OSX_gcc42',`
 #########################################################
 #
 #  Appropriate compiler definitions for MAC OS X
 #  with gcc 4.2
-#  Also change defintion of DOWNLOAD
 #
 #########################################################
 CC	= gcc
@@ -783,14 +775,12 @@ RUNLDPREFIX = DYLD_LIBRARY_PATH=$(CBF_PREFIX)/lib:$$DYLD_LIBRARY_PATH;export DYL
 EXTRALIBS = -lm
 M4FLAGS = -Dfcb_bytes_in_rec=131072
 TIME = time
-DOWNLOAD = /sw/bin/wget -N
 SO_EXT = dylib',
 cbf_system,`OSX_gcc42_DMALLOC',`
 #########################################################
 #
 #  Appropriate compiler definitions for MAC OS X
 #  with gcc 4.2 and DMALLOC
-#  Also change defintion of DOWNLOAD
 #
 #########################################################
 CC	= gcc
@@ -811,7 +801,6 @@ M4FLAGS = -Dfcb_bytes_in_rec=131072
 TIME = time
 # Default environment variable for dynamic library load path
 DLLVAR =  DYLD_LIBRARY_PATH
-DOWNLOAD = /sw/bin/wget -N
 SO_EXT = dylib',
 cbf_system,`LINUX_64',`
 #########################################################
@@ -1851,7 +1840,6 @@ $(SWIG_FORTRAN_KIT):    build_swig_fortran
 	git clone $(SWIG_FORTRAN_URL) $(SWIG_FORTRAN_KIT)
 	(export SWIG_FORTRAN_PREFIX=$(PWD);cd $(SWIG_FORTRAN_KIT); ./autogen.sh; \
 	./configure --prefix=$(F90CBF); make; make install) 
-	touch $(SWIG_FORTRAN_KIT)
 endif
 
 ifneq ($(CBFLIB_DONT_USE_LOCAL_SWIG),yes)
@@ -1865,7 +1853,6 @@ $(SWIG_KIT):    build_swig
 	git clone $(SWIG_URL) $(SWIG_KIT)
 	(export SWIG_PREFIX=$(PWD);cd $(SWIG_KIT); ./autogen.sh; \
 	./configure --prefix=$(SWIG_PREFIX); make; make install) 
-	touch $(SWIG_KIT)
 endif
 
 	
@@ -1877,10 +1864,7 @@ build_py2cifrw:	$(M4)/Makefile.m4
 	touch build_py2cifrw
 $(PY2CIFRW):	build_py2cifrw
 	-rm -rf $(PY2CIFRW)
-	-rm -rf $(PY2CIFRW).tar.gz
-	$(DOWNLOAD) $(PY2CIFRWURL)
-	tar -xvf $(PY2CIFRW).tar.gz
-	-rm $(PY2CIFRW).tar.gz
+	wget -O - -nv $(PY2CIFRWURL) | tar -xzf -
 	(cd $(PY2CIFRW); \
 	PYTHONPATH=$(PY2CIFRW_PREFIX)/lib/python:$(PY2CIFRW_PREFIX)/lib64/python; export PYTHONPATH; \
 	mkdir -p $(PY2CIFRW_PREFIX)/lib/python/site-packages; \
@@ -1894,10 +1878,7 @@ build_py2ply:	$(M4)/Makefile.m4
 	touch build_py2ply
 $(PY2PLY):	build_py2ply
 	-rm -rf $(PY2PLY)
-	-rm -rf $(PY2PLY).tar.gz
-	$(DOWNLOAD) $(PY2PLYURL)
-	tar -xvf $(PY2PLY).tar.gz
-	-rm $(PY2PLY).tar.gz
+	wget -O - -nv $(PY2PLYURL) | tar -xzf -
 	(cd $(PY2PLY); \
 	PYTHONPATH=$(PY2CIFRW_PREFIX)/lib/python:$(PY2CIFRW_PREFIX)/lib64/python; export PYTHONPATH; \
 	mkdir -p $(PY2CIFRW_PREFIX)/lib/python/site-packages; \
@@ -1913,10 +1894,7 @@ build_py3cifrw: $(M4)/Makefile.m4
 	touch build_py3cifrw
 $(PY3CIFRW):    build_py3cifrw
 	-rm -rf $(PY3CIFRW)
-	-rm -rf $(PY3CIFRW).tar.gz
-	$(DOWNLOAD) $(PY3CIFRWURL)
-	tar -xvf $(PY3CIFRW).tar.gz
-	-rm $(PY3CIFRW).tar.gz
+	wget -O - -nv $(PY3CIFRWURL) | tar -xf -
 	(cd $(PY3CIFRW); \
 	PYTHONPATH=$(PY3CIFRW_PREFIX)/lib/python:$(PY3CIFRW_PREFIX)/lib64/python; export PYTHONPATH; \
 	mkdir -p $(PY3CIFRW_PREFIX)/lib/python/site-packages; \
@@ -1930,10 +1908,7 @@ build_py3ply:   $(M4)/Makefile.m4
 	touch build_py3ply
 $(PY3PLY):      build_py3ply
 	-rm -rf $(PY3PLY)
-	-rm -rf $(PY3PLY).tar.gz
-	$(DOWNLOAD) $(PY3PLYURL)
-	tar -xvf $(PY3PLY).tar.gz
-	-rm $(PY3PLY).tar.gz
+	wget -O - -nv $(PY3PLYURL) | tar -xzf -
 	(cd $(PY3PLY); \
 	PYTHONPATH=$(PY3CIFRW_PREFIX)/lib/python:$(PY3CIFRW_PREFIX)/lib64/python; export PYTHONPATH; \
 	mkdir -p $(PY3CIFRW_PREFIX)/lib/python/site-packages; \
@@ -1948,11 +1923,7 @@ endif
 ifneq ($(NUWEB_DEP),''`''`)
 $(NUWEB_DEP):
 	-rm -rf $(NUWEB_DEP)
-	-rm -rf $(NUWEB_DEP).tar.gz
-	$(DOWNLOAD) $(NUWEB_URL)
-	tar -xvf $(NUWEB_DEP).tar.gz
-	touch $(NUWEB_DEP)
-	rm $(NUWEB_DEP).tar.gz
+	wget -O - -nv $(NUWEB_URL) | tar -xzf -
 
 $(NUWEB_DEP2): $(NUWEB_DEP)
 	(cd $(NUWEB_DEP); make nuweb; cp nuweb $(NUWEB_DEP2))
@@ -1967,11 +1938,7 @@ build_regex:    $(M4)/Makefile.m4
 	touch build_regex
 $(REGEX):   build_regex
 	-rm -rf $(REGEX)
-	-rm -rf $(REGEX).tar.gz
-	$(DOWNLOAD) $(REGEX_URL)
-	tar -xvf $(REGEX).tar.gz
-	touch $(REGEX)
-	-rm $(REGEX).tar.gz
+	wget -O - -nv $(REGEX_URL) | tar -xzf -
 	cp config.guess config.sub $(REGEX)
 	(cd $(REGEX); \
 	prefix=$(REGEX_PREFIX); export prefix; \
@@ -1979,7 +1946,7 @@ $(REGEX):   build_regex
 	@-cp $(REGEX_PREFIX)/include/pcre2posix.h $(REGEX_PREFIX)/include/regex.h
 $(REGEX)_INSTALL:   $(REGEX)
 	-rm -rf $(REGEX)_install
-	rsync -avz $(REGEX)/ $(REGEX)_install
+	rsync -az $(REGEX)/ $(REGEX)_install
 	(cd $(REGEX)_install; prefix=$(CBF_PREFIX); export prefix; \
 	make distclean; ./configure --prefix=$(CBF_PREFIX); make install )
 	@-cp $(CBF_PREFIX)/include/pcre2posix.h $(CBF_PREFIX)/include/regex.h
@@ -1991,17 +1958,13 @@ build_tiff:	$(M4)/Makefile.m4
 	touch build_tiff
 $(TIFF):	build_tiff config.guess config.sub
 	-rm -rf $(TIFF)
-	-rm -rf $(TIFF).tar.gz
-	$(DOWNLOAD) $(TIFF_URL)
-	tar -xvf $(TIFF).tar.gz
-	touch $(TIFF)
-	-rm $(TIFF).tar.gz
+	wget -O - -nv $(TIFF_URL) | tar -xzf -
 	cp config.guess config.sub $(TIFF)/config/
 	(cd $(TIFF); prefix=$(TIFF_PREFIX); export prefix; \
 	./configure --prefix=$(TIFF_PREFIX); make install)
 $(TIFF)_INSTALL:    $(TIFF)
 	-rm -rf $(TIFF)_install
-	rsync -avz $(TIFF)/  $(TIFF)_install
+	rsync -az $(TIFF)/  $(TIFF)_install
 	(cd $(TIFF)_install; make distclean; prefix=$(CBF_PREFIX); export prefix; \
 	./configure --prefix=$(CBF_PREFIX); make install)
 
@@ -2015,13 +1978,9 @@ build_hdf5:	$(M4)/Makefile.m4
 	touch build_hdf5
 $(HDF5):	build_hdf5 $(LIBAECdep)
 	-rm -rf $(HDF5)
-	-rm -rf $(HDF5).tar.gz
-	$(DOWNLOAD) $(HDF5_URL)
-	tar -xvf $(HDF5).tar.gz
+	wget -O - -nv $(HDF5_URL) | tar -xzf -
 	cp config.guess $(HDF5)/bin/config.guess
 	cp config.sub $(HDF5)/bin/config.sub
-	touch $(HDF5)
-	-rm $(HDF5).tar.gz
 	echo  "first level HDF5 install in "$(HDF5_PREFIX)
 	(cd $(ROOT)/$(HDF5); \
 	CFLAGS="$(CFLAGS)"; export CFLAGS; \
@@ -2029,16 +1988,16 @@ $(HDF5):	build_hdf5 $(LIBAECdep)
 	./configure --prefix=$(ROOT)/$(HDF5)/hdf5 --enable-build-mode=production \
 	--enable-trace --enable-fortran --enable-using-memchecker --with-szlib=$(ROOT)  ;\
 	make install; \
-	rsync -avz $(ROOT)/$(HDF5)/hdf5/bin/ $(HDF5_PREFIX)/bin; \
-	rsync -avz $(ROOT)/$(HDF5)/hdf5/lib/ $(HDF5_PREFIX)/lib; \
-	rsync -avz $(ROOT)/$(HDF5)/hdf5/include/ $(HDF5_PREFIX)/include; \
+	rsync -az $(ROOT)/$(HDF5)/hdf5/bin/ $(HDF5_PREFIX)/bin; \
+	rsync -az $(ROOT)/$(HDF5)/hdf5/lib/ $(HDF5_PREFIX)/lib; \
+	rsync -az $(ROOT)/$(HDF5)/hdf5/include/ $(HDF5_PREFIX)/include; \
 	cd $(HDF5_PREFIX)/bin; $(ROOT)/$(HDF5)/hdf5/bin/h5redeploy -force )
 $(HDF5)_INSTALL:    $(HDF5)
 	-rm -rf $(HDF5)_install
 	echo "final HDF5 install in "$(CBF_PREFIX)
-	rsync -avz $(ROOT)/$(HDF5)/hdf5/bin/ $(CBF_PREFIX)/bin; \
-	rsync -avz $(ROOT)/$(HDF5)/hdf5/lib/ $(CBF_PREFIX)/lib; \
-	rsync -avz $(ROOT)/$(HDF5)/hdf5/include/ $(CBF_PREFIX)/include; \
+	rsync -az $(ROOT)/$(HDF5)/hdf5/bin/ $(CBF_PREFIX)/bin; \
+	rsync -az $(ROOT)/$(HDF5)/hdf5/lib/ $(CBF_PREFIX)/lib; \
+	rsync -az $(ROOT)/$(HDF5)/hdf5/include/ $(CBF_PREFIX)/include; \
 	cd $(CBF_PREFIX)/bin; $(ROOT)/$(HDF5)/hdf5/bin/h5redeploy -force
 endif
 
@@ -2051,13 +2010,9 @@ build_libaec:	$(M4)/Makefile.m4
 $(LIBAEC):	build_libaec
 	mkdir -p $(SOLIB)
 	-rm -rf $(LIBAEC)
-	-rm -rf $(LIBAEC).tar.gz
-	$(DOWNLOAD) $(LIBAEC_URL)
-	tar -xvf $(LIBAEC).tar.gz
-	-rm $(LIBAEC).tar.gz
+	wget -O - -nv $(LIBAEC_URL) | tar -xzf -
 	(cd $(LIBAEC); mkdir -p build; cd build; ../configure --prefix=$(ROOT); make install; \
 	cp $(LIB)/libsz.so* $(LIB)/libaec.so* $(SOLIB))
-	touch $(LIBAEC)
 endif
 
 ifneq ($(CBFLIB_DONT_USE_LZ4),yes)
@@ -2070,10 +2025,7 @@ $(LZ4): $(HDF5)	build_lz4
 	mkdir -p $(SOLIB)
 	-rm -rf $(LZ4)
 ifneq ($(MSYS2),yes)
-	-rm -rf $(LZ4).tar.gz
-	$(DOWNLOAD) $(LZ4_URL)
-	tar -xvf $(LZ4).tar.gz
-	-rm $(LZ4).tar.gz
+	wget -O - -nv $(LZ4_URL) | tar -xzf -
 	(cp $(LZ4include)/lz4.h $(INCLUDE); \
 	$(CC) $(CFLAGS) $(SOWCFLAGS) $(INCLUDES) $(WARNINGS) -c $(LZ4src)/lz4.c -o lz4.o; \
 	$(CC) $(CFLAGS) $(SOCFLAGS) $(INCLUDES) $(WARNINGS) -c $(LZ4src)/h5zlz4.c -o h5zlz4.o; \
@@ -2083,7 +2035,6 @@ else
 	git clone $(LZ4_URL)
 	(cd $(LZ4); mkdir build; cd build; cmake .. -G ''`MSYS Makefiles''` -DENABLE_LZ4_PLUGIN="yes"; make all; cp plugins/* $(SOLIB))
 endif 
-	touch $(LZ4)
 endif
 
 
@@ -2099,7 +2050,6 @@ $(BSHUF): $(HDF5)  build_BSHUF $(LZ4dep)
 	git clone $(BSHUF_URL)
 	(cd $(BSHUF); git submodule update --init; $(PYTHON3) -m build --config-setting=install \
           -C--h5plugin -C--h5plugin-dir=../solib -C--zstd -C--user) 
-	touch $(BSHUF)
 endif
 
 ifneq ($(CBFLIB_DONT_USE_ZSTD),yes)
@@ -2119,7 +2069,6 @@ $(ZSTD): $(HDF5)  build_ZSTD
 	$(CC) -shared zstd_h5plugin.o $(HDF5SOLIBS_LOCAL) $(HDF5SOLIBS_SYSTEM) -lzstd \
 	    -o $(SOLIB)/$(ZSTDFILTER).so; \
 	rm zstd_h5plugin.o)
-	touch $(ZSTD)
 endif
 
 ifneq ($(CBFLIB_DONT_USE_CQRLIB),yes)
@@ -2141,7 +2090,6 @@ cqrlib $(SOLIB)/libcqr.so $(LIB)lbcqr.a:  build_CQRLIB
 ifneq ($(RANLIB),)
 	$(RANLIB) $(LIB)/libcqr.a
 endif
-	touch cqrlib
 endif
 
 
@@ -2321,7 +2269,6 @@ $(PY2CBF)/xmas/readmarheader.py \
 $(PY2CBF)/xmas/xmasheaders.py   \
 $(PY2CBF)/xmas/xmas_cif_template.cif : $(NUWEB_DEP) $(NUWEB_DEP2) $(PY2CBF)/pycbf.w
 	(cd $(PY2CBF); $(NUWEB) pycbf.w )
-	touch $(PY2CBF)/py2setup_py.m4
  
 $(PY2CBF)/_py2cbf.$(PY2CBFEXT):	$(PY2CBF)  shared \
 	$(PY2CBF)/py2setup.py                    \
@@ -2393,7 +2340,6 @@ $(PY3CBF)/xmas/readmarheader.py \
 $(PY3CBF)/xmas/xmasheaders.py   \
 $(PY3CBF)/xmas/xmas_cif_template.cif: $(NUWEB_DEP) $(NUWEB_DEP2) $(PY3CBF)/pycbf.w
 	(cd $(PY3CBF); $(NUWEB) pycbf.w )
-	touch $(PY3CBF)/py3setup_py.m4
 
 
 $(PY3CBF)/_pycbf.$(PY3CBFEXT):	$(PY3CBF)  shared \
@@ -2853,16 +2799,10 @@ $(BIN)/cbf_testxfelread: $(LIB)/libcbf.a $(EXAMPLES)/cbf_testxfelread.c $(EXAMPL
 #
 
 $(DATADIRI):	$(M4)/Makefile.m4
-	(cd ..; $(DOWNLOAD) $(DATAURLI))
-	(cd ..; tar -zxvf CBFlib_$(VERSION)_Data_Files_Input.tar.gz)
-	touch $(DATADIRI)
-	-(cd ..; rm CBFlib_$(VERSION)_Data_Files_Input.tar.gz)
+	wget -O - -nv $(DATAURLI) | tar -C .. -xzf -
 
 $(DATADIRO):	$(M4)/Makefile.m4
-	(cd ..; $(DOWNLOAD) $(DATAURLO))
-	(cd ..; tar -zxvf CBFlib_$(VERSION)_Data_Files_Output.tar.gz)
-	touch $(DATADIRO)
-	-(cd ..; rm CBFlib_$(VERSION)_Data_Files_Output.tar.gz)
+	wget -O - -nv $(DATAURLO) | tar -C .. -xzf -
 
 # Input Data Files 
 
@@ -3543,7 +3483,7 @@ tar:   $(DOCUMENTS) $(SOURCE) $(SRC)/cbf.stx $(HEADERS) $(M4FILES)\
 	README.html README Makefile \
 	$(JPEGS)
 	-/bin/rm -f CBFlib.tar*
-	tar cvBf CBFlib.tar \
+	tar -cf CBFlib.tar \
 	$(DOCUMENTS) $(SOURCE) $(SRC)/cbf.stx $(HEADERS) $(M4FILES)\
 	$(EXAMPLES) \
 	README.html README Makefile \

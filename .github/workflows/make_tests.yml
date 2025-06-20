@@ -12,32 +12,22 @@ on:
   schedule:
     - cron: '0 20 * * 1'  # Monday 20:00 UTC
 
-
 jobs:
   build_test:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    - name: create conda environments
-      run: |
-        conda create -y -n build -c conda-forge python=3.11 python-build
-        conda create -y -n test -c conda-forge python=3.11 numpy matplotlib
-    - name: install extra dependencies
+    - name: Install extra dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libjpeg-dev liblzma-dev
-    - name: build
+        sudo apt-get install -y libjpeg-dev liblzma-dev python3-build python3-dev python3-numpy-dev
+    - name: Build
       run: |
-        source /usr/share/miniconda/etc/profile.d/conda.sh
-        conda activate build
         make all
-    - name: test
+    - name: Test
       run: |
-        source /usr/share/miniconda/etc/profile.d/conda.sh
-        conda activate test
         make tests 2>&1 | tee test.out
-    - name : check test output
+    - name : Check test output
       run: |
         ! grep -a ignored test.out

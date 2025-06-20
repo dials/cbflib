@@ -1,4 +1,4 @@
-name: Cmake build and tests
+name: CMake build and tests
 
 on:
   push:
@@ -18,14 +18,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: install extra dependencies
+    - name: Install extra dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y python3-numpy-dev
-    - name: build
+    - name: Build
       run: |
         cmake .
         cmake --build . --parallel `nproc`
-    - name: test
+    - name: Test
       run: |
         ctest --parallel `nproc`
