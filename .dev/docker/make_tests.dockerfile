@@ -1,5 +1,6 @@
 FROM ubuntu:24.04
 SHELL ["/bin/bash", "-c"]
+ENV LANG=C.UTF-8
 
 RUN mkdir /app
 COPY ./cbflib /app/cbflib
