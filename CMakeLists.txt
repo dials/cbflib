@@ -1216,6 +1216,15 @@ if(NOT HAVE_MKSTEMP)
     PRIVATE "${CBF__SRC}/mkstemp.c")
 endif()
 
+add_executable(cif2c
+  "${CBF__EXAMPLES}/cif2c.c")
+target_link_libraries(cif2c
+  cbf)
+if(NOT HAVE_MKSTEMP)
+  target_sources(cif2c
+    PRIVATE "${CBF__SRC}/mkstemp.c")
+endif()
+
 add_executable(cif2cbf
   "${CBF__EXAMPLES}/cif2cbf.c")
 target_link_libraries(cif2cbf
