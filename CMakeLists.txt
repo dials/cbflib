@@ -1110,7 +1110,8 @@ target_link_libraries(cbf_standardize_numbers
   cbf
   "${libm}")
 if(NOT HAVE_FGETLN)
-  target_sources(cbf_standardize_numbers PRIVATE "${CBF__SRC}/fgetln.c")
+  target_sources(cbf_standardize_numbers
+    PRIVATE "${CBF__SRC}/fgetln.c")
 endif()
 
 add_executable(cbf_tail

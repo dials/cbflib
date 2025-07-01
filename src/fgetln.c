@@ -31,9 +31,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef HAVE_fgetln
 char *
-fgetln(FILE *stream, size_t *len)
+_cbf_fgetln(FILE *stream, size_t *len)
 {
   static char *buf = NULL;
   static size_t buflen = 0;
@@ -63,4 +62,3 @@ fgetln(FILE *stream, size_t *len)
   *len = strlen(buf);
   return buf;
 }
-#endif /* !defined(HAVE_fgetln) */
