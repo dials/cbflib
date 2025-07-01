@@ -337,12 +337,18 @@ if (NOT CMAKE_BUILD_TYPE)
 endif (NOT CMAKE_BUILD_TYPE)
 
 
-# Check for missing functions: fgetln(3) is in 4.4BSD; regcomp(3) is
-# in POSIX.1-2001, POSIX.1-2008.
+# Check for missing functions: fgetln(3) is in 4.4BSD; realpath(3) is
+# in 4.4BSD, POSIX.1-2001; regcomp(3) is in POSIX.1-2001,
+# POSIX.1-2008.
 include(CheckSymbolExists)
 check_symbol_exists(fgetln "stdio.h" HAVE_FGETLN)
 if(HAVE_FGETLN)
   add_compile_definitions("HAVE_FGETLN")
+endif()
+
+check_symbol_exists(realpath "stdlib.h" HAVE_REALPATH)
+if(HAVE_REALPATH)
+  add_compile_definitions("HAVE_REALPATH")
 endif()
 
 check_symbol_exists(regcomp "regex.h" HAVE_REGEX)
@@ -818,6 +824,10 @@ if(CBF_ENABLE_ULP)
     PUBLIC CBF_USE_ULP)
   target_sources(cbf
     PRIVATE "${CBF__SRC}/cbf_ulp.c")
+endif()
+if(NOT HAVE_REALPATH)
+  target_sources(cbf
+    PRIVATE "${CBF__SRC}/realpath.c")
 endif()
 
 set_target_properties(cbf PROPERTIES OUTPUT_NAME "cbf")
