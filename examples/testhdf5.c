@@ -1121,11 +1121,13 @@ static testResult_t test_H5Dinsert
 	TEST_CBF_PASS(cbf_H5Dinsert(dset,off,std,cnt,buf,val,type));
 	{/* post-conditions */
 		CBF_CALL(cbf_H5Dread2(dset,off,std,cnt,valBuf,type));
-		if (CBF_SUCCESS==error) TEST(!cmp(val,valBuf,length
+		if (CBF_SUCCESS==error) {
 #ifdef CBF_USE_ULP
-                                          ,cmp_params
+			TEST(!cmp(val,valBuf,length,cmp_params));
+#else
+			TEST(!cmp(val,valBuf,length));
 #endif
-                                          ));
+		}
 	}
     
 	return r;
