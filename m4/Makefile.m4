@@ -737,7 +737,7 @@ endif
 #########################################################
 CC	= gcc
 C++	= g++
-CFLAGS  = -g -O2 -Wall -std=c99 -pedantic $(HDF5CFLAGS)
+CFLAGS  = -g -O2 -Wall -std=c99 -pedantic -DHAVE_REALPATH $(HDF5CFLAGS)
 LDFLAGS =
 F90C = gfortran
 #F90FLAGS = -g -fno-range-check -fallow-invalid-boz
@@ -761,7 +761,7 @@ cbf_system,`OSX_gcc42',`
 #########################################################
 CC	= gcc
 C++	= g++
-CFLAGS  = -g -O2 -Wall -std=c99 -pedantic $(HDF5CFLAGS)
+CFLAGS  = -g -O2 -Wall -std=c99 -pedantic -DHAVE_REALPATH $(HDF5CFLAGS)
 LDFLAGS =
 F90C = gfortran
 #F90FLAGS = -g -fno-range-check -fallow-invalid-boz
@@ -785,7 +785,7 @@ cbf_system,`OSX_gcc42_DMALLOC',`
 #########################################################
 CC	= gcc
 C++	= g++
-CFLAGS  = -g -O2 -Wall -std=c99 -pedantic -DDMALLOC -DDMALLOC_FUNC_CHECK -I$(HOME)/include $(HDF5CFLAGS)
+CFLAGS  = -g -O2 -Wall -std=c99 -pedantic -DDMALLOC -DDMALLOC_FUNC_CHECK -DHAVE_REALPATH -I$(HOME)/include $(HDF5CFLAGS)
 LDFLAGS =
 F90C = gfortran
 #F90FLAGS = -g -fno-range-check -fallow-invalid-boz
@@ -811,7 +811,7 @@ cbf_system,`LINUX_64',`
 #########################################################
 CC	= gcc -m64
 C++	= g++ -m64
-CFLAGS  = -g -O2 -Wall -D_USE_XOPEN_EXTENDED -fno-strict-aliasing  $(HDF5CFLAGS)
+CFLAGS  = -g -O2 -Wall -DHAVE_REALPATH -D_USE_XOPEN_EXTENDED -fno-strict-aliasing  $(HDF5CFLAGS)
 LDFLAGS =
 F90C = gfortran -m64
 #F90FLAGS = -g -fno-range-check -fallow-invalid-boz
@@ -839,7 +839,7 @@ cbf_system,`LINUX_gcc42',`
 #########################################################
 CC	= gcc
 C++	= g++
-CFLAGS  = -g -O2 -Wall -D_USE_XOPEN_EXTENDED -fno-strict-aliasing  $(HDF5CFLAGS)
+CFLAGS  = -g -O2 -Wall -DHAVE_REALPATH -D_USE_XOPEN_EXTENDED -fno-strict-aliasing  $(HDF5CFLAGS)
 LDFLAGS =
 F90C = gfortran
 #F90FLAGS = -g -fno-range-check -fallow-invalid-boz
@@ -866,7 +866,7 @@ cbf_system,`LINUX',`
 #########################################################
 CC	= gcc
 C++	= g++
-CFLAGS  = -g -O2 -Wall -D_USE_XOPEN_EXTENDED -fno-strict-aliasing  $(HDF5CFLAGS)
+CFLAGS  = -g -O2 -Wall -DHAVE_REALPATH -D_USE_XOPEN_EXTENDED -fno-strict-aliasing  $(HDF5CFLAGS)
 LDFLAGS =
 F90C = gfortran
 #F90FLAGS = -g -fno-range-check -fallow-invalid-boz
@@ -894,7 +894,7 @@ cbf_system,`LINUX_gcc42_DMALLOC', `
 #########################################################
 CC	= gcc
 C++	= g++
-CFLAGS  = -g -O2 -Wall -D_USE_XOPEN_EXTENDED -fno-strict-aliasing \
+CFLAGS  = -g -O2 -Wall -DHAVE_REALPATH -D_USE_XOPEN_EXTENDED -fno-strict-aliasing \
 	  -DDMALLOC -DDMALLOC_FUNC_CHECK  $(HDF5CFLAGS)  -I$(HOME)/include
 LDFLAGS =
 F90C = gfortran
@@ -921,7 +921,7 @@ cbf_system,`LINUX_DMALLOC',`
 #########################################################
 CC	= gcc
 C++	= g++
-CFLAGS  = -g -O2 -Wall -D_USE_XOPEN_EXTENDED -fno-strict-aliasing \
+CFLAGS  = -g -O2 -Wall -DHAVE_REALPATH -D_USE_XOPEN_EXTENDED -fno-strict-aliasing \
 	  -DDMALLOC -DDMALLOC_FUNC_CHECK   $(HDF5CFLAGS) -I$(HOME)/include
 LDFLAGS =
 F90C = gfortran
@@ -1094,9 +1094,9 @@ RANLIB  = ',
 CC	= gcc
 C++	= g++
 ifneq ($(CBFDEBUG),)
-CFLAGS  = -g -O0 -Wall -D_USE_XOPEN_EXTENDED -fno-strict-aliasing -DCBFDEBUG=1  $(HDF5CFLAGS)
+CFLAGS  = -g -O0 -Wall -DHAVE_REALPATH -D_USE_XOPEN_EXTENDED -fno-strict-aliasing -DCBFDEBUG=1  $(HDF5CFLAGS)
 else
-CFLAGS  = -g -O3 -Wall -D_USE_XOPEN_EXTENDED -fno-strict-aliasing  $(HDF5CFLAGS)
+CFLAGS  = -g -O3 -Wall -DHAVE_REALPATH -D_USE_XOPEN_EXTENDED -fno-strict-aliasing  $(HDF5CFLAGS)
 endif
 LDFLAGS =
 F90C = gfortran

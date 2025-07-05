@@ -283,6 +283,12 @@ extern "C" {
 #include <assert.h>
 #include <errno.h>
 
+#ifndef HAVE_REALPATH
+#define realpath _cbf_realpath
+char *
+_cbf_realpath(const char *path, char *resolved_path);
+#endif
+
     static int cbf_find_array_data_h5type
     (hid_t * const type,
      unsigned int bits,

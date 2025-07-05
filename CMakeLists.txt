@@ -337,12 +337,18 @@ if (NOT CMAKE_BUILD_TYPE)
 endif (NOT CMAKE_BUILD_TYPE)
 
 
-# Check for missing functions: fgetln(3) is in 4.4BSD; regcomp(3) is
-# in POSIX.1-2001, POSIX.1-2008.
+# Check for missing functions: fgetln(3) is in 4.4BSD; realpath(3) is
+# in 4.4BSD, POSIX.1-2001; regcomp(3) is in POSIX.1-2001,
+# POSIX.1-2008.
 include(CheckSymbolExists)
 check_symbol_exists(fgetln "stdio.h" HAVE_FGETLN)
 if(HAVE_FGETLN)
   add_compile_definitions("HAVE_FGETLN")
+endif()
+
+check_symbol_exists(realpath "stdlib.h" HAVE_REALPATH)
+if(HAVE_REALPATH)
+  add_compile_definitions("HAVE_REALPATH")
 endif()
 
 check_symbol_exists(regcomp "regex.h" HAVE_REGEX)
@@ -819,6 +825,10 @@ if(CBF_ENABLE_ULP)
   target_sources(cbf
     PRIVATE "${CBF__SRC}/cbf_ulp.c")
 endif()
+if(NOT HAVE_REALPATH)
+  target_sources(cbf
+    PRIVATE "${CBF__SRC}/realpath.c")
+endif()
 
 set_target_properties(cbf PROPERTIES OUTPUT_NAME "cbf")
 set_target_properties(cbf PROPERTIES LINKER_LANGUAGE C)
@@ -1100,7 +1110,8 @@ target_link_libraries(cbf_standardize_numbers
   cbf
   "${libm}")
 if(NOT HAVE_FGETLN)
-  target_sources(cbf_standardize_numbers PRIVATE "${CBF__SRC}/fgetln.c")
+  target_sources(cbf_standardize_numbers
+    PRIVATE "${CBF__SRC}/fgetln.c")
 endif()
 
 add_executable(cbf_tail

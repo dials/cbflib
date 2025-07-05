@@ -15,7 +15,11 @@
 #include <string.h>
 
 
-char * fgetln(FILE *, size_t *);
+#ifndef HAVE_FGETLN
+#    define fgetln _cbf_fgetln
+char *
+_cbf_fgetln(FILE *stream, size_t *len);
+#endif
 
 void usage ( void ) {
     
