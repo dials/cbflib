@@ -261,6 +261,8 @@ extern "C" {
 #if !defined(_MSC_VER)
 #define __USE_XOPEN
 #define _XOPEN_SOURCE
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 

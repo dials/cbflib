@@ -337,6 +337,14 @@ if (NOT CMAKE_BUILD_TYPE)
 endif (NOT CMAKE_BUILD_TYPE)
 
 
+# Check for missing header files.
+include(CheckIncludeFile)
+check_include_file("unistd.h" HAVE_UNISTD_H)
+if(HAVE_UNISTD_H)
+  add_compile_definitions("HAVE_UNISTD_H")
+endif()
+
+
 # Check for missing functions: fgetln(3) is in 4.4BSD; realpath(3) is
 # in 4.4BSD, POSIX.1-2001; regcomp(3) is in POSIX.1-2001,
 # POSIX.1-2008.

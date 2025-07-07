@@ -290,7 +290,9 @@
 #include <ctype.h>
 #include <time.h>
 #include <errno.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
 
 #include "cbf_getopt.h"
 

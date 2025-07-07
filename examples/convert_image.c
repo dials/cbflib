@@ -305,7 +305,9 @@
 #include <math.h>
 #include <errno.h>
 #include "cbf_getopt.h"
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
 
 
 

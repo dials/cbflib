@@ -498,7 +498,9 @@
 #include <time.h>
 #include <errno.h>
 #include "cbf_getopt.h"
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 #define C2CBUFSIZ 8192
 #define NUMDICTS 50

@@ -735,7 +735,7 @@ endif
 #########################################################
 CC	= gcc
 C++	= g++
-CFLAGS  = -g -O2 -Wall -DHAVE_REALPATH -D_USE_XOPEN_EXTENDED -fno-strict-aliasing  $(HDF5CFLAGS)
+CFLAGS  = -g -O2 -Wall -D_USE_XOPEN_EXTENDED -fno-strict-aliasing -DHAVE_REALPATH -DHAVE_UNISTD_H $(HDF5CFLAGS)
 LDFLAGS =
 F90C = gfortran
 #F90FLAGS = -g -fno-range-check -fallow-invalid-boz

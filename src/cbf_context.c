@@ -261,7 +261,9 @@ extern "C" {
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+  #include <unistd.h>
+#endif
 #include <fcntl.h>
 #ifdef _WIN32
   #include <direct.h>

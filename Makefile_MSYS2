@@ -736,7 +736,8 @@ endif
 CC	= gcc
 C++	= g++
 CFLAGS  = -g -O2 -Wall -D_USE_XOPEN_EXTENDED -DH5_HAVE_WIN32_API \
-  -DH5_HAVE_MINGW -DH5_USE_110_API -fno-strict-aliasing  $(HDF5CFLAGS)
+  -DH5_HAVE_MINGW -DH5_USE_110_API -fno-strict-aliasing -DHAVE_UNISTD_H \
+  $(HDF5CFLAGS)
 LDFLAGS =
 F90C = gfortran
 #F90FLAGS = -g -fno-range-check -fallow-invalid-boz

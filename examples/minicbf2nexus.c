@@ -253,7 +253,9 @@
 #include <ctype.h>
 #include <time.h>
 #include <errno.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #ifdef CBF_USE_ULP
 #include <stdint.h>
 #endif
