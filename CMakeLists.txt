@@ -317,8 +317,7 @@ set (CBF_CMAKE_DEBUG "ON")
 # Java and Python bindings
 #
 # The Java and Python modules can only be built when BUILD_SHARED_LIBS
-# is set.  On Debian, Java should only require openjdk-17-jdk-headless
-# but AWT requires openjdk-17-jdk?
+# is set, but that is not enforced here.
 if(BUILD_SHARED_LIBS)
   option(CBF_ENABLE_JAVA "Enable Java" ON)
   option(CBF_ENABLE_PYTHON "Enable Python" ON)
@@ -676,6 +675,7 @@ set(
     ${CBF__SRC}/cbf.c
     "${CBF__SRC}/cbf_airy_disk.c"
     ${CBF__SRC}/cbf_alloc.c
+    "${CBF__SRC}/cbf_array2minicbf.c"
     ${CBF__SRC}/cbf_ascii.c
     ${CBF__SRC}/cbf_binary.c
     ${CBF__SRC}/cbf_byte_offset.c
@@ -736,6 +736,7 @@ set(
 	CBF_HEADERS
 	${CBF__INCLUDE}/cbf.h			
     ${CBF__INCLUDE}/cbf_alloc.h
+    "${CBF__INCLUDE}/cbf_array2minicbf.h"
     ${CBF__INCLUDE}/cbf_ascii.h
     ${CBF__INCLUDE}/cbf_binary.h		
     ${CBF__INCLUDE}/cbf_byte_offset.h
@@ -830,7 +831,6 @@ if(NOT HAVE_REALPATH)
     PRIVATE "${CBF__SRC}/realpath.c")
 endif()
 
-set_target_properties(cbf PROPERTIES OUTPUT_NAME "cbf")
 set_target_properties(cbf PROPERTIES LINKER_LANGUAGE C)
 set_target_properties(cbf PROPERTIES SOVERSION "${SOVERSION}")
 target_link_libraries(cbf
@@ -843,13 +843,12 @@ target_link_libraries(cbf
 # Build the static and shared IMG libraries
 #
 add_library(img "${CBF__SRC}/img.c")
-set_target_properties(img PROPERTIES OUTPUT_NAME "img")
 set_target_properties(img PROPERTIES LINKER_LANGUAGE C)
 
 
 #
-# Build all Fortran sources and libraries.  The f90cbf library is not
-# installed.
+# Build Fortran sources, libraries, and examples.  The f90cbf library
+# and the examples for testing are not installed.
 if(CBF_ENABLE_FORTRAN)
   find_program(M4 m4 REQUIRED)
   set(M4FLAGS "-Dfcb_bytes_in_rec=4096" CACHE STRING
@@ -872,13 +871,16 @@ if(CBF_ENABLE_FORTRAN)
     set(f90bldsrc "${CMAKE_CURRENT_BINARY_DIR}/src/${filename}.f90")
     add_custom_command(
       OUTPUT "${f90bldsrc}"
-      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/m4"
       COMMAND ${CMAKE_COMMAND} -E make_directory
         "${CMAKE_CURRENT_BINARY_DIR}/src"
-      COMMAND ${M4} -P ${M4FLAGS} "${f90srcm4}" > "${f90bldsrc}"
+      COMMAND ${CMAKE_COMMAND}
+        "-Dcommand=${M4};-P;${M4FLAGS};${f90srcm4}"
+        "-Doutput-file=${f90bldsrc}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake"
       DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/m4/fcblib_defines.m4"
               "${f90srcm4}"
-      COMMENT "Generating ${f90bldsrc}")
+      VERBATIM
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/m4")
   endforeach()
 
   add_library(fcb
@@ -895,9 +897,18 @@ if(CBF_ENABLE_FORTRAN)
     "${CBF__SRC}/fcb_read_byte.f90"
     "${CBF__SRC}/fcb_read_line.f90"
     "${CBF__SRC}/fcb_skip_whitespace.f90")
-  set_target_properties(fcb PROPERTIES OUTPUT_NAME "fcb")
   set_target_properties(fcb PROPERTIES LINKER_LANGUAGE C)
   install(TARGETS fcb DESTINATION lib)
+
+  add_executable(test_fcb_read_image
+    "${CMAKE_CURRENT_BINARY_DIR}/src/test_fcb_read_image.f90")
+  target_link_libraries(test_fcb_read_image
+    fcb)
+
+  add_executable(test_xds_binary
+    "${CMAKE_CURRENT_BINARY_DIR}/src/test_xds_binary.f90")
+  target_link_libraries(test_xds_binary
+    fcb)
 
 
   # Use the pre-generated SWIG wrapper, because current SWIG does not
@@ -911,9 +922,10 @@ endif()
 
 
 #
-# Java bindings
-if(CBF_ENABLE_JAVA)
-  # In CMake 3.24, COMPONENTS could be set to "JVM" for FindJNI.
+# Java bindings and examples
+if(BUILD_SHARED_LIBS AND CBF_ENABLE_JAVA)
+  # In CMake 3.24, COMPONENTS could be set to "JVM" for FindJNI,
+  # because AWT is not needed.
   find_package(Java COMPONENTS Development REQUIRED)
   find_package(JNI REQUIRED)
   find_package(SWIG COMPONENTS java REQUIRED)
@@ -926,7 +938,9 @@ if(CBF_ENABLE_JAVA)
   # ${_java_files_generated}, because it would be executed at
   # configuration time, when ${CMAKE_CURRENT_BINARY_DIR}/jcbf may not
   # exist.  get_property(... SWIG_SUPPORT_FILES) only returns
-  # "jcbf/cbf.java" and "jcbf/cbfJNI.java".
+  # "jcbf/cbf.java" and "jcbf/cbfJNI.java"; the contents of
+  # CMakeFiles/cbflib.dir/java_class_filelist do not appear to be
+  # accessible.
   #
   # CMake 3.19 and earlier may not automatically regenerate
   # ${CMAKE_CURRENT_BINARY_DIR}/jcbf for Makefile Generators unless
@@ -940,13 +954,14 @@ if(CBF_ENABLE_JAVA)
     LANGUAGE Java
     OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/jcbf"
     SOURCES "${CBF__SRC}/jcbf.i")
-  set_property(TARGET cbf_wrap PROPERTY
-    SWIG_COMPILE_OPTIONS -package org.iucr.cbflib)
+  set_target_properties(cbf_wrap PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+    SWIG_COMPILE_OPTIONS "-package;org.iucr.cbflib")
   target_include_directories(cbf_wrap
     PRIVATE "${JAVA_INCLUDE_PATH}"
             "${JAVA_INCLUDE_PATH2}")
   target_link_libraries(cbf_wrap
-    cbf)
+    PRIVATE cbf)
 
   set(_java_files_generated
     "${CMAKE_CURRENT_BINARY_DIR}/jcbf/CBF_NODETYPE.java"
@@ -977,16 +992,25 @@ if(CBF_ENABLE_JAVA)
     VERSION "${PROJECT_VERSION}")
   add_dependencies(cbflib
     cbf_wrap)
+
+  add_executable(ctestcbf
+    "${CBF__EXAMPLES}/testcbf.c")
+  target_link_libraries(ctestcbf
+    cbf)
+
+  add_jar(testcbf
+    "${CBF__EXAMPLES}/testcbf.java"
+    INCLUDE_JARS cbflib)
 endif()
 
 
 #
 # Python bindings
-if(CBF_ENABLE_PYTHON)
+if(BUILD_SHARED_LIBS AND CBF_ENABLE_PYTHON)
   # As per Makefile, want links (not lynx) to reduce the diffs against
   # versioned CBFlib.txt.  Need SWIG 4.0.0 or later.  For Python 3,
   # Makefile also adds "# coding=utf-8" to the top of pycbf.py.
-  find_program(BROWSER_DUMP_TOOL NAMES links lynx elinks)
+  find_program(BROWSER_DUMP_TOOL NAMES links elinks lynx REQUIRED)
   find_package(Python COMPONENTS Development Interpreter REQUIRED)
   find_package(SWIG COMPONENTS python REQUIRED)
   include(UseSWIG)
@@ -996,11 +1020,12 @@ if(CBF_ENABLE_PYTHON)
     COMMAND ${CMAKE_COMMAND} -E make_directory
       "${CMAKE_CURRENT_BINARY_DIR}/pycbf"
     COMMAND ${CMAKE_COMMAND}
-      "-Dcommand=${BROWSER_DUMP_TOOL};-dump;${CMAKE_CURRENT_SOURCE_DIR}/doc/CBFlib.html"
+      "-Dcommand=${BROWSER_DUMP_TOOL};-dump;CBFlib.html"
       "-Doutput-file=${CMAKE_CURRENT_BINARY_DIR}/pycbf/CBFlib.txt"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake"
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/doc/CBFlib.html"
-    VERBATIM)
+    VERBATIM
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/doc")
 
 
   # Generate the SWIG interfaces from CBFlib.txt (so really no need to
@@ -1030,9 +1055,10 @@ if(CBF_ENABLE_PYTHON)
   swig_add_library(pycbf
     SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf.i"
     LANGUAGE Python
-    OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/pycbf")
+    OUTFILE_DIR "${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
   set_target_properties(pycbf PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pycbf")
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
   target_compile_definitions(pycbf
     PRIVATE SWIG_PYTHON_STRICT_BYTE_CHAR)
   target_link_libraries(pycbf
@@ -1199,35 +1225,6 @@ add_executable(testreals
   "${CBF__EXAMPLES}/testreals.c")
 target_link_libraries(testreals
   cbf)
-
-
-#
-# F90 examples.  Only for testing, not installed.
-if(CBF_ENABLE_FORTRAN)
-  add_executable(test_fcb_read_image
-    "${CMAKE_CURRENT_BINARY_DIR}/src/test_fcb_read_image.f90")
-  target_link_libraries(test_fcb_read_image
-    fcb)
-
-  add_executable(test_xds_binary
-    "${CMAKE_CURRENT_BINARY_DIR}/src/test_xds_binary.f90")
-  target_link_libraries(test_xds_binary
-    fcb)
-endif()
-
-
-#
-# Java examples
-if(CBF_ENABLE_JAVA)
-  add_executable(ctestcbf
-    "${CBF__EXAMPLES}/testcbf.c")
-  target_link_libraries(ctestcbf
-    cbf)
-
-  add_jar(testcbf
-    "${CBF__EXAMPLES}/testcbf.java"
-    INCLUDE_JARS cbflib)
-endif()
 
 
 #
@@ -2433,7 +2430,7 @@ if(CBF_ENABLE_FORTRAN)
     FIXTURES_CLEANUP xds_binary-flat)
 
   add_test(NAME xds_binary-flat-cmp
-    COMMAND ${CMAKE_COMMAND} -E compare_files
+    COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol
       "${data_output}/test_xds_bin_testflatout_orig.out"
       "${CBF__DATA}/test_xds_bin_testflatout.out")
   set_tests_properties(xds_binary-flat-cmp PROPERTIES
@@ -2460,7 +2457,7 @@ if(CBF_ENABLE_FORTRAN)
     FIXTURES_CLEANUP xds_binary-flatpacked)
 
   add_test(NAME xds_binary-flatpacked-cmp
-    COMMAND ${CMAKE_COMMAND} -E compare_files
+    COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol
       "${data_output}/test_xds_bin_testflatpackedout_orig.out"
       "${CBF__DATA}/test_xds_bin_testflatpackedout.out")
   set_tests_properties(xds_binary-flatpacked-cmp PROPERTIES
@@ -2487,7 +2484,7 @@ if(CBF_ENABLE_FORTRAN)
     FIXTURES_CLEANUP fcb_read_image-flat)
 
   add_test(NAME fcb_read_image-flat-cmp
-    COMMAND ${CMAKE_COMMAND} -E compare_files
+    COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol
       "${data_output}/test_fcb_read_testflatout_orig.out"
       "${CBF__DATA}/test_fcb_read_testflatout.out")
   set_tests_properties(fcb_read_image-flat-cmp PROPERTIES
@@ -2514,7 +2511,7 @@ if(CBF_ENABLE_FORTRAN)
     FIXTURES_CLEANUP fcb_read_image-flatpacked)
 
   add_test(NAME fcb_read_image-flatpacked-cmp
-    COMMAND ${CMAKE_COMMAND} -E compare_files
+    COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol
       "${data_output}/test_fcb_read_testflatpackedout_orig.out"
       "${CBF__DATA}/test_fcb_read_testflatpackedout.out")
   set_tests_properties(fcb_read_image-flatpacked-cmp PROPERTIES
@@ -2525,13 +2522,12 @@ endif()
 
 #
 # Java tests
-if(CBF_ENABLE_JAVA)
+if(BUILD_SHARED_LIBS AND CBF_ENABLE_JAVA)
   add_test(NAME java-setup-c
     COMMAND ${CMAKE_COMMAND}
-      "-Dcommand=$<TARGET_FILE:ctestcbf>"
+      "-Dcommand=$<TARGET_FILE:ctestcbf>;${CMAKE_CURRENT_SOURCE_DIR}/examples/template_pilatus6m_2463x2527.cbf"
       "-Doutput-file=${CBF__DATA}/testcbfc.txt"
-      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake")
   set_tests_properties(java-setup-c PROPERTIES
     FIXTURES_SETUP java-setup-c
     REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/examples/template_pilatus6m_2463x2527.cbf")
@@ -2541,13 +2537,35 @@ if(CBF_ENABLE_JAVA)
   set_tests_properties(java-cleanup-c PROPERTIES
     FIXTURES_CLEANUP java-setup-c)
 
+
+  # Tweak PATH to find CBFlib: this appears to be necessary on
+  # Windows, where java.library.path may not be honored for dependent
+  # libraries.  Linux still needs java.library_path.
+  #
+  # CMake 3.22 has path_list_append() for manipulating path lists;
+  # could use $<JOIN:${class_path},${glue}> with that.
+  set(class_path
+    "$<TARGET_PROPERTY:cbflib,JAR_FILE>"
+    "$<TARGET_PROPERTY:testcbf,JAR_FILE>")
+
+  set(library_path
+    "$<TARGET_FILE_DIR:cbf_wrap>"
+    "$<TARGET_FILE_DIR:cbf>"
+    "$ENV{PATH}")
+
+  if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(glue "\;")
+  else()
+    set(glue ":")
+  endif()
+
   add_test(NAME java-setup-java
     COMMAND ${CMAKE_COMMAND}
-      "-Dcommand=${Java_JAVA_EXECUTABLE};-Djava.library.path=${CMAKE_BINARY_DIR}/lib/;-cp;$<TARGET_PROPERTY:cbflib,JAR_FILE>:$<TARGET_PROPERTY:testcbf,JAR_FILE>;testcbf"
+      "-Dcommand=${Java_JAVA_EXECUTABLE};-Djava.library.path=$<TARGET_FILE_DIR:cbf_wrap>;-cp;$<JOIN:${class_path},${glue}>;testcbf;${CMAKE_CURRENT_SOURCE_DIR}/examples/template_pilatus6m_2463x2527.cbf"
       "-Doutput-file=${CBF__DATA}/testcbfj.txt"
-      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake")
   set_tests_properties(java-setup-java PROPERTIES
+    ENVIRONMENT "PATH=$<JOIN:${library_path},${glue}>"
     FIXTURES_SETUP java-setup-java
     REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/examples/template_pilatus6m_2463x2527.cbf")
 
@@ -2567,14 +2585,14 @@ endif()
 
 #
 # Python tests
-if(CBF_ENABLE_PYTHON)
+if(BUILD_SHARED_LIBS AND CBF_ENABLE_PYTHON)
   add_test(NAME pycbf-test1
     COMMAND Python::Interpreter
       "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_test1.py"
       "${CBF__DATA}/img2cif_packed.cif"
       "${CBF__DATA}/pycbf_test1.raw")
   set_tests_properties(pycbf-test1 PROPERTIES
-    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:pycbf>"
     FIXTURES_REQUIRED "img2cif-flatpacked-cif"
     FIXTURES_SETUP pycbf-test1
     REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_test1.py")
@@ -2600,7 +2618,7 @@ if(CBF_ENABLE_PYTHON)
     FIXTURES_CLEANUP pycbf-test1-standardize-numbers)
 
   add_test(NAME pycbf-test1-cmp
-    COMMAND ${CMAKE_COMMAND} -E compare_files
+    COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol
       "${data_output}/pycbf_test1_orig.out"
       "${CBF__DATA}/pycbf_test1.out")
   set_tests_properties(pycbf-test1-cmp PROPERTIES
@@ -2614,7 +2632,7 @@ if(CBF_ENABLE_PYTHON)
       "${CBF__DATA}/adscconverted.cbf"
       "${CBF__DATA}/pycbf_test2.raw")
   set_tests_properties(pycbf-test2 PROPERTIES
-    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:pycbf>"
     FIXTURES_REQUIRED "convert_image-adscimg"
     FIXTURES_SETUP pycbf-test2
     REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_test2.py")
@@ -2640,7 +2658,7 @@ if(CBF_ENABLE_PYTHON)
     FIXTURES_CLEANUP pycbf-test2-standardize-numbers)
 
   add_test(NAME pycbf-test2-cmp
-    COMMAND ${CMAKE_COMMAND} -E compare_files
+    COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol
       "${data_output}/pycbf_test2_orig.out"
       "${CBF__DATA}/pycbf_test2.out")
   set_tests_properties(pycbf-test2-cmp PROPERTIES
@@ -2652,7 +2670,7 @@ if(CBF_ENABLE_PYTHON)
     COMMAND Python::Interpreter
       "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_test3.py")
   set_tests_properties(pycbf-test3 PROPERTIES
-    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:pycbf>"
     REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_test3.py")
 
 
@@ -2663,7 +2681,7 @@ if(CBF_ENABLE_PYTHON)
       "${CBF__DATA}/pycbf_test4.raw"
       "${CBF__DATA}/newtest1.cbf")
   set_tests_properties(pycbf-test4 PROPERTIES
-    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:pycbf>"
     FIXTURES_REQUIRED "img2cif-flatpacked-cif"
     FIXTURES_SETUP pycbf-test4
     REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf_test4.py")
@@ -2691,7 +2709,7 @@ if(CBF_ENABLE_PYTHON)
     FIXTURES_CLEANUP pycbf-test4-standardize-numbers)
 
   add_test(NAME pycbf-test4-cmp
-    COMMAND ${CMAKE_COMMAND} -E compare_files
+    COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol
       "${data_output}/pycbf_test4_orig.out"
       "${CBF__DATA}/pycbf_test4.out")
   set_tests_properties(pycbf-test4-cmp PROPERTIES
@@ -2705,7 +2723,7 @@ if(CBF_ENABLE_PYTHON)
       "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/fel_test1.cbf"
       "${CBF__DATA}/fel_test1.raw")
   set_tests_properties(pycbf-fel1 PROPERTIES
-    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:pycbf>"
     FIXTURES_SETUP pycbf-fel1
     REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/fel_test1.cbf")
 
@@ -2730,7 +2748,7 @@ if(CBF_ENABLE_PYTHON)
     FIXTURES_CLEANUP pycbf-fel1-standardize-numbers)
 
   add_test(NAME pycbf-fel1-cmp
-    COMMAND ${CMAKE_COMMAND} -E compare_files
+    COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol
       "${data_output}/fel_test1_orig.out"
       "${CBF__DATA}/fel_test1.out")
   set_tests_properties(pycbf-fel1-cmp PROPERTIES
@@ -2744,7 +2762,7 @@ if(CBF_ENABLE_PYTHON)
       "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/fel_test2.cbf"
       "${CBF__DATA}/fel_test2.raw")
   set_tests_properties(pycbf-fel2 PROPERTIES
-    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:pycbf>"
     FIXTURES_SETUP pycbf-fel2
     REQUIRED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/fel_test2.cbf")
 
@@ -2769,7 +2787,7 @@ if(CBF_ENABLE_PYTHON)
     FIXTURES_CLEANUP pycbf-fel2-standardize-numbers)
 
   add_test(NAME pycbf-fel2-cmp
-    COMMAND ${CMAKE_COMMAND} -E compare_files
+    COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol
       "${data_output}/fel_test2_orig.out"
       "${CBF__DATA}/fel_test2.out")
   set_tests_properties(pycbf-fel2-cmp PROPERTIES
@@ -2783,7 +2801,7 @@ if(CBF_ENABLE_PYTHON)
       "${data_input}/hit-20140306005258847.cbf"
       "${CBF__DATA}/fel_test3.raw")
   set_tests_properties(pycbf-fel3 PROPERTIES
-    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/pycbf"
+    ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:pycbf>"
     FIXTURES_SETUP pycbf-fel3
     REQUIRED_FILES "${data_input}/hit-20140306005258847.cbf")
 
@@ -2808,7 +2826,7 @@ if(CBF_ENABLE_PYTHON)
     FIXTURES_CLEANUP pycbf-fel3-standardize-numbers)
 
   add_test(NAME pycbf-fel3-cmp
-    COMMAND ${CMAKE_COMMAND} -E compare_files
+    COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol
       "${data_output}/fel_test3_orig.out"
       "${CBF__DATA}/fel_test3.out")
   set_tests_properties(pycbf-fel3-cmp PROPERTIES

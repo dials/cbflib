@@ -56,7 +56,7 @@ print("pycbf Copyright (C) 2005  Jonathan Wright, no warranty, LGPL")
 
 
 # Get the ascii text as a list of strings 
-lines = open("CBFlib.txt","r").readlines()
+lines = open("CBFlib.txt","r",encoding="utf-8").readlines()
 
 # Variables to hold the useful things we find in the file
 docstring = "\n"
@@ -3406,11 +3406,11 @@ def generate_wrappers(name_dict):
 
 
 generate_wrappers(name_dict)
-open("cbfgoniometerwrappers.i","w").write(cbf_goniometer_wrapper.get_code())
-open("cbfdetectorwrappers.i","w").write(cbf_detector_wrapper.get_code())
-open("cbfpositionerwrappers.i","w").write(cbf_positioner_wrapper.get_code())
-open("cbfhandlewrappers.i","w").write(cbf_handle_wrapper.get_code())
-open("cbfgenericwrappers.i","w").write(generic_wrapper.get_code())
+open("cbfgoniometerwrappers.i","w",encoding="utf-8").write(cbf_goniometer_wrapper.get_code())
+open("cbfdetectorwrappers.i","w",encoding="utf-8").write(cbf_detector_wrapper.get_code())
+open("cbfpositionerwrappers.i","w",encoding="utf-8").write(cbf_positioner_wrapper.get_code())
+open("cbfhandlewrappers.i","w",encoding="utf-8").write(cbf_handle_wrapper.get_code())
+open("cbfgenericwrappers.i","w",encoding="utf-8").write(generic_wrapper.get_code())
 
 print("End of output from make_pycbf.py")
 print("\\end{verbatim}")

@@ -994,7 +994,7 @@ input files is a python script named make\_pycbf.py.
 \mbox{}\verb@@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@# Get the ascii text as a list of strings @\\
-\mbox{}\verb@lines = open("CBFlib.txt","r").readlines()@\\
+\mbox{}\verb@lines = open("CBFlib.txt","r",encoding="utf-8").readlines()@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@# Variables to hold the useful things we find in the file@\\
 \mbox{}\verb@docstring = "\n"@\\
@@ -4344,11 +4344,11 @@ input files is a python script named make\_pycbf.py.
 \mbox{}\verb@@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@generate_wrappers(name_dict)@\\
-\mbox{}\verb@open("cbfgoniometerwrappers.i","w").write(cbf_goniometer_wrapper.get_code())@\\
-\mbox{}\verb@open("cbfdetectorwrappers.i","w").write(cbf_detector_wrapper.get_code())@\\
-\mbox{}\verb@open("cbfpositionerwrappers.i","w").write(cbf_positioner_wrapper.get_code())@\\
-\mbox{}\verb@open("cbfhandlewrappers.i","w").write(cbf_handle_wrapper.get_code())@\\
-\mbox{}\verb@open("cbfgenericwrappers.i","w").write(generic_wrapper.get_code())@\\
+\mbox{}\verb@open("cbfgoniometerwrappers.i","w",encoding="utf-8").write(cbf_goniometer_wrapper.get_code())@\\
+\mbox{}\verb@open("cbfdetectorwrappers.i","w",encoding="utf-8").write(cbf_detector_wrapper.get_code())@\\
+\mbox{}\verb@open("cbfpositionerwrappers.i","w",encoding="utf-8").write(cbf_positioner_wrapper.get_code())@\\
+\mbox{}\verb@open("cbfhandlewrappers.i","w",encoding="utf-8").write(cbf_handle_wrapper.get_code())@\\
+\mbox{}\verb@open("cbfgenericwrappers.i","w",encoding="utf-8").write(generic_wrapper.get_code())@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@print("End of output from make_pycbf.py")@\\
 \mbox{}\verb@print("\\end{verbatim}")@\\
@@ -4735,7 +4735,7 @@ It appears to work - eventually. Surprising
 \end{list}
 \end{minipage}\vspace{4ex}
 \end{flushleft}
-\subsection{Version of pycbf_test1 with write logic added}
+\subsection{Version of pycbf\_test1 with write logic added}
 
 \begin{flushleft} \small
 \begin{minipage}{\linewidth}\label{scrap16}\raggedright\small
