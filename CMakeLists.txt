@@ -636,16 +636,7 @@ set(CBF_WITH_LIBTIFF ON CACHE BOOL
 mark_as_advanced(CBF_WITH_LIBTIFF)
 
 if(CBF_WITH_LIBTIFF)
-  # The first LibTIFF at https://download.osgeo.org/libtiff with
-  # native CMake support seems to be 4.0.5.  The first version that
-  # builds on current MSYS2 is 4.0.9.
-  #
-  # 4.0.3-rev-29Sep13 appears to have CMakeLists.txt patched in but
-  # fails on MSYS2: multiple definition of ua_wcsicmp.
-  #
-  # 4.0.6_rev_3Nov16 fails on MSYS2: _FILE_OFFSET_BITS not defined
-  #
-  # 4.0.8 fails on MSYS2: _FILE_OFFSET_BITS
+  # TIFFFieldSetGetSize() was introduced in LibTIFF 4.4.0
   set(tiff-contrib OFF CACHE INTERNAL "Build TIFF contrib")
   set(tiff-docs OFF CACHE INTERNAL "Build TIFF documentation")
   set(tiff-tests OFF CACHE INTERNAL "Build TIFF tests")
@@ -663,7 +654,7 @@ else()
   # cmake_pkg_config(), because e.g. Debian does not ship CMake config
   # files in their dev packages.
   find_package(PkgConfig REQUIRED)
-  pkg_check_modules(tiff REQUIRED IMPORTED_TARGET libtiff-4>=4.0.10)
+  pkg_check_modules(tiff REQUIRED IMPORTED_TARGET libtiff-4>=4.4.0)
   add_library(tiff ALIAS PkgConfig::tiff)
 endif()
 

@@ -78,40 +78,6 @@ static const char *orientNames[] = {
 };
 #define	NORIENTNAMES	(sizeof (orientNames) / sizeof (orientNames[0]))
 
-/*
- * Return data size of the field datatype in bytes.  LibTIFF 4.4.0 introduced
- * TIFFFieldSetGetSize() for this.
- */
-static int
-_TIFFFieldDataSize(const TIFFField *fip)
-{
-	switch (TIFFFieldDataType(fip))
-	{
-		case TIFF_BYTE:
-		case TIFF_SBYTE:
-		case TIFF_ASCII:
-		case TIFF_UNDEFINED:
-		    return 1;
-		case TIFF_SHORT:
-		case TIFF_SSHORT:
-		    return 2;
-		case TIFF_LONG:
-		case TIFF_SLONG:
-		case TIFF_FLOAT:
-		case TIFF_IFD:
-		case TIFF_RATIONAL:
-		case TIFF_SRATIONAL:
-		    return 4;
-		case TIFF_DOUBLE:
-		case TIFF_LONG8:
-		case TIFF_SLONG8:
-		case TIFF_IFD8:
-		    return 8;
-		default:
-		    return 0;
-	}
-}
-
 static size_t
 _TIFFSNPrintField(char * str, const size_t xstrlen, const TIFFField *fip,
                   uint32_t value_count, void *raw_data)
@@ -141,8 +107,8 @@ _TIFFSNPrintField(char * str, const size_t xstrlen, const TIFFField *fip,
 			chars_used += snprintf(str+chars_used, ((xstrlen>chars_used)?xstrlen-chars_used:0), "0x%" PRIx32, ((uint32_t *) raw_data)[j]);
 		else if(TIFFFieldDataType(fip) == TIFF_RATIONAL
 			|| TIFFFieldDataType(fip) == TIFF_SRATIONAL) {
-			if (_TIFFFieldDataSize(fip) == 8)
-				chars_used += snprintf(str+chars_used, ((xstrlen>chars_used)?xstrlen-chars_used:0), "%lf", ((double *)raw_data)[j]);
+			if (TIFFFieldSetGetSize(fip) == 8)
+				chars_used += snprintf(str+chars_used, ((xstrlen>chars_used)?xstrlen-chars_used:0), "%lf", ((double *) raw_data)[j]);
 			else
 				chars_used += snprintf(str+chars_used, ((xstrlen>chars_used)?xstrlen-chars_used:0), "%f", ((float *) raw_data)[j]);
 		} else if(TIFFFieldDataType(fip) == TIFF_FLOAT)
@@ -289,8 +255,8 @@ cbf_TIFFSNPrintDirectory(TIFF* tif, char * str, const size_t xstrlen, long flags
     size_t chars_used = 0;
 
 	chars_used += snprintf(str+chars_used, ((xstrlen>chars_used)?xstrlen-chars_used:0), "TIFF Directory at offset 0x%" PRIx64 " (%" PRIu64 ")\n",
-		TIFFCurrentDirOffset(tif),
-		TIFFCurrentDirOffset(tif));
+			TIFFCurrentDirOffset(tif),
+			TIFFCurrentDirOffset(tif));
 	if (!TIFFGetField(tif, TIFFTAG_EXTRASAMPLES, &extrasamples, &sampleinfo)) {
 		extrasamples = 0;
 		sampleinfo = NULL;
@@ -316,7 +282,7 @@ cbf_TIFFSNPrintDirectory(TIFF* tif, char * str, const size_t xstrlen, long flags
 	if (TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &imagelength)
 	    && TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &imagewidth)) {
 		chars_used += snprintf(str+chars_used, ((xstrlen>chars_used)?xstrlen-chars_used:0), "  Image Width: %" PRIu32 " Image Length: %" PRIu32,
-			imagewidth, imagelength);
+				imagewidth, imagelength);
 		if (TIFFGetField(tif, TIFFTAG_IMAGEDEPTH, &imagedepth))
 			chars_used += snprintf(str+chars_used, ((xstrlen>chars_used)?xstrlen-chars_used:0), " Image Depth: %" PRIu32,
 			    imagedepth);
@@ -450,7 +416,7 @@ cbf_TIFFSNPrintDirectory(TIFF* tif, char * str, const size_t xstrlen, long flags
 		     cp = strchr(cp,'\0')+1, i--) {
 			size_t max_chars = 
 				inknameslen - (cp - inknames);
-            chars_used += snprintf(str+chars_used, ((xstrlen>chars_used)?xstrlen-chars_used:0),sep);
+            chars_used += snprintf(str+chars_used, ((xstrlen>chars_used)?xstrlen-chars_used:0), "%s", sep);
             chars_used += _TIFFsnprintAsciiBounded(str+chars_used, ((xstrlen>chars_used)?xstrlen-chars_used:0), cp, max_chars);
 			sep = ", ";
 		}
@@ -667,7 +633,7 @@ cbf_TIFFSNPrintDirectory(TIFF* tif, char * str, const size_t xstrlen, long flags
 					/*--: Rational2Double: For Rationals evaluate
 					 * "set_field_type" to determine internal storage size. */
 					raw_data = _TIFFmalloc(
-					    _TIFFFieldDataSize(fip)
+					    TIFFFieldSetGetSize(fip)
 					    * value_count);
 					mem_alloc = 1;
 					if(TIFFGetField(tif, tag, raw_data) != 1) {
@@ -698,8 +664,8 @@ cbf_TIFFSNPrintDirectory(TIFF* tif, char * str, const size_t xstrlen, long flags
         /* _TIFFFillStriles( tif ); */
         
 	if ((flags & TIFFPRINT_STRIPS) &&
-	    TIFFGetField(tif, TIFFTAG_STRIPOFFSETS, &stripoffsets) &&
-	    TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecounts)) {
+		TIFFGetField(tif, TIFFTAG_STRIPOFFSETS, &stripoffsets) &&
+		TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecounts)) {
 		uint32_t s;
 
 		chars_used += snprintf(str+chars_used, ((xstrlen>chars_used)?xstrlen-chars_used:0), "  %" PRIu32 " %s:\n",
