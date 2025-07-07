@@ -510,7 +510,7 @@ extern "C" {
         while (cbf_find_nextrow (cbf, array_id) == 0) {
             
             int i, index;
-            const char * direction[rank];
+            CBF_START_ARRAY(const char *, direction, rank);
             
             cbf_failnez (cbf_find_column      (cbf, "index"))
             cbf_failnez (cbf_get_integervalue (cbf, &index))
@@ -527,6 +527,8 @@ extern "C" {
             cbf_failnez (cbf_get_value        (cbf, &direction[i-1]))
             
             cbf_failnez (cbf_find_column      (cbf, "array_id"))
+
+            CBF_END_ARRAY(direction);
             
         }
         
@@ -925,7 +927,7 @@ extern "C" {
         
         {
             
-            double psizes[rank];
+            CBF_START_ARRAY(double, psizes, rank);
             
             if (!cbf_get_array_section_pixel_sizes(cbf,array_id,rank,psizes)) {
                 
@@ -955,6 +957,8 @@ extern "C" {
                 
                 
             }
+
+            CBF_END_ARRAY(psizes);
             
         }
         

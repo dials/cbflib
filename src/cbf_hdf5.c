@@ -11839,7 +11839,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
 
             size_t ii, rank, adim;
 
-            double oldvec[dimension];
+            CBF_START_ARRAY(double, oldvec, dimension);
 
             CBF_UNUSED( adim );
 
@@ -11879,6 +11879,8 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
             if (cbf_H5Ivalid(attribtype)) H5Tclose(attribtype);
 
             if (cbf_H5Ivalid(attribid)) H5Aclose(attribid);
+
+            CBF_END_ARRAY(oldvec);
 
             return errorcode;
 
@@ -22090,7 +22092,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                                 cbf_debug_print("error: problem getting the rank of a dataset");
                                 error |= CBF_H5ERROR;
                             } else if (rank > 0) {
-                                hsize_t dims[rank];
+                                CBF_START_ARRAY(hsize_t, dims, rank);
                                 if (rank != H5Sget_simple_extent_dims(data_space,dims,0)) {
                                     cbf_debug_print("error: problem getting the dimensions of a dataset");
                                     error |= CBF_H5ERROR;
@@ -22105,8 +22107,8 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                                      - assume that it's a uniformly spaced array of pixels in 3D space, so ignore subsequent values
                                      - store it (and dependency chain) in the key, to be converted along with other axes
                                      */
-                                    hsize_t off[rank];
-                                    hsize_t cnt[rank];
+                                    CBF_START_ARRAY(hsize_t, off, rank);
+                                    CBF_START_ARRAY(hsize_t, cnt, rank);
                                     size_t ir;
                                     double disp2[] = {0.,0.};
                                     double factor = 0./0.;
@@ -22140,7 +22142,10 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                                         free((void*)long_name_string);
                                         cbf_H5Afree(long_name);
                                     }
+                                    CBF_END_ARRAY(cnt);
+                                    CBF_END_ARRAY(off);
                                 }
+                                CBF_END_ARRAY(dims);
                             } else {
                                 cbf_debug_print("error: unsupported rank of a 'pixel_offset' field");
                                 error |= CBF_NOTIMPLEMENTED;
@@ -28873,7 +28878,7 @@ CBF_CALL(CBFM_pilatusAxis2nexusAxisAttrs(h5data,token,"",axisItem,cmp_double,cmp
 
                 if (type_class==H5T_STRING) {
 
-                    char element[type_size+1];
+                    CBF_START_ARRAY(char, element, type_size+1);
 
                     size_t ii, jj;;
 
@@ -28902,6 +28907,8 @@ CBF_CALL(CBFM_pilatusAxis2nexusAxisAttrs(h5data,token,"",axisItem,cmp_double,cmp
                         }
 
                     }
+
+                    CBF_END_ARRAY(element);
 
                 } else if (type_class==H5T_INTEGER){
 

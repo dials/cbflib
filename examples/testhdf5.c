@@ -53,6 +53,7 @@
 #include <stdint.h>
 
 #include "cbf.h"
+#include "cbf_alloc.h"
 #include "cbf_hdf5.h"
 #include "unittest.h"
 
@@ -901,8 +902,6 @@ static testResult_t testDataset_read_write(const hid_t grp)
 	const int N2 = N*2;
 	int dataWrite0[] = {42};
 	int dataRead0[] = {0};
-	int dataWrite2[N2];
-	int dataRead2[N2];
 	const int rank = 2;
 	const hsize_t offset[] = {0,0};
 	const hsize_t offset_1[] = {1,0};
@@ -915,6 +914,9 @@ static testResult_t testDataset_read_write(const hid_t grp)
 	const hsize_t chunk[] = {1,N2};
 	TEST(H5I_GROUP==H5Iget_type(grp));
     
+	CBF_START_ARRAY(int, dataWrite2, N2);
+	CBF_START_ARRAY(int, dataRead2, N2);
+
 	{/* populate the data */
 		int i;
 		for (i = 0; i < N2; ++i) dataWrite2[i] = i*i;
@@ -1035,6 +1037,9 @@ static testResult_t testDataset_read_write(const hid_t grp)
 	if (CBF_SUCCESS!=error)
 		fprintf(stderr,"%s: Error: %s\n",__WHERE__,cbf_strerror(error));
     
+	CBF_END_ARRAY(dataRead2);
+	CBF_END_ARRAY(dataWrite2);
+
 	/* free the handle after using it */
 	cbf_H5Dfree(handle0);
 	cbf_H5Dfree(handle2);

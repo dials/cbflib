@@ -1152,6 +1152,13 @@ add_executable(testcell
 target_link_libraries(testcell
   cbf)
 
+add_executable(roi_peaksearch
+  "${CBF__EXAMPLES}/dps_peaksearch.c"
+  "${CBF__EXAMPLES}/roi_peaksearch.c")
+target_link_libraries(roi_peaksearch
+  cbf
+  "${libm}")
+
 add_executable(sauter_test
   "${CBF__EXAMPLES}/sauter_test.C")
 target_link_libraries(sauter_test
