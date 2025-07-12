@@ -16,8 +16,8 @@ m4_include(`fcblib_defines.m4')`      PROGRAM TEST
 	DO I = 1,1000
 	DO J = 1,1000
 	  IF (IFRAME(I,J).NE.DPREV) THEN
-	    PRINT *,"ROW ", I, ":"
-	    PRINT *,(IFRAME(I,K),K=1,1000)
+	    PRINT "(A4,I13,A2)","ROW", I, ":"
+	    PRINT "(1000I7)",(IFRAME(I,K),K=1,1000)
 	    DPREV = IFRAME(I,1000)
 	    GO TO 1000
 	  ENDIF

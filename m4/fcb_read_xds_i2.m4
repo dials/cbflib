@@ -193,7 +193,7 @@ m4_include(`fcblib_defines.m4')
       DO I = 1,NX
       IF (JFRAME(I,J).NE.PREV_ELEMENT) THEN
         PREV_ELEMENT = JFRAME(I,J)
-        PRINT *,"ARRAY(",I+(J-1)*NX,") =",JFRAME(I,J)
+        PRINT "(A7,I12,A4,I12)","ARRAY(",I+(J-1)*NX,") =",JFRAME(I,J)
       ENDIF
       IFRAME(I+(J-1)*NX) = CNT2PIX(JFRAME(I,J))
       END DO
