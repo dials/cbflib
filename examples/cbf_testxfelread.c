@@ -1030,8 +1030,9 @@ extern "C" {
         for (ii=0; ii < XFEL_DIAMETER; ii++) {
             for (jj=0; jj < XFEL_DIAMETER; jj++) {
                 if (outarray[ii][jj] != XFEL_UNDEFINED
-                    && outarray[ii][jj] != XFEL_OVERLOAD);
-                intoutarray[ii][jj] = (int)(outarray[ii][jj]+0.5);
+                    && outarray[ii][jj] != XFEL_OVERLOAD) {
+                    intoutarray[ii][jj] = (int)(outarray[ii][jj]+0.5);
+                }
             }
         }
 
