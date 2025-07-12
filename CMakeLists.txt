@@ -308,7 +308,7 @@ if(CBF_ENABLE_FORTRAN)
   endif()
 endif()
 
-option(CBF_ENABLE_ULP "Enable ULP" OFF)
+option(CBF_ENABLE_ULP "Enable ULP" ON)
 
 set (CBF_CMAKE_DEBUG "ON")
 
