@@ -676,6 +676,7 @@ set(
     ${CBF__SRC}/cbf.c
     "${CBF__SRC}/cbf_airy_disk.c"
     ${CBF__SRC}/cbf_alloc.c
+    "${CBF__SRC}/cbf_array2minicbf.c"
     ${CBF__SRC}/cbf_ascii.c
     ${CBF__SRC}/cbf_binary.c
     ${CBF__SRC}/cbf_byte_offset.c
@@ -736,6 +737,7 @@ set(
 	CBF_HEADERS
 	${CBF__INCLUDE}/cbf.h			
     ${CBF__INCLUDE}/cbf_alloc.h
+    "${CBF__INCLUDE}/cbf_array2minicbf.h"
     ${CBF__INCLUDE}/cbf_ascii.h
     ${CBF__INCLUDE}/cbf_binary.h		
     ${CBF__INCLUDE}/cbf_byte_offset.h
