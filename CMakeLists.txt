@@ -337,13 +337,18 @@ if (NOT CMAKE_BUILD_TYPE)
 endif (NOT CMAKE_BUILD_TYPE)
 
 
-# Check for missing functions: fgetln(3) is in 4.4BSD; realpath(3) is
-# in 4.4BSD, POSIX.1-2001; regcomp(3) is in POSIX.1-2001,
-# POSIX.1-2008.
+# Check for missing functions: fgetln(3) is in 4.4BSD; mkstemp(3) is
+# in 4.3BSD, POSIX.1-2001; realpath(3) is in 4.4BSD, POSIX.1-2001;
+# regex(3) is in POSIX.1-2001, POSIX.1-2008.
 include(CheckSymbolExists)
 check_symbol_exists(fgetln "stdio.h" HAVE_FGETLN)
 if(HAVE_FGETLN)
   add_compile_definitions("HAVE_FGETLN")
+endif()
+
+check_symbol_exists(mkstemp "stdlib.h" HAVE_MKSTEMP)
+if(HAVE_MKSTEMP)
+  add_compile_definitions("HAVE_MKSTEMP")
 endif()
 
 check_symbol_exists(realpath "stdlib.h" HAVE_REALPATH)
@@ -1062,6 +1067,10 @@ add_executable(cbf2nexus
   "${CBF__EXAMPLES}/cbf2nexus.c")
 target_link_libraries(cbf2nexus
   cbf)
+if(NOT HAVE_MKSTEMP)
+  target_sources(cbf2nexus
+    PRIVATE "${CBF__SRC}/mkstemp.c")
+endif()
 
 add_executable(nexus2cbf
   "${CBF__EXAMPLES}/nexus2cbf.c")
@@ -1073,6 +1082,10 @@ add_executable(minicbf2nexus
   "${CBF__EXAMPLES}/minicbf2nexus.c")
 target_link_libraries(minicbf2nexus
   cbf)
+if(NOT HAVE_MKSTEMP)
+  target_sources(minicbf2nexus
+    PRIVATE "${CBF__SRC}/mkstemp.c")
+endif()
 
 add_executable(adscimg2cbf
   "${CBF__EXAMPLES}/adscimg2cbf.c"
@@ -1095,11 +1108,19 @@ add_executable(convert_image
   "${CBF__EXAMPLES}/convert_image.c")
 target_link_libraries(convert_image
   cbf)
+if(NOT HAVE_MKSTEMP)
+  target_sources(convert_image
+    PRIVATE "${CBF__SRC}/mkstemp.c")
+endif()
 
 add_executable(convert_minicbf
   "${CBF__EXAMPLES}/convert_minicbf.c")
 target_link_libraries(convert_minicbf
   cbf)
+if(NOT HAVE_MKSTEMP)
+  target_sources(convert_minicbf
+    PRIVATE "${CBF__SRC}/mkstemp.c")
+endif()
 
 add_executable(makecbf
   "${CBF__EXAMPLES}/makecbf.c")
@@ -1136,6 +1157,19 @@ add_executable(img2cif
   "${CBF__EXAMPLES}/img2cif.c")
 target_link_libraries(img2cif
   cbf)
+if(NOT HAVE_MKSTEMP)
+  target_sources(img2cif
+    PRIVATE "${CBF__SRC}/mkstemp.c")
+endif()
+
+add_executable(cif2c
+  "${CBF__EXAMPLES}/cif2c.c")
+target_link_libraries(cif2c
+  cbf)
+if(NOT HAVE_MKSTEMP)
+  target_sources(cif2c
+    PRIVATE "${CBF__SRC}/mkstemp.c")
+endif()
 
 add_executable(cif2cbf
   "${CBF__EXAMPLES}/cif2cbf.c")
@@ -1143,6 +1177,10 @@ target_link_libraries(cif2cbf
   cbf
   CQR
   "${libm}")
+if(NOT HAVE_MKSTEMP)
+  target_sources(cif2cbf
+    PRIVATE "${CBF__SRC}/mkstemp.c")
+endif()
 
 add_executable(cbf_template_t
   "${CBF__DECTRIS_EXAMPLES}/cbf_template_t.c")
@@ -1163,6 +1201,10 @@ add_executable(sequence_match
   "${CBF__EXAMPLES}/sequence_match.c")
 target_link_libraries(sequence_match
   cbf)
+if(NOT HAVE_MKSTEMP)
+  target_sources(sequence_match
+    PRIVATE "${CBF__SRC}/mkstemp.c")
+endif()
 
 add_executable(test_cbf_airy_disk
   "${CBF__EXAMPLES}/test_cbf_airy_disk.c")
