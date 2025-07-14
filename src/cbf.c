@@ -2500,12 +2500,12 @@ int cbf_select_saveframe (cbf_handle handle, unsigned int saveframe)
     return CBF_ARGUMENT;
 
 
-    /* Find the data block node */
+  /* Find the data block node */
 
-    cbf_failnez (cbf_find_parent (&node, handle->node, CBF_DATABLOCK))
+  cbf_failnez (cbf_find_parent (&node, handle->node, CBF_DATABLOCK))
 
 
-    /* Select the save frame */
+  /* Select the save frame */
 
   isf = 0;
 

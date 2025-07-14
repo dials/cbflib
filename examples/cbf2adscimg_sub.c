@@ -154,7 +154,8 @@ static void puthd (char* field, char* value, char* header)
 /*
  * find the } marking the end of the information in the header
  */
-  for ( hp=header; *hp != '}'; hp++);
+  for ( hp=header; *hp != '}'; hp++)
+    ;
 
 /*
  * Write the field name starting at the position of the }
@@ -214,7 +215,8 @@ static void padhd (char* header, int size)
 /*
  * find the } marking the end of the header
  */
-  for ( hp=header; *hp != '}'; hp++); 
+  for ( hp=header; *hp != '}'; hp++)
+    ;
   hp++;
 
 /*
