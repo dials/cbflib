@@ -3598,7 +3598,7 @@ if (CBF_SUCCESS==found) {
                     error |= cbf_H5Dcreate(location,&_dataset,name,0,0,0,0,H5T_IEEE_F64LE);
                     error |= cbf_H5Dwrite2(_dataset,0,0,0,&value,H5T_NATIVE_DOUBLE);
                 } else {
-                    double data = 0./0.;
+                    double data = nan("");
                     error |= cbf_H5Dread(_dataset,0,0,0,&data);
                     if (fabs(value - data)> 1.e-38+1.e-13*(fabs(value)+fabs(data))) {
                     cbf_debug_print4("Error: data doesn't match (%g vs %g) for nexus field '%s'\n",data,value,name);
@@ -3651,7 +3651,7 @@ if (CBF_SUCCESS==found) {
         hid_t * dset = dataset ? dataset : &_dataset;
         found =  cbf_H5Dfind2(location,dset,name,0,0,0,H5T_IEEE_F64LE);
         if (CBF_SUCCESS==found) {
-                double data = 0./0.;
+                double data = nan("");
             error |= cbf_H5Dread2(*dset,0,0,0,&data,H5T_NATIVE_DOUBLE);
             if (cmp(&value, &data, 1)) {
                 cbf_debug_print4("data doesn't match (%g vs %g) for nexus field '%s'\n",data,value,name);
@@ -3715,7 +3715,7 @@ if (CBF_SUCCESS==found) {
         hid_t * dset = dataset ? dataset : &_dataset; /* always usable */
             found =  cbf_H5Dfind2(location,dset,name,0,0,0,H5T_IEEE_F64LE);
             if (CBF_SUCCESS==found) {
-                double data = 0./0.;
+                double data = nan("");
             CBF_CALL2(cbf_H5Dread2(*dset,0,0,0,&data,H5T_NATIVE_DOUBLE),error);
                 if (cmp(&value, &data, 1, cmp_params)) {
                 cbf_debug_print4("data doesn't match (%g vs %g) for nexus field '%s'\n",data,value,name);
@@ -4605,7 +4605,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
         }
         if (CBF_SUCCESS==error) { /* vector */
             const hsize_t vdims[] = {3};
-            double buf[3] = {0./0.};
+            double buf[3] = {nan("")};
             double matrix[3][3] = {
                 {-1.,0.0,0.0},
                 {0.0,1.0,0.0},
@@ -19169,7 +19169,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                             error |= CBF_H5ERROR;
                         } else {
                             /* check rank, allowing for multiple usable results */
-                            double value = 0., factor = 0./0.;
+                            double value = 0., factor = nan("");
                             const int rank = H5Sget_simple_extent_ndims(data_space);
                             if (0==rank) {
                                 /* read the value */
@@ -19219,7 +19219,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                             error |= CBF_H5ERROR;
                         } else {
                             /* check rank, allowing for multiple usable results */
-                            double value = 0., factor = 0./0.;
+                            double value = 0., factor = nan("");
                             const int rank = H5Sget_simple_extent_ndims(data_space);
                             if (0==rank) {
                                 /* read the value */
@@ -19329,7 +19329,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                                 } else {
                                     hsize_t offset[1];
                                     hsize_t count[] = {1};
-                                    double value = 0., factor = 0./0.;
+                                    double value = 0., factor = nan("");
                                     offset[0] = dim[0]>1 ? nx->slice : 0;
                                     CBF_CALL(cbf_H5Dread2(object,offset,0,count,&value,H5T_NATIVE_DOUBLE));
                                     if (CBF_SUCCESS==error) {
@@ -19371,7 +19371,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                         } else {
                             /* check rank, allowing for multiple usable results */
                             if (0==H5Sget_simple_extent_ndims(data_space)) {
-                                double value = 0., factor = 0./0.;
+                                double value = 0., factor = nan("");
                                 CBF_CALL(cbf_H5Dread2(object,0,0,0,&value,H5T_NATIVE_DOUBLE));
                                 if (CBF_SUCCESS==error) {
                                     /* convert the data to the correct units */
@@ -19524,7 +19524,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                                 } else {
                                     hsize_t offset[1];
                                     hsize_t count[] = {1};
-                                    double value = 0., factor = 0./0.;
+                                    double value = 0., factor = nan("");
                                     offset[0] = dim[0]>1 ? nx->slice : 0;
                                     /* read the value */
                                     CBF_CALL(cbf_H5Dread2(object,offset,0,count,&value,H5T_NATIVE_DOUBLE));
@@ -19613,7 +19613,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                                 } else {
                                     hsize_t offset[1];
                                     hsize_t count[] = {1};
-                                    double value = 0., factor = 0./0.;
+                                    double value = 0., factor = nan("");
                                     offset[0] = dim[0]>1 ? nx->slice : 0;
                                     CBF_CALL(cbf_H5Dread2(object,offset,0,count,&value,H5T_NATIVE_DOUBLE));
                                     if (CBF_SUCCESS==error) {
@@ -19806,7 +19806,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                         } else {
                             /* check rank, allowing for multiple usable results */
                             if (0==H5Sget_simple_extent_ndims(data_space)) {
-                                double value = 0., factor = 0./0.;
+                                double value = 0., factor = nan("");
                                 CBF_CALL(cbf_H5Dread2(object,0,0,0,&value,H5T_NATIVE_DOUBLE));
                                 if (CBF_SUCCESS==error) {
                                     /* convert the data to the correct units */
@@ -19839,7 +19839,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                         } else {
                             /* check rank, allowing for multiple usable results */
                             if (0==H5Sget_simple_extent_ndims(data_space)) {
-                                double value = 0., factor = 0./0.;
+                                double value = 0., factor = nan("");
                                 CBF_CALL(cbf_H5Dread2(object,0,0,0,&value,H5T_NATIVE_DOUBLE));
                                 if (CBF_SUCCESS==error) {
                                     /* convert the data to the correct units */
@@ -20150,7 +20150,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                             /* check rank, allowing for multiple usable results */
                             if (0==H5Sget_simple_extent_ndims(data_space)) {
                                 hid_t units = CBF_H5FAIL;
-                                double value = 0., factor = 0./0.;
+                                double value = 0., factor = nan("");
                                 const char * unit_string = NULL;
                                 CBF_CALL(cbf_H5Dread2(object,0,0,0,&value,H5T_NATIVE_DOUBLE));
                                 CBF_CALL(cbf_H5Afind(object,&units,"units",CBF_H5FAIL,CBF_H5FAIL));
@@ -20201,7 +20201,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                             /* check rank, allowing for multiple usable results */
                             if (0==H5Sget_simple_extent_ndims(data_space)) {
                                 hid_t units = CBF_H5FAIL;
-                                double value = 0., factor = 0./0.;
+                                double value = 0., factor = nan("");
                                 const char * unit_string = NULL;
                                 CBF_CALL(cbf_H5Dread2(object,0,0,0,&value,H5T_NATIVE_DOUBLE));
                                 CBF_CALL(cbf_H5Afind(object,&units,"units",CBF_H5FAIL,CBF_H5FAIL));
@@ -20296,7 +20296,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                             /* check rank, allowing for multiple usable results */
                             if (0==H5Sget_simple_extent_ndims(data_space)) {
                                 hid_t units = CBF_H5FAIL;
-                                double value = 0., factor = 0./0.;
+                                double value = 0., factor = nan("");
                                 const char * unit_string = NULL;
                                 CBF_CALL(cbf_H5Dread2(object,0,0,0,&value,H5T_NATIVE_DOUBLE));
                                 CBF_CALL(cbf_H5Afind(object,&units,"units",CBF_H5FAIL,CBF_H5FAIL));
@@ -20792,7 +20792,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                             /* check rank, allowing for multiple usable results */
                             if (0==H5Sget_simple_extent_ndims(data_space)) {
                                 hid_t units = CBF_H5FAIL;
-                                double value = 0., factor = 0./0.;
+                                double value = 0., factor = nan("");
                                 const char * unit_string = NULL;
                                 CBF_CALL(cbf_H5Dread2(object,0,0,0,&value,H5T_NATIVE_DOUBLE));
                                 CBF_CALL(cbf_H5Afind(object,&units,"units",CBF_H5FAIL,CBF_H5FAIL));
@@ -20820,7 +20820,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                             /* check rank, allowing for multiple usable results */
                             if (0==H5Sget_simple_extent_ndims(data_space)) {
                                 hid_t units = CBF_H5FAIL;
-                                double value = 0., factor = 0./0.;
+                                double value = 0., factor = nan("");
                                 const char * unit_string = NULL;
                                 CBF_CALL(cbf_H5Dread2(object,0,0,0,&value,H5T_NATIVE_DOUBLE));
                                 CBF_CALL(cbf_H5Afind(object,&units,"units",CBF_H5FAIL,CBF_H5FAIL));
@@ -20870,7 +20870,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                             /* check rank, allowing for multiple usable results */
                             if (0==H5Sget_simple_extent_ndims(data_space)) {
                                 hid_t units = CBF_H5FAIL;
-                                double value = 0., factor = 0./0.;
+                                double value = 0., factor = nan("");
                                 const char * unit_string = NULL;
                                 CBF_CALL(cbf_H5Dread2(object,0,0,0,&value,H5T_NATIVE_DOUBLE));
                                 CBF_CALL(cbf_H5Afind(object,&units,"units",CBF_H5FAIL,CBF_H5FAIL));
@@ -20899,7 +20899,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                             /* check rank, allowing for multiple usable results */
                             if (0==H5Sget_simple_extent_ndims(data_space)) {
                                 hid_t units = CBF_H5FAIL;
-                                double value = 0., factor = 0./0.;
+                                double value = 0., factor = nan("");
                                 const char * unit_string = NULL;
                                 CBF_CALL(cbf_H5Dread2(object,0,0,0,&value,H5T_NATIVE_DOUBLE));
                                 CBF_CALL(cbf_H5Afind(object,&units,"units",CBF_H5FAIL,CBF_H5FAIL));
@@ -20928,7 +20928,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                             /* check rank, allowing for multiple usable results */
                             if (0==H5Sget_simple_extent_ndims(data_space)) {
                                 hid_t units = CBF_H5FAIL;
-                                double value = 0., factor = 0./0.;
+                                double value = 0., factor = nan("");
                                 const char * unit_string = NULL;
                                 CBF_CALL(cbf_H5Dread2(object,0,0,0,&value,H5T_NATIVE_DOUBLE));
                                 CBF_CALL(cbf_H5Afind(object,&units,"units",CBF_H5FAIL,CBF_H5FAIL));
@@ -22047,7 +22047,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                     const char * _axis_set_id[3] = {NULL, NULL,NULL}; /*< always free'able */
                     const char * axis_set_id[3]; /*< always useable */
                     hsize_t pixel_offset_dim[3];
-                    double elem_size[] = {0./0., 0./0.,0./0.};
+                    double elem_size[] = {nan(""), nan(""),nan("")};
                     int i;
                     pixel_offset_pat[0] = z_pixel_offset_pat;
                     pixel_offset_pat[1] = y_pixel_offset_pat;
@@ -22109,7 +22109,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                                     hsize_t cnt[rank];
                                     size_t ir;
                                     double disp2[] = {0.,0.};
-                                    double factor = 0./0.;
+                                    double factor = nan("");
                                     for (ir = 0; ir < rank; ir++) { off[ir] = 0; cnt[ir] = (ir<rank-1)?1:2;}
                                     /* extract data */
                                     CBF_CALL(cbf_H5Dread2(pixel_data,off,NULL,cnt,disp2,H5T_NATIVE_DOUBLE));
@@ -22173,7 +22173,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                                 error |= CBF_H5ERROR;
                             } else if (0==rank) {
                                 double size = 0.;
-                                double factor = 0./0.;
+                                double factor = nan("");
                                 CBF_CALL(cbf_H5Dread2(pixel_data,NULL,NULL,NULL,&size,H5T_NATIVE_DOUBLE));
                                 if (CBF_SUCCESS==error) {
                                     /* convert the data to the correct units */
@@ -22954,7 +22954,7 @@ _cbf_pilatusAxis2nexusAxisAttrs(h4data,units,depends_on,exsisItem,cmp)
                                     CBF_CALL(cbf_H5Aread_string(units,&unit_string));
                                     if (!error) {
                                         /* need a conversion factor to apply to the offset before storing it */
-                                        double factor = 0./0.;
+                                        double factor = nan("");
                                         if (CBF_SUCCESS!=(error|=cbf_scale_units(unit_string,"mm",&factor))) {
                                             cbf_debug_print(cbf_strerror(error));
                                         } else {
@@ -24267,7 +24267,7 @@ static int process_DiffrnScanAxisCache(cbf_node * const category,
                 } else if (!strcmp(type,"rotation")) {
                     data = c->angle_strt + (c->angle_incr+c->angle_rstrt_incr)*key->frame_number;
                 } else {
-                    data = 0./0.;
+                    data = nan("");
                 }
                 CBF_CALL(cbf_H5Dfind2(nx->hfile,&dset,key->axis.path[i],1,max,buf,H5T_IEEE_F64LE));
                 CBF_CALL(cbf_H5Dinsert(dset,off,0,cnt,buf,&data,H5T_NATIVE_DOUBLE));
@@ -27753,7 +27753,7 @@ static int process_DiffrnScanAxisCache(cbf_node * const category,
         cbf_onfailnez(error |= cbf_rewind_datablock(handle), cbf_debug_print("CBF error: cannot find datablock.\n"));
         while (CBF_SUCCESS==error) {
             /* get some useful parameters out of the metadata as it's converted */
-            double pixel_x = 0./0., pixel_y = 0./0.;
+            double pixel_x = nan(""), pixel_y = nan("");
 
             /* then search for the 'array_data' category */
             cbf_onfailnez(cbf_find_category(handle,"array_data"),
@@ -27774,8 +27774,8 @@ static int process_DiffrnScanAxisCache(cbf_node * const category,
                         char * token = malloc(n*sizeof(char));
                         int newline = 1;
                         /* Numerical values for use after main parsing loop */
-                        double beam_x = 0./0., beam_y = 0./0.;
-                        double detector_distance = 0./0.;
+                        double beam_x = nan(""), beam_y = nan("");
+                        double detector_distance = nan("");
                         /* Flags to determine what information I actually have */
                         /* Other useful values */
                         hid_t pilatusDiagnostics = CBF_H5FAIL; /* <- non-nexus group to dump some possibly useful information into */
@@ -28023,7 +28023,7 @@ static int process_DiffrnScanAxisCache(cbf_node * const category,
                                 hsize_t offset[1];
                                 const hsize_t count[] = {1};
                                 hsize_t buf[] = {0};
-                                double num = 0./0.;
+                                double num = nan("");
                                 offset[0] = h5handle->slice;
                                 CBF_CALL(_cbf_scan_pilatus_V1_2_miniheader(&token, &n, &newline, 0, &value));
                                 num = strtod(token,0);
@@ -28043,7 +28043,7 @@ static int process_DiffrnScanAxisCache(cbf_node * const category,
                                 hsize_t offset[1];
                                 const hsize_t count[] = {1};
                                 hsize_t buf[] = {0};
-                                double num = 0./0.;
+                                double num = nan("");
                                 offset[0] = h5handle->slice;
                                 CBF_CALL(_cbf_scan_pilatus_V1_2_miniheader(&token, &n, &newline, 0, &value));
                                 num = strtod(token,0);
@@ -28057,7 +28057,7 @@ static int process_DiffrnScanAxisCache(cbf_node * const category,
                                 hid_t h5data = CBF_H5FAIL;
                                 hid_t h5location = detector;
                                 const char h5name[] = "dead_time";
-                                double num = 0./0.;
+                                double num = nan("");
                                 CBF_CALL(_cbf_scan_pilatus_V1_2_miniheader(&token, &n, &newline, 0, &value));
                                 num = strtod(token,0);
                                 CBF_CALL(CBFM_H5Drequire_scalar_F64LE2(h5location,&h5data,h5name,num,cmp_double,cmp_params));
@@ -28072,7 +28072,7 @@ static int process_DiffrnScanAxisCache(cbf_node * const category,
                                     saturation_value = _cbf_strdup(token);
                                 }
                             } else if (!cbf_cistrcmp("Threshold_setting",token)) {
-                                double num = 0./0.;
+                                double num = nan("");
                                 hid_t h5data = CBF_H5FAIL;
                                 /* Get value & units */
                                 CBF_CALL(_cbf_scan_pilatus_V1_2_miniheader(&token, &n, &newline, 0, &value));
@@ -28099,7 +28099,7 @@ static int process_DiffrnScanAxisCache(cbf_node * const category,
                                 hsize_t offset[1];
                                 const hsize_t count[] = {1};
                                 hsize_t buf[] = {0};
-                                double num = 0./0.;
+                                double num = nan("");
                                 offset[0] = h5handle->slice;
                                 CBF_CALL(_cbf_scan_pilatus_V1_2_miniheader(&token, &n, &newline, 0, &value));
                                 num = strtod(token,0);
@@ -28121,7 +28121,7 @@ static int process_DiffrnScanAxisCache(cbf_node * const category,
                                 Extract x & y positions from the header, put them into the file later.
                                 I might need to read all the header to know if I can actually convert these values to NeXus data.
                                 */
-                                double num_x = 0./0., num_y = 0./0.;
+                                double num_x = nan(""), num_y = nan("");
                                 CBF_CALL(_cbf_scan_pilatus_V1_2_miniheader(&token, &n, &newline, 0, &value));
                                 num_x = strtod(token,0);
                                 CBF_CALL(_cbf_scan_pilatus_V1_2_miniheader(&token, &n, &newline, 0, &value));
@@ -28140,7 +28140,7 @@ static int process_DiffrnScanAxisCache(cbf_node * const category,
                                 Either a number with some units or a random string, only do anything if it's a number.
                                 */
                                 const char * end = 0;
-                                double num = 0./0.;
+                                double num = nan("");
                                 CBF_CALL(_cbf_scan_pilatus_V1_2_miniheader(&token, &n, &newline, 0, &value));
                                 num = strtod(token,(char**)(&end));
                                 if (end != token && 0.0 != num) {
@@ -28351,7 +28351,7 @@ CBF_CALL(CBFM_pilatusAxis2nexusAxisAttrs(h5data,token,"",axisItem,cmp_double,cmp
                             /* TODO: write depends_on attributes with full paths */
                             /* Common settings */
                             const hsize_t vdims[] = {3};
-                            double vbuf[3] = {0./0.};
+                            double vbuf[3] = {nan("")};
                             const hsize_t max[] = {H5S_UNLIMITED};
                             hsize_t buf[] = {0};
                             const hsize_t chunk[] = {1};
@@ -28480,7 +28480,7 @@ CBF_CALL(CBFM_pilatusAxis2nexusAxisAttrs(h5data,token,"",axisItem,cmp_double,cmp
                     {
                         const double vector[] = {1.0, 0.0, 0.0};
                         const hsize_t vdims[] = {3};
-                        double vbuf[3] = {0./0.};
+                        double vbuf[3] = {nan("")};
                         CBF_CALL(CBFM_H5Arequire_cmp2(h5axis,"vector",1,vdims,H5T_IEEE_F64LE,H5T_NATIVE_DOUBLE,
                                                          vector,vbuf,cmp_double,cmp_params));
                     }
@@ -28537,7 +28537,7 @@ CBF_CALL(CBFM_pilatusAxis2nexusAxisAttrs(h5data,token,"",axisItem,cmp_double,cmp
                     {
                         const double vector[] = {0.0, 1.0, 0.0};
                         const hsize_t vdims[] = {3};
-                        double vbuf[3] = {0./0.};
+                        double vbuf[3] = {nan("")};
                         CBF_CALL(CBFM_H5Arequire_cmp2(h5axis,"vector",1,vdims,H5T_IEEE_F64LE,H5T_NATIVE_DOUBLE,
                                                          vector,vbuf,cmp_double,cmp_params));
                     }
