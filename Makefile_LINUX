@@ -2164,7 +2164,7 @@ $(BIN)/cbf2adscimg: $(LIB)/libcbf.a $(EXAMPLES)/cbf2adscimg.c $(EXAMPLES)/cbf2ad
 $(BIN)/cbf_standardize_numbers: $(EXAMPLES)/cbf_standardize_numbers.c $(EXAMPLES)/cbf_standardize_numbers.h
 	mkdir -p $(BIN)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(MISCFLAG) $(CBF_REGEXFLAG) -D_SVID_SOURCE $(INCLUDES) $(WARNINGS) \
-	$(EXAMPLES)/cbf_standardize_numbers.c $(SRC_FGETLN)  $(REGEX_LIBS_STATIC) $(EXTRALIBS) -o $@
+	$(EXAMPLES)/cbf_standardize_numbers.c $(SRC_FGETLN) -L$(LIB) -lcbf $(REGEX_LIBS_STATIC) $(EXTRALIBS) -o $@
 
 #
 # changtestcompression example program

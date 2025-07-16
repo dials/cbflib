@@ -69,6 +69,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include "cbf.h"
+#include "cbf_alloc.h"
 #include "dps_peaksearch.h"
 
 
@@ -82,14 +84,13 @@ int xirint(double x) {
 }
 
 
-#if defined (__linux__)||defined(sun)
+#if defined(sun)
 /* Round a double to an integer */
 
 
 /* Calculate sin() and cos(). */
-void
-sincos(x, s, c)
-double x, *s, *c;
+static void
+sincos(double x, double *s, double *c)
 {
     *s = sin(x);
     *c = cos(x);
@@ -100,9 +101,8 @@ double x, *s, *c;
 
 
 /* Calculate sin() and cos(). */
-void
-sincos(x, s, c)
-double x, *s, *c;
+static void
+sincos(double x, double *s, double *c)
 {
     *s = sin(x);
     *c = cos(x);
@@ -110,9 +110,8 @@ double x, *s, *c;
 
 
 /* Round a double to an integer */
-double
-rint(x)
-register double x;
+static double
+rint(register double x)
 {
     if (x == (int)x)
         return(x);
@@ -137,12 +136,16 @@ int	fsign(double x)
  *
  */
 
-void
-cmass (idata, iwidth, iheight, x, y, cm_x, cm_y, cm_nx, cm_ny)
-register unsigned short  *idata;
-int iwidth, iheight, x, y;
-double *cm_x, *cm_y;
-int cm_nx, cm_ny;
+static void
+cmass(register unsigned short *idata,
+      int iwidth,
+      int iheight,
+      int x,
+      int y,
+      double *cm_x,
+      double *cm_y,
+      int cm_nx,
+      int cm_ny)
 {
     register int i, j, val;
     double sum_x=0, sum_y=0, sum_z=0.0;
@@ -203,6 +206,9 @@ static	DPS_Peak *dps_peaks = NULL;
 
 static	int	ccd_image_saturation = 0;
 
+int
+sortfunc(const void *lhs, const void *rhs);
+
 int dps_peaksearch(unsigned short *data, int nx, int ny,
                    int npeaks_out, double min_isigma,
                    int min_spacing, DPS_Peak *pptr, int min_value)
@@ -229,13 +235,11 @@ int dps_peaksearch(unsigned short *data, int nx, int ny,
     int overload = 55000;
     int npeaks=0;
     int maxpeaks=20480;
-    int sortfunc();
     int nover;
     int nunder;
     int	nxfer;
     DPS_Peak dps_temp;
     int peakfw, peakfh;
-    int next_good_y[nx];
     int collide;
     
     stepx = (min_spacing+1)/2;  /* Initial stepsize for scanning through the image */
@@ -267,6 +271,7 @@ int dps_peaksearch(unsigned short *data, int nx, int ny,
     }
     
     /* Initialize the next_good_y  array to 0 */
+    CBF_START_ARRAY(int, next_good_y, nx);
     for (i=0; i < nx; i++) next_good_y[i]= 0;
     
     /* The next two loops go over the whole frame with stepsize
@@ -444,6 +449,7 @@ int dps_peaksearch(unsigned short *data, int nx, int ny,
             }
         }
     }
+    CBF_END_ARRAY(next_good_y);
     
     if (min_spacing > 0) {
         for(i=0;i<npeaks;i++)
@@ -485,9 +491,11 @@ int dps_peaksearch(unsigned short *data, int nx, int ny,
 /* Sort pixel value
  */
 int
-sortfunc(pk1, pk2)
-DPS_Peak *pk1, *pk2;
+sortfunc(const void *lhs, const void *rhs)
 {
+    const DPS_Peak *pk1 = lhs;
+    const DPS_Peak *pk2 = rhs;
+
     if (pk2->isigma > pk1->isigma)
         return 1;
     else

@@ -7,6 +7,7 @@
 //
 
 #include "cbf.h"
+#include "cbf_alloc.h"
 #include "cbf_standardize_numbers.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -107,7 +108,7 @@ int main (int argc, char ** argv) {
                 continue;
             }
             if (isdigit(c) || c == '.' || c == '-' || c == '+') {
-                char text[lineln+1];
+                CBF_START_ARRAY(char, text, lineln+1);
                 char * endptr;
                 for (ii=0; ii < lineln; ii++) text[ii] = line[ii];
                 text[lineln] = '\0';
@@ -139,6 +140,7 @@ int main (int argc, char ** argv) {
                     spacestarted = 1;
                     numcomp++;
                 }
+                CBF_END_ARRAY(text);
                 continue;
             }
             if (c == ',' || (termc && c == termc)) {

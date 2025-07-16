@@ -12,6 +12,7 @@
 #include	<stdlib.h>
 #include	<string.h>
 #include	"cbf.h"
+#include        "cbf_alloc.h"
 #include        "cbf_string.h"
 
 /****************************************************************/
@@ -155,8 +156,7 @@ int	main(int argc, char *argv[])
 	char		header_bytes[6];
     int     numargs = argc;
     int     iarg;
-    int     argtype_array[argc];
-    int     *argtype=argtype_array;
+    int     *argtype;
     int     filec;
     int		file_size, header_size_char, actread;
     int		cbf_status;
@@ -174,8 +174,7 @@ int	main(int argc, char *argv[])
     int     *new_int_data, *old_int_data;
     size_t  new_int_data_size, old_int_data_size;
     double  thickness=0.;
-    const char *    argval_array[argc];
-    const char * *  argval=argval_array;
+    const char * *  argval;
     const char *    roi=NULL;
     const char *    thickstr=NULL;
     const char *    polarstr=NULL;
@@ -231,6 +230,11 @@ int	main(int argc, char *argv[])
 
         CBF_UNUSED( cbf_status );
         CBF_UNUSED( thickness );
+
+        CBF_START_ARRAY(int, argtype_array, argc);
+        argtype = argtype_array;
+        CBF_START_ARRAY(const char *, argval_array, argc);
+        argval = argval_array;
 
 	if(argc < 2)
 	{
@@ -641,5 +645,7 @@ int	main(int argc, char *argv[])
             filec--;
         }
     }
+	CBF_END_ARRAY(argval_array);
+	CBF_END_ARRAY(argtype_array);
 	exit(0);
 }
