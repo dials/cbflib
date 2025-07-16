@@ -239,7 +239,6 @@
 #include <ctype.h>
 #include <time.h>
 #include <errno.h>
-#include <unistd.h>
 #include <stdint.h>
 
 #include <hdf5.h>

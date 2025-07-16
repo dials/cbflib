@@ -730,7 +730,7 @@ endif
 #########################################################
 CC	= gcc
 C++	= g++
-CFLAGS  = -g -O2 -Wall -std=c99 -pedantic -DHAVE_REALPATH $(HDF5CFLAGS)
+CFLAGS  = -g -O2 -Wall -std=c99 -pedantic -DHAVE_REALPATH -DHAVE_UNISTD_H $(HDF5CFLAGS)
 LDFLAGS =
 F90C = gfortran
 #F90FLAGS = -g -fno-range-check -fallow-invalid-boz

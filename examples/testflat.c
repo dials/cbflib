@@ -243,7 +243,6 @@
 #include <ctype.h>
 #include <math.h>
 #include <errno.h>
-#include <unistd.h>
 
 
 int local_exit (int status);
