@@ -1771,10 +1771,8 @@ $(MINICBF_TESTS):
 #
 # Parser
 #
-$(SRC)/cbf_stx.c: $(SRC)/cbf.stx.y
-	bison $(SRC)/cbf.stx.y -o $(SRC)/cbf.stx.tab.c -d
-	mv $(SRC)/cbf.stx.tab.c $(SRC)/cbf_stx.c
-	mv $(SRC)/cbf.stx.tab.h $(INCLUDE)/cbf_stx.h
+$(INCLUDE)/cbf_stx.h $(SRC)/cbf_stx.c &: $(SRC)/cbf.stx.y
+	bison -H$(INCLUDE)/cbf_stx.h -o$(SRC)/cbf_stx.c $(SRC)/cbf.stx.y
 
 #
 # CBF library
@@ -1904,18 +1902,14 @@ $(PY2CBF)/pycbf_test4.py   \
 $(PY2CBF)/pycbf_testfelaxes.py  \
 $(PY2CBF)/xmas/readmarheader.py \
 $(PY2CBF)/xmas/xmasheaders.py   \
-$(PY2CBF)/xmas/xmas_cif_template.cif : $(NUWEB_DEP) $(NUWEB_DEP2) $(PY2CBF)/pycbf.w
-	(cd $(PY2CBF); $(NUWEB) pycbf.w )
+$(PY2CBF)/xmas/xmas_cif_template.cif &: $(NUWEB_DEP) $(NUWEB_DEP2) $(PY2CBF)/pycbf.w
+	(cd $(PY2CBF); $(NUWEB) -t pycbf )
  
 $(PY2CBF)/_py2cbf.$(PY2CBFEXT):	$(PY2CBF)  shared \
 	$(PY2CBF)/py2setup.py                    \
-	$(PY2CBF)/pycbf.i		         \
-	$(PY2CBF)/cbfhandlewrappers.i            \
-	$(PY2CBF)/cbfdetectorwrappers.i          \
-	$(PY2CBF)/cbfgenericwrappers.i           \
-	$(PY2CBF)/cbfgoniometerwrappers.i
+	$(PY2CBF)/pycbf_wrap.c
 	-cp $(SOLIB)/*.$(SO_EXT) $(LIB)
-	(cd $(PY2CBF); $(PYTHON2) py2setup.py build $(PY2CBFBOPT); cp build/lib*/_py2cbf*.$(PY2CBFEXT) .) 
+	(cd $(PY2CBF); $(PYTHON2) py2setup.py build $(PY2CBFBOPT); cp build/lib*/_py2cbf*.$(PY2CBFEXT) _py2cbf.$(PY2CBFEXT))
 
 $(PY2CBF)/py2cbfinstall: $(PY2CBF)/pycbf.py
 	(cd $(PY2CBF); $(PYTHON2) $(PY2INSTALLSETUP_PY) install $(PY2CBFIOPT) --prefix=$(CBF_PREFIX))
@@ -1939,19 +1933,22 @@ $(LIB)/_py2cbf.$(PY2CBFEXT): $(PY2CBF)/_py2cbf.$(PY2CBFEXT)
 	
 $(PY2CBF)/pycbf.pdf: $(NUWEB_DEP) $(NUWEB_DEP2) $(PY2CBF)/pycbf.w
 	(cd $(PY2CBF); \
-	$(NUWEB) pycbf; \
-	latex pycbf; \
-	$(NUWEB) pycbf; \
-	latex pycbf; \
-	dvipdfm pycbf )
+	$(NUWEB) -o pycbf; \
+	pdflatex -interaction batchmode pycbf; \
+	pdflatex -interaction batchmode pycbf; \
+	$(NUWEB) -o pycbf; \
+	pdflatex -interaction batchmode pycbf )
 	
 $(PY2CBF)/CBFlib.txt: $(DOC)/CBFlib.html
 	links -dump $(DOC)/CBFlib.html > $(PY2CBF)/CBFlib.txt
 
-$(PY2CBF)/pycbf.py:	$(PY2CBF)/pycbf.pdf $(PY2CBF)/cbfdetectorwrappers.i \
-			$(PY2CBF)/cbfgenericwrappers.i                   \
-			$(PY2CBF)/cbfgoniometerwrappers.i                \
-			$(PY2CBF)/CBFlib.txt $(PY2CBF)/make_pycbf.py 
+$(PY2CBF)/cbfdetectorwrappers.i   \
+$(PY2CBF)/cbfgenericwrappers.i    \
+$(PY2CBF)/cbfgoniometerwrappers.i \
+$(PY2CBF)/cbfhandlewrappers.i     \
+$(PY2CBF)/cbfpositionerwrappers.i \
+$(PY2CBF)/pycbf.py                \
+$(PY2CBF)/pycbf_wrap.c            &: $(PY2CBF)/CBFlib.txt $(PY2CBF)/make_pycbf.py $(PY2CBF)/pycbf.i
 	(cd $(PY2CBF);  $(PYTHON2) make_pycbf.py; $(PYSWIG) -module py2cbf pycbf.i;     \
 		$(PYTHON2) py2setup.py build; mv pycbf.py rawpycbf.py;   \
 		cat rawpycbf.py | sed "s/ _pycbf/ _py2cbf/" > pycbf.py )
@@ -1975,19 +1972,15 @@ $(PY3CBF)/pycbf_test4.py   \
 $(PY3CBF)/pycbf_testfelaxes.py  \
 $(PY3CBF)/xmas/readmarheader.py \
 $(PY3CBF)/xmas/xmasheaders.py   \
-$(PY3CBF)/xmas/xmas_cif_template.cif: $(NUWEB_DEP) $(NUWEB_DEP2) $(PY3CBF)/pycbf.w
-	(cd $(PY3CBF); $(NUWEB) pycbf.w )
+$(PY3CBF)/xmas/xmas_cif_template.cif &: $(NUWEB_DEP) $(NUWEB_DEP2) $(PY3CBF)/pycbf.w
+	(cd $(PY3CBF); $(NUWEB) -t pycbf )
 
 
 $(PY3CBF)/_pycbf.$(PY3CBFEXT):	$(PY3CBF)  shared \
 	$(PY3CBF)/py3setup.py                    \
-	$(PY3CBF)/pycbf.i		         \
-	$(PY3CBF)/cbfhandlewrappers.i            \
-	$(PY3CBF)/cbfdetectorwrappers.i          \
-	$(PY3CBF)/cbfgenericwrappers.i           \
-	$(PY3CBF)/cbfgoniometerwrappers.i
+	$(PY3CBF)/pycbf_wrap.c
 	-cp $(SOLIB)/*.$(SO_EXT) $(LIB)
-	(cd $(PY3CBF); $(PYTHON3) py3setup.py build $(PY3CBFBOPT); cp build/lib*/_pycbf*.$(PY3CBFEXT) .) 
+	(cd $(PY3CBF); $(PYTHON3) py3setup.py build $(PY3CBFBOPT); cp build/lib*/_pycbf*.$(PY3CBFEXT) _pycbf.$(PY3CBFEXT))
 
 $(PY3CBF)/py3cbfinstall: $(PY3CBF)/pycbf.py
 	(cd $(PY3CBF); $(PYTHON3) $(PY3INSTALLSETUP_PY) install $(PY3CBFIOPT) --prefix=$(CBF_PREFIX))
@@ -2011,19 +2004,22 @@ $(LIB)/_pycbf.$(PY3CBFEXT): $(PY3CBF)/_pycbf.$(PY3CBFEXT)
 	
 $(PY3CBF)/pycbf.pdf: $(NUWEB_DEP) $(NUWEB_DEP2) $(PY3CBF)/pycbf.w
 	(cd $(PY3CBF); \
-	$(NUWEB) pycbf; \
-	latex pycbf; \
-	$(NUWEB) pycbf; \
-	latex pycbf; \
-	dvipdfm pycbf )
+	$(NUWEB) -o pycbf; \
+	pdflatex -interaction batchmode pycbf; \
+	pdflatex -interaction batchmode pycbf; \
+	$(NUWEB) -o pycbf; \
+	pdflatex -interaction batchmode pycbf )
 	
 $(PY3CBF)/CBFlib.txt: $(DOC)/CBFlib.html
 	links -dump $(DOC)/CBFlib.html > $(PY3CBF)/CBFlib.txt
 
-$(PY3CBF)/pycbf.py:	$(PY3CBF)/pycbf.pdf $(PY3CBF)/cbfdetectorwrappers.i \
-			$(PY3CBF)/cbfgenericwrappers.i                   \
-			$(PY3CBF)/cbfgoniometerwrappers.i                \
-			$(PY3CBF)/CBFlib.txt $(PY3CBF)/make_pycbf.py 
+$(PY3CBF)/cbfdetectorwrappers.i   \
+$(PY3CBF)/cbfgenericwrappers.i    \
+$(PY3CBF)/cbfgoniometerwrappers.i \
+$(PY3CBF)/cbfhandlewrappers.i     \
+$(PY3CBF)/cbfpositionerwrappers.i \
+$(PY3CBF)/pycbf.py                \
+$(PY3CBF)/pycbf_wrap.c            &: $(PY3CBF)/CBFlib.txt $(PY3CBF)/make_pycbf.py $(PY3CBF)/pycbf.i
 	(cd $(PY3CBF);  $(PYTHON3) make_pycbf.py; $(PYSWIG) pycbf.i;     \
 		$(PYTHON3) py3setup.py build; mv pycbf.py rawpycbf.py;   \
 		echo "# coding=utf-8" | cat - rawpycbf.py > pycbf.py)

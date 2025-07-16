@@ -557,7 +557,7 @@ if __name__=="__main__":
 @}
 
 
-\subsection{Version of pycbf_test1 with write logic added}
+\subsection{Version of pycbf\_test1 with write logic added}
 
 @o pycbf_test4.py -i -t
 @{

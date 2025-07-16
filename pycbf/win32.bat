@@ -1,10 +1,9 @@
 
 nuweb pycbf
-latex pycbf
+pdflatex pycbf
+pdflatex pycbf
 nuweb pycbf
-latex pycbf
-dvipdfm pycbf
-nuweb pycbf
+pdflatex pycbf
 C:\python24\python make_pycbf.py > TODO.txt
 "C:\program files\swigwin-1.3.31\swig.exe" -python pycbf.i
 C:\python24\python setup.py build --compiler=mingw32

@@ -66,8 +66,9 @@
 The program that does the conversion from CBFlib.txt to the SWIG
 input files is a python script named make\_pycbf.py.
 
-@o make_pycbf.py -i -t
-@{
+@O make_pycbf.py -i -t
+@{from re import match
+
 print("\\begin{verbatim}")
 print("This output comes from make_pycbf.py which generates the wrappers")
 print("pycbf Copyright (C) 2005  Jonathan Wright, no warranty, LGPL")
@@ -150,7 +151,7 @@ while i<len(lines)-1:
       continue
    if line.find("#include")>=0: # why?
       continue 
-   if line.find("int cbf_")>=0: # We found a function
+   if match("^\\s*int cbf_", line): # We found a function
       # keep going up to DESCRIPTION
       prototypes+=""+lines[i].rstrip()+" "
       # print(lines[i].rstrip())

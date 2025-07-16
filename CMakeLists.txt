@@ -308,6 +308,7 @@ if(CBF_ENABLE_FORTRAN)
   endif()
 endif()
 
+option(CBF_ENABLE_DOC "Build documentation" OFF)
 option(CBF_ENABLE_ULP "Enable ULP" OFF)
 
 set (CBF_CMAKE_DEBUG "ON")
@@ -671,8 +672,15 @@ endif()
 #
 # Source files
 #
+# Since Bison 2.7 (2012-12-12), use of "%define api.pure full" is
+# strongly encouraged.
+find_package(BISON 2.7 REQUIRED)
+bison_target(cbf_stx "${CBF__SRC}/cbf.stx.y" "cbf_stx.c"
+  DEFINES_FILE "cbf_stx.h")
+
 set(
 	CBF_C_SOURCES
+    "${BISON_cbf_stx_OUTPUTS}"
     ${CBF__SRC}/cbf.c
     "${CBF__SRC}/cbf_airy_disk.c"
     ${CBF__SRC}/cbf_alloc.c
@@ -698,7 +706,6 @@ set(
     ${CBF__SRC}/cbf_read_mime.c
     ${CBF__SRC}/cbf_simple.c
     ${CBF__SRC}/cbf_string.c
-    ${CBF__SRC}/cbf_stx.c
     ${CBF__SRC}/cbf_tree.c
     ${CBF__SRC}/cbf_uncompressed.c
     ${CBF__SRC}/cbf_write.c
@@ -759,7 +766,6 @@ set(
     ${CBF__INCLUDE}/cbf_read_mime.h		
     ${CBF__INCLUDE}/cbf_simple.h		
     ${CBF__INCLUDE}/cbf_string.h		
-    ${CBF__INCLUDE}/cbf_stx.h
     ${CBF__INCLUDE}/cbf_tree.h
     ${CBF__INCLUDE}/cbf_uncompressed.h
     ${CBF__INCLUDE}/cbf_write.h
@@ -809,11 +815,6 @@ set(
 	CACHE STRING ""
 )
 
-# Set up the necessary includes
-
-include_directories(BEFORE SYSTEM
-  ${CBFlib_SOURCE_DIR}/include)
-
 
 #
 # Build the static and shared CBF libraries
@@ -835,6 +836,11 @@ endif()
 set_target_properties(cbf PROPERTIES OUTPUT_NAME "cbf")
 set_target_properties(cbf PROPERTIES LINKER_LANGUAGE C)
 set_target_properties(cbf PROPERTIES SOVERSION "${SOVERSION}")
+target_include_directories(cbf
+  PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 target_link_libraries(cbf
   PUBLIC hdf5
   PRIVATE pcre2-posix
@@ -847,6 +853,10 @@ target_link_libraries(cbf
 add_library(img "${CBF__SRC}/img.c")
 set_target_properties(img PROPERTIES OUTPUT_NAME "img")
 set_target_properties(img PROPERTIES LINKER_LANGUAGE C)
+target_include_directories(img
+  PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 
 
 #
@@ -1045,6 +1055,24 @@ if(CBF_ENABLE_PYTHON)
     TARGETS pycbf
     COMPONENT "Runtime"
     DESTINATION "${Python_SITEARCH}")
+
+  if(CBF_ENABLE_DOC)
+    find_program(PDFLATEX pdflatex REQUIRED)
+    add_custom_command(
+      OUTPUT "pycbf.pdf"
+      COMMAND "${PDFLATEX}"
+        -interaction batchmode
+        -output-directory "${CMAKE_CURRENT_BINARY_DIR}"
+        "pycbf.tex"
+      COMMAND "${PDFLATEX}"
+        -interaction batchmode
+        -output-directory "${CMAKE_CURRENT_BINARY_DIR}"
+        "pycbf.tex"
+      MAIN_DEPENDENCY "${CMAKE_CURRENT_SOURCE_DIR}/pycbf/pycbf.tex"
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/pycbf")
+    add_custom_target(pdf ALL
+      DEPENDS "pycbf.pdf")
+  endif()
 endif()
 
 

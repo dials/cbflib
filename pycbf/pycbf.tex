@@ -91,7 +91,7 @@
 \usepackage{graphics} % For the pictures
 \usepackage{anysize}  % Try to circumvent Latex default margins
 \usepackage{fancyhdr}
-\usepackage[dvipdfm,bookmarks=true,backref,bookmarksnumbered=true,
+\usepackage[bookmarks=true,backref,bookmarksnumbered=true,
             bookmarkstype=toc]{hyperref}
 \newcommand{\var}[1]{\textbf{\textsf{#1}}} % highlight variables in text
 \newcommand{\code}[1]{\textbf{\textsf{#1}}} % highlight code in text
@@ -150,21 +150,21 @@ package in order to give the author easy access to binary cif files.
 \section*{Index of file names}
 
 {\small\begin{list}{}{\setlength{\itemsep}{-\parsep}\setlength{\itemindent}{-\leftmargin}}
-\item \verb@"linux.sh"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb12a}{12a}.}
-\item \verb@"makeflatascii.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb12b}{12b}.}
+\item \verb@"linux.sh"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb66a}{66a}.}
+\item \verb@"makeflatascii.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb66b}{66b}.}
 \item \verb@"make_pycbf.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb10}{10}.}
-\item \verb@"py3setup_py.m4"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb11a}{11a}.}
+\item \verb@"py3setup_py.m4"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb65a}{65a}.}
 \item \verb@"pycbf.i"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb5b}{5b}\NWlink{nuweb9}{, 9}.
 }
-\item \verb@"pycbf_test1.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb14}{14}.}
-\item \verb@"pycbf_test2.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb15a}{15a}.}
-\item \verb@"pycbf_test3.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb15b}{15b}.}
-\item \verb@"pycbf_test4.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb17}{17}.}
-\item \verb@"pycbf_testfelaxes.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb18}{18}.}
-\item \verb@"win32.bat"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb11b}{11b}.}
-\item \verb@"xmas/readmarheader.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb20}{20}.}
-\item \verb@"xmas/xmasheaders.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb22}{22}.}
-\item \verb@"xmas/xmas_cif_template.cif"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb24}{24}.}
+\item \verb@"pycbf_test1.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb68}{68}.}
+\item \verb@"pycbf_test2.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb69a}{69a}.}
+\item \verb@"pycbf_test3.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb69b}{69b}.}
+\item \verb@"pycbf_test4.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb71}{71}.}
+\item \verb@"pycbf_testfelaxes.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb72}{72}.}
+\item \verb@"win32.bat"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb65b}{65b}.}
+\item \verb@"xmas/readmarheader.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb74}{74}.}
+\item \verb@"xmas/xmasheaders.py"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb76}{76}.}
+\item \verb@"xmas/xmas_cif_template.cif"@ {\footnotesize {\NWtxtDefBy} \NWlink{nuweb78}{78}.}
 \end{list}}
 
 
@@ -931,11 +931,11 @@ error prone and involved less typing for the author.
 The program that does the conversion from CBFlib.txt to the SWIG
 input files is a python script named make\_pycbf.py.
 
-\begin{flushleft} \small
-\begin{minipage}{\linewidth}\label{scrap8}\raggedright\small
+\begin{flushleft} \small\label{scrap8}\raggedright\small
 \NWtarget{nuweb10}{} \verb@"make_pycbf.py"@\nobreak\ {\footnotesize {10}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
+\mbox{}\verb@from re import match@\\
 \mbox{}\verb@@\\
 \mbox{}\verb@print("\\begin{verbatim}")@\\
 \mbox{}\verb@print("This output comes from make_pycbf.py which generates the wrappers")@\\
@@ -1019,7 +1019,7 @@ input files is a python script named make\_pycbf.py.
 \mbox{}\verb@      continue@\\
 \mbox{}\verb@   if line.find("#include")>=0: # why?@\\
 \mbox{}\verb@      continue @\\
-\mbox{}\verb@   if line.find("int cbf_")>=0: # We found a function@\\
+\mbox{}\verb@   if match("^\\s*int cbf_", line): # We found a function@\\
 \mbox{}\verb@      # keep going up to DESCRIPTION@\\
 \mbox{}\verb@      prototypes+=""+lines[i].rstrip()+" "@\\
 \mbox{}\verb@      # print(lines[i].rstrip())@\\
@@ -4360,7 +4360,7 @@ input files is a python script named make\_pycbf.py.
 
 \item{}
 \end{list}
-\end{minipage}\vspace{4ex}
+\vspace{4ex}
 \end{flushleft}
 \section{Building python extensions - the setup file}
 
@@ -4372,7 +4372,7 @@ pull in all of the library for now. We use the distutils approach.
 
 \begin{flushleft} \small
 \begin{minipage}{\linewidth}\label{scrap9}\raggedright\small
-\NWtarget{nuweb11a}{} \verb@"py3setup_py.m4"@\nobreak\ {\footnotesize {11a}}$\equiv$
+\NWtarget{nuweb65a}{} \verb@"py3setup_py.m4"@\nobreak\ {\footnotesize {65a}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -4411,16 +4411,15 @@ Aim to build and test in one go (so that the source and the binary match!!)
 
 \begin{flushleft} \small
 \begin{minipage}{\linewidth}\label{scrap10}\raggedright\small
-\NWtarget{nuweb11b}{} \verb@"win32.bat"@\nobreak\ {\footnotesize {11b}}$\equiv$
+\NWtarget{nuweb65b}{} \verb@"win32.bat"@\nobreak\ {\footnotesize {65b}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
 \mbox{}\verb@nuweb pycbf@\\
-\mbox{}\verb@latex pycbf@\\
+\mbox{}\verb@pdflatex pycbf@\\
+\mbox{}\verb@pdflatex pycbf@\\
 \mbox{}\verb@nuweb pycbf@\\
-\mbox{}\verb@latex pycbf@\\
-\mbox{}\verb@dvipdfm pycbf@\\
-\mbox{}\verb@nuweb pycbf@\\
+\mbox{}\verb@pdflatex pycbf@\\
 \mbox{}\verb@C:\python24\python make_pycbf.py > TODO.txt@\\
 \mbox{}\verb@"C:\program files\swigwin-1.3.31\swig.exe" -python pycbf.i@\\
 \mbox{}\verb@C:\python24\python setup.py build --compiler=mingw32@\\
@@ -4442,16 +4441,15 @@ Aim to build and test in one go (so that the source and the binary match!!)
 \end{flushleft}
 \begin{flushleft} \small
 \begin{minipage}{\linewidth}\label{scrap11}\raggedright\small
-\NWtarget{nuweb12a}{} \verb@"linux.sh"@\nobreak\ {\footnotesize {12a}}$\equiv$
+\NWtarget{nuweb66a}{} \verb@"linux.sh"@\nobreak\ {\footnotesize {66a}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
 \mbox{}\verb@nuweb pycbf@\\
-\mbox{}\verb@latex pycbf@\\
+\mbox{}\verb@pdflatex pycbf@\\
+\mbox{}\verb@pdflatex pycbf@\\
 \mbox{}\verb@nuweb pycbf@\\
-\mbox{}\verb@latex pycbf@\\
-\mbox{}\verb@dvipdfm pycbf@\\
-\mbox{}\verb@nuweb pycbf@\\
+\mbox{}\verb@pdflatex pycbf@\\
 \mbox{}\verb@lynx -dump CBFlib.html > CBFlib.txt@\\
 \mbox{}\verb@python make_pycbf.py @\\
 \mbox{}\verb@swig -python pycbf.i@\\
@@ -4476,7 +4474,7 @@ This still gives bold in the ascii (=sucks)
 
 \begin{flushleft} \small
 \begin{minipage}{\linewidth}\label{scrap12}\raggedright\small
-\NWtarget{nuweb12b}{} \verb@"makeflatascii.py"@\nobreak\ {\footnotesize {12b}}$\equiv$
+\NWtarget{nuweb66b}{} \verb@"makeflatascii.py"@\nobreak\ {\footnotesize {66b}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\
@@ -4576,7 +4574,7 @@ when you build CBFlib, hence that file is hardwired in.
 
 \begin{flushleft} \small
 \begin{minipage}{\linewidth}\label{scrap13}\raggedright\small
-\NWtarget{nuweb14}{} \verb@"pycbf_test1.py"@\nobreak\ {\footnotesize {14}}$\equiv$
+\NWtarget{nuweb68}{} \verb@"pycbf_test1.py"@\nobreak\ {\footnotesize {68}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from sys import argv@\\
@@ -4665,7 +4663,7 @@ a single member function.
 
 \begin{flushleft} \small
 \begin{minipage}{\linewidth}\label{scrap14}\raggedright\small
-\NWtarget{nuweb15a}{} \verb@"pycbf_test2.py"@\nobreak\ {\footnotesize {15a}}$\equiv$
+\NWtarget{nuweb69a}{} \verb@"pycbf_test2.py"@\nobreak\ {\footnotesize {69a}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from sys import argv@\\
@@ -4698,7 +4696,7 @@ It appears to work - eventually. Surprising
 
 \begin{flushleft} \small
 \begin{minipage}{\linewidth}\label{scrap15}\raggedright\small
-\NWtarget{nuweb15b}{} \verb@"pycbf_test3.py"@\nobreak\ {\footnotesize {15b}}$\equiv$
+\NWtarget{nuweb69b}{} \verb@"pycbf_test3.py"@\nobreak\ {\footnotesize {69b}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@import pycbf, unittest@\\
@@ -4735,11 +4733,11 @@ It appears to work - eventually. Surprising
 \end{list}
 \end{minipage}\vspace{4ex}
 \end{flushleft}
-\subsection{Version of pycbf_test1 with write logic added}
+\subsection{Version of pycbf\_test1 with write logic added}
 
 \begin{flushleft} \small
 \begin{minipage}{\linewidth}\label{scrap16}\raggedright\small
-\NWtarget{nuweb17}{} \verb@"pycbf_test4.py"@\nobreak\ {\footnotesize {17}}$\equiv$
+\NWtarget{nuweb71}{} \verb@"pycbf_test4.py"@\nobreak\ {\footnotesize {71}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@from sys import argv@\\
@@ -4856,7 +4854,7 @@ It appears to work - eventually. Surprising
 
 \begin{flushleft} \small
 \begin{minipage}{\linewidth}\label{scrap17}\raggedright\small
-\NWtarget{nuweb18}{} \verb@"pycbf_testfelaxes.py"@\nobreak\ {\footnotesize {18}}$\equiv$
+\NWtarget{nuweb72}{} \verb@"pycbf_testfelaxes.py"@\nobreak\ {\footnotesize {72}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@import pycbf, sys@\\
@@ -4931,7 +4929,7 @@ FIXME : byteswapping and ends???
 
 \begin{flushleft} \small
 \begin{minipage}{\linewidth}\label{scrap18}\raggedright\small
-\NWtarget{nuweb20}{} \verb@"xmas/readmarheader.py"@\nobreak\ {\footnotesize {20}}$\equiv$
+\NWtarget{nuweb74}{} \verb@"xmas/readmarheader.py"@\nobreak\ {\footnotesize {74}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@#!/usr/bin/env python@\\
@@ -5291,7 +5289,7 @@ This relies on a "template" cif file to get it started (avoids me programming ev
 
 \begin{flushleft} \small
 \begin{minipage}{\linewidth}\label{scrap19}\raggedright\small
-\NWtarget{nuweb22}{} \verb@"xmas/xmasheaders.py"@\nobreak\ {\footnotesize {22}}$\equiv$
+\NWtarget{nuweb76}{} \verb@"xmas/xmasheaders.py"@\nobreak\ {\footnotesize {76}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@#!/usr/bin/env python@\\
@@ -5568,7 +5566,7 @@ Hopefully the four circle geometry at least vaguely matches what is at the beaml
 
 \begin{flushleft} \small
 \begin{minipage}{\linewidth}\label{scrap20}\raggedright\small
-\NWtarget{nuweb24}{} \verb@"xmas/xmas_cif_template.cif"@\nobreak\ {\footnotesize {24}}$\equiv$
+\NWtarget{nuweb78}{} \verb@"xmas/xmas_cif_template.cif"@\nobreak\ {\footnotesize {78}}$\equiv$
 \vspace{-1ex}
 \begin{list}{}{} \item
 \mbox{}\verb@@\\

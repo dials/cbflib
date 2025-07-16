@@ -262,6 +262,7 @@ extern "C" {
 #include "cbf_read_binary.h"
 #include "cbf_read_mime.h"
 #include "cbf_alloc.h"
+#include "cbf_stx.h"
 #include "cbf_ws.h"
 
 #include <stdlib.h>
