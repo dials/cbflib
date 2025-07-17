@@ -2654,7 +2654,7 @@ $(BIN)/sequence_match: $(LIB)/libcbf.a $(EXAMPLES)/sequence_match.c $(LIB)/libim
 #
 # cbf2tiff example program
 #
-$(BIN)/cbf2tiff: $(LIB)/libcbf.a $(EXAMPLES)/cbf2tiff.c $(EXAMPLES)/tif_sprint.c \
+$(BIN)/cbf2tiff: $(LIB)/libcbf.a $(EXAMPLES)/cbf2tiff.c \
 	$(GOPTLIB)	$(GOPTINC) $(TIFF)
 	mkdir -p $(BIN)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(MISCFLAG) $(CBF_REGEXFLAG) $(INCLUDES) $(WARNINGS) \
