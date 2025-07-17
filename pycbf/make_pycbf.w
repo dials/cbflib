@@ -66,8 +66,9 @@
 The program that does the conversion from CBFlib.txt to the SWIG
 input files is a python script named make\_pycbf.py.
 
-@o make_pycbf.py -i -t
-@{
+@O make_pycbf.py -i -t
+@{from re import match
+
 print("\\begin{verbatim}")
 print("This output comes from make_pycbf.py which generates the wrappers")
 print("pycbf Copyright (C) 2005  Jonathan Wright, no warranty, LGPL")
@@ -125,7 +126,7 @@ print("pycbf Copyright (C) 2005  Jonathan Wright, no warranty, LGPL")
 
 
 # Get the ascii text as a list of strings 
-lines = open("CBFlib.txt","r").readlines()
+lines = open("CBFlib.txt","r",encoding="utf-8").readlines()
 
 # Variables to hold the useful things we find in the file
 docstring = "\n"
@@ -150,7 +151,7 @@ while i<len(lines)-1:
       continue
    if line.find("#include")>=0: # why?
       continue 
-   if line.find("int cbf_")>=0: # We found a function
+   if match("^\\s*int cbf_", line): # We found a function
       # keep going up to DESCRIPTION
       prototypes+=""+lines[i].rstrip()+" "
       # print(lines[i].rstrip())
@@ -3475,11 +3476,11 @@ def generate_wrappers(name_dict):
 
 
 generate_wrappers(name_dict)
-open("cbfgoniometerwrappers.i","w").write(cbf_goniometer_wrapper.get_code())
-open("cbfdetectorwrappers.i","w").write(cbf_detector_wrapper.get_code())
-open("cbfpositionerwrappers.i","w").write(cbf_positioner_wrapper.get_code())
-open("cbfhandlewrappers.i","w").write(cbf_handle_wrapper.get_code())
-open("cbfgenericwrappers.i","w").write(generic_wrapper.get_code())
+open("cbfgoniometerwrappers.i","w",encoding="utf-8").write(cbf_goniometer_wrapper.get_code())
+open("cbfdetectorwrappers.i","w",encoding="utf-8").write(cbf_detector_wrapper.get_code())
+open("cbfpositionerwrappers.i","w",encoding="utf-8").write(cbf_positioner_wrapper.get_code())
+open("cbfhandlewrappers.i","w",encoding="utf-8").write(cbf_handle_wrapper.get_code())
+open("cbfgenericwrappers.i","w",encoding="utf-8").write(generic_wrapper.get_code())
 
 print("End of output from make_pycbf.py")
 print("\\end{verbatim}")

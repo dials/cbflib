@@ -263,20 +263,13 @@ extern "C" {
 #include "cbf_tree.h"
 #include "cbf_alloc.h"
 #include "cbf_context.h"
+#include "cbf_lex.h"
+#include "cbf_stx.h"
 #include "cbf_ws.h"
 
 #define yyparse       cbf_parse
 #define yylex         cbf_lex_wrapper
 #define yyerror(dummy,x)    cbf_syntax_error(((cbf_handle)(((void **)context)[2])),(x))
-typedef union
-{
-  int          errorcode;
-  const char  *text;
-  cbf_node    *node;
-} YYSTYPE;
-#define YYSTYPE_IS_DECLARED
-
-#include "cbf_stx.h"
 
 #ifdef alloca
 #undef alloca
@@ -287,7 +280,6 @@ typedef union
 #define YYINITDEPTH 200
 #define YYMAXDEPTH  200
 
-int cbf_lex (cbf_handle handle, YYSTYPE *val ); 
 /*
   vcontext[0]  -- (void *)file
   vcontext[1]  -- (void *)handle->node
@@ -304,6 +296,8 @@ static int cbf_lex_wrapper (void *val, void *vcontext)
   
   cbf_file *cbffile;
   
+  CBF_UNUSED( cbffile );
+
 
   do {
   
@@ -338,15 +332,9 @@ static int cbf_syntax_error (cbf_handle handle, const char *message)
 %defines
 %lex-param {void * context}
 %parse-param {void * context}
-%pure-parser
+%define api.pure full
+%define api.value.type {union _cbf_stype}
 %token-table
-
-%union
-{
-  int          errorcode;
-  const char  *text;
-  cbf_node    *node;
-}
 
 %token <text> DATA
 %token <text> DEFINE

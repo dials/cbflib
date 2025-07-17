@@ -76,7 +76,7 @@
 \usepackage{graphics} % For the pictures
 \usepackage{anysize}  % Try to circumvent Latex default margins
 \usepackage{fancyhdr}
-\usepackage[dvipdfm,bookmarks=true,backref,bookmarksnumbered=true,
+\usepackage[bookmarks=true,backref,bookmarksnumbered=true,
             bookmarkstype=toc]{hyperref}
 \newcommand{\var}[1]{\textbf{\textsf{#1}}} % highlight variables in text
 \newcommand{\code}[1]{\textbf{\textsf{#1}}} % highlight code in text
@@ -302,11 +302,10 @@ Aim to build and test in one go (so that the source and the binary match!!)
 @o win32.bat -i -t
 @{
 nuweb pycbf
-latex pycbf
+pdflatex pycbf
+pdflatex pycbf
 nuweb pycbf
-latex pycbf
-dvipdfm pycbf
-nuweb pycbf
+pdflatex pycbf
 C:\python24\python make_pycbf.py > TODO.txt
 "C:\program files\swigwin-1.3.31\swig.exe" -python pycbf.i
 C:\python24\python setup.py build --compiler=mingw32
@@ -321,11 +320,10 @@ C:\python24\python makeflatascii.py pycbf_ascii_help.txt
 @o linux.sh
 @{
 nuweb pycbf
-latex pycbf
+pdflatex pycbf
+pdflatex pycbf
 nuweb pycbf
-latex pycbf
-dvipdfm pycbf
-nuweb pycbf
+pdflatex pycbf
 lynx -dump CBFlib.html > CBFlib.txt
 python make_pycbf.py 
 swig -python pycbf.i
@@ -559,7 +557,7 @@ if __name__=="__main__":
 @}
 
 
-\subsection{Version of pycbf_test1 with write logic added}
+\subsection{Version of pycbf\_test1 with write logic added}
 
 @o pycbf_test4.py -i -t
 @{from sys import argv

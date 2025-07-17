@@ -6,7 +6,7 @@ RUN mkdir /app
 COPY ./cbflib /app/cbflib
 
 RUN apt-get update && \
-  apt-get install -y bison build-essential git wget libjpeg-dev m4 automake libpcre2-dev liblzma-dev python3-build python3-dev python3-numpy-dev python3-setuptools python3-venv rsync gfortran libz-dev
+  apt-get install -y bison build-essential git wget libjpeg-dev m4 automake libpcre2-dev liblzma-dev links python3-build python3-dev python3-numpy-dev python3-setuptools python3-venv rsync gfortran libz-dev
 
 RUN cd /app/cbflib && \
   make all

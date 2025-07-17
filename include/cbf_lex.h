@@ -258,9 +258,16 @@ extern "C" {
 
 #include "cbf_tree.h"
 #include "cbf_file.h"
-#include "cbf_stx.h"
 
 #include <stdio.h>
+
+
+typedef union _cbf_stype
+{
+  int          errorcode;
+  const char  *text;
+  cbf_node    *node;
+} YYSTYPE;
 
 
   /* Get the next token */

@@ -1,10 +1,9 @@
 
 nuweb pycbf
-latex pycbf
+pdflatex pycbf
+pdflatex pycbf
 nuweb pycbf
-latex pycbf
-dvipdfm pycbf
-nuweb pycbf
+pdflatex pycbf
 lynx -dump CBFlib.html > CBFlib.txt
 python make_pycbf.py 
 swig -python pycbf.i
