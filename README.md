@@ -14,7 +14,6 @@
 Crystallographic Binary Files with ASCII Support**  
 Version 0.9.8  
 3 April 2025  
-/
 
 by  
 Paul J. Ellis  
@@ -38,360 +37,255 @@ ALTERNATIVELY YOU MAY REDISTRIBUTE THE CBFLIB API UNDER THE TERMS OF THE [LGPL](
 
 ### Before using this software, please read the [![NOTICE](html_graphics/noticeButton.jpg)](CBFlib_NOTICES.html) for important disclaimers and the IUCr Policy on the Use of the Crystallographic Information File (CIF) and for other important information.
 
-Work on imgCIF and CBFlib currentlysupported in part by the the National Institutes of Health under grant R24-GM154040-01 and in the past by U. S. Department of Energy (DOE) under grants ER63601-1021466-0009501 and ER64212-1027708-0011962, by the U. S. National Science Foundation (NSF) under grants DBI-0610407, DBI-0315281 and EF-0312612, the U. S. National Institutes of Health (NIH) under grants 1R15GM078077 from NIGMS and 1R13RR023192 from NCRR and funding from the International Union for Crystallographyn (IUCr). The content is solely the responsibility of the authors and does not necessarily represent the official views of DOE, NSF, NIH, NIGMS, NCRR or IUCr. Recent work on integration among CBF, HDF5 and NeXus supported in part by Pandata ODI (EU 7th Framework Programme)
+Work on imgCIF and CBFlib currently supported in part by the the National Institutes of Health under grant R24-GM154040-01 and in the past by U. S. Department of Energy (DOE) under grants ER63601-1021466-0009501 and ER64212-1027708-0011962, by the U. S. National Science Foundation (NSF) under grants DBI-0610407, DBI-0315281 and EF-0312612, the U. S. National Institutes of Health (NIH) under grants 1R15GM078077 from NIGMS and 1R13RR023192 from NCRR and funding from the International Union for Crystallographyn (IUCr). The content is solely the responsibility of the authors and does not necessarily represent the official views of DOE, NSF, NIH, NIGMS, NCRR or IUCr. Recent work on integration among CBF, HDF5 and NeXus supported in part by Pandata ODI (EU 7th Framework Programme)
 
 ------------------------------------------------------------------------
 
 ## Version History
 
-Version
-
-Date
-
-By
-
-Description
-
-  0.1
-
-  Apr. 1998
-
-  PJE
-
-  This was the first CBFlib release. It supported binary CBF files using binary strings.
-
-  [0.2](ChangeLog.md#0.2)
-
-  Aug. 1998
-
-  HJB
-
-  This release added ascii imgCIF support using MIME-encoded binary sections, added the option of MIME headers for the binary strings was well. MIME code adapted from mpack 1.5. Added hooks needed for DDL1-style names without categories.
-
-  [0.3](ChangeLog.md#0.3)
-
-  Sep. 1998
-
-  PJE
-
-  This release cleaned up the changes made for version 0.2, allowing multi-threaded use of the code, and removing dependence on the mpack package.
-
-  [0.4](ChangeLog.md#0.4)
-
-  Nov. 1998
-
-  HJB
-
-  This release merged much of the message digest code into the general file reading and writing to reduce the number of passes. More consistency checking between the MIME header and the binary header was introduced. The size in the MIME header was adjusted to agree with the version 0.2 documentation.
-
-  [0.5](ChangeLog.md#0.5)
-
-  Dec. 1998
-
-  PJE
-
-  This release greatly increased the speed of processing by allowing for deferred digest evaluation.
-
-  [0.6](ChangeLog.md#0.6)
-
-  Jan. 1999
-
-  HJB
-
-  This release removed the redundant information (binary id, size, compression id) from a binary header when there is a MIME header, removed the unused repeat argument, and made the memory allocation for buffering and tables with many rows sensitive to the current memory allocation already used.
-
-  [0.6.1](ChangeLog.md#0.6.1)
-
-  Feb. 2001
-
-  HP (per HJB)
-
-  This release fixed a memory leak due to misallocation by size of cbf_handle instead of cbf_handle_struct
-
-  [0.7](ChangeLog.md#0.7)
-
-  Mar. 2001
-
-  PJE
-
-  This release added high-level instructions based on the imgCIF dictionary version 1.1.
-
-  [0.7.1](ChangeLog.md#0.7.1)
-
-  Mar. 2001
-
-  PJE
-
-  The high-level functions were revised to permit future expansion to files with multiple images.
-
-  [0.7.2](ChangeLog.md#0.7.2)
-
-  Apr. 2001
-
-  HJB
-
-  This release adjusted cbf_cimple.c to conform to cif_img.dic version 1.1.3
-
-  [0.7.2.1](ChangeLog.md#0.7.2.1)
-
-  May 2001
-
-  PJE
-
-  This release corrected an if nesting error in the prior mod to cbf_cimple.c.
-
-  [0.7.3](ChangeLog.md#0.7.3)
-
-  Oct. 2002
-
-  PJE
-
-  This release modified cbf_simple.c to reorder image data on read so that the indices are always increasing in memory (this behavior was undefined previously).
-
-  [0.7.4](ChangeLog.md#0.7.4)
-
-  Jan 2004
-
-  HJB
-
-  This release fixes a parse error for quoted strings, adds code to get and set character string types, and removes compiler warnings
-
-  [0.7.5](ChangeLog.md#0.7.5)
-
-  Apr 2006
-
-  HJB
-
-  This release cleans up some compiler warnings, corrects a parse error on quoted strings with a leading blank as adds the new routines for support of aliases, dictionaries and real arrays, higher level routines to get and set pixel sizes, do cell computations, and to set beam centers, improves support for conversion of images, picking up more data from headers.
-
-  [0.7.6](ChangeLog.md#0.7.6)
-
-  Jul 2006
-
-  HJB
-
-  This release reorganizes the kit into two pieces: CBFlib_0.7.6_Data_Files and CBFlib_0.7.6. An optional local copy of getopt is added. The 1.4 draft dictionary has been added. cif2cbf updated to support vcif2 validation. convert_image and cif2cbf updated to report text of error messages. convert_image updated to support tag and category aliases, default to adxv images. convert_image and img updated to support row-major images. Support added for binning. API Support added for validation, wide files and line folding. Logic changed for beam center reporting. Added new routines: cbf_validate, cbf_get_bin_sizes, cbf_set_bin_sizes, cbf_find_last_typed_child, cbf_compose_itemname, cbf_set_cbf_logfile, cbf_make_widefile, cbf_read_anyfile, cbf_read_widefile, cbf_write_local_file, cbf_write_widefile, cbf_column_number, cbf_blockitem_number, cbf_log, cbf_check_category_tags, cbf_set_beam_center
-
-  [0.7.7](ChangeLog.md#0.7.7)
-
-  February 2007
-
-  HJB
-
-  This release reflects changes for base 32K support developed by G. Darakev, and changes for support of reals, 3d arrays, byte_offset compression and J. P. Abrahams packed compression made in consultation with (in alphabetic order) E. Eikenberry, A. Hammerley, W. Kabsch, M. Kobas, J. Wright and others at PSI and ESRF in January 2007, as well accumulated changes fixing problems in release 0.7.6.
-
-  [0.7.7.1](ChangeLog.md#0.7.7.1)
-
-  February 2007
-
-  HJB
-
-  This release is a patch to 0.7.7 to change the treatment of the byteorder parameter from strcpy semantics to return of a pointer to a string constant. Our thanks to E. Eikenberry for pointing out the problem.
-
-  [0.7.7.2](ChangeLog.md#0.7.7.2)
-
-  February 2007
-
-  HJB
-
-  This release is a patch to 0.7.7.1 to add testing for JPA packed compression and to respect signs declared in the MIME header.
-
-  [0.7.7.3](ChangeLog.md#0.7.7.3)
-
-  April 2007
-
-  HJB
-
-  This release is a patch to 0.7.7.3 to add f90 support for reading of CBF byte-offset and packed compression, to fix problems with gcc 4.4.1 and to correct errors in multidimensional packed compression.
-
-  [0.7.7.4](ChangeLog.md#0.7.7.4)
-
-  May 2007
-
-  HJB
-
-  Corrects in handling SLS detector mincbfs and reorder dimensions versus arrays for some f90 compilers as per H. Powell.
-
-  [0.7.7.5](ChangeLog.md#0.7.7.5)
-
-  May 2007
-
-  HJB
-
-  Fix to cbf_get_image for bug reported by F. Remacle, fixes for windows builds as per J. Wright and F. Remacle.
-
-  [0.7.7.6](ChangeLog.md#0.7.7.6)
-
-  Jun 2007
-
-  HJB
-
-  Fix to CBF byte-offset compression writes, fix to Makefiles and m4 for f90 test programs to allow adjustable record length.
-
-  [0.7.8](ChangeLog.md#0.7.8)
-
-  Jul 2007
-
-  HJB
-
-  Release for full support of SLS data files with updated convert_minicbf, and support for gfortran from gcc 4.2.
-
-  [0.7.8.1](ChangeLog.md#0.7.8.1)
-
-  Jul 2007
-
-  HJB
-
-  Update to 0.7.8 release to fix memory leaks reported by N. Sauter and to update validation checks for recent changes.
-
-  [0.7.8.2](ChangeLog.md#0.7.8.2)
-
-  Dec 2007
-
-  CN, HJB
-
-  Update to 0.7.8.1 to add ADSC jiffie by Chris Nielsen, and to add ...\_fs and ...\_sf macros.
-
-  [0.7.9](ChangeLog.md#0.7.9)
-
-  Dec 2007
-
-  CN, HJB
-
-Identical to 0.7.8.2 except for a cleanup of deprecated examples, e.g. diffrn_frame_data
-
-  [0.7.9.1](ChangeLog.md#0.7.9.1)
-
-  Jan 2008
-
-  CN, HJB
-
-  Update to 0.7.8.2 to add inverse ADSC jiffie by Chris Nielsen, to clean up problems in handling maps for RasMol.
-
-  [0.8.0](ChangeLog.md#0.8.0)
-
-  Jul 2008
-
-  GT, HJB
-
-  Cleanup of 0.7.9.1 to start 0.8 series.
-
-  [0.8.1](ChangeLog.md#0.8.1)
-
-  Jul 2009
-
-  EZ, CN, PC, GW, JH, HJB
-
-   Release with EZ's 2008 DDLm support using JH's PyCifRW, also cbff f95 wrapper code, PC's java bindings.
-
-  [0.9.1](ChangeLog.md#0.9.1)
-
-  Aug 2010
-
-  PC, EE, JLM, NS, EZ, HJB
-
-   Release with EE's Dectris template software, also with vcif3, new arvai_test, sequence_match.
-
-  [0.9.2](ChangeLog.md#0.9.2)
-
-  Feb 2011
-
-  PC, EE, JLM, NS, EZ, HJB
-
-   New default release with updated pycbf, tiff support, removal of default use of PyCifRW to avoid Fedora license issue.
-
-  [0.9.3](ChangeLog.md#0.9.3)
-
-  Oct 2013
-
-  JS, HJB
-
-  Added low-level 'cbf_H5\*' functions for interacting with HDF5, higher level functions for converting CBF or miniCBF files to NeXus format, two utility programs to convert CBF or miniCBF files to NeXus format and some unit tests for the low-level 'cbf_H5\*' functions. Add initial FEL detector support.
-
-  [0.9.4](ChangeLog.md#0.9.4)
-
-  March 2014
-
-  JS, HJB
-
-  Refactored implementation of the NXMX application defintion functional mapping with improvements to cmake support and a preliminary effort at handling Stokes polarization mapping. This release had serious issues in the functional mapping axis mapping and should not be used for production involving NeXus files.
-
-  [0.9.5](ChangeLog.md#0.9.5)
-
-  April 2014
-
-  HJB
-
-  This is a production release for single detector module single crystal MX NeXus support.
-
-  [0.9.6](ChangeLog.md#0.9.6)
-
-  May 2020
-
-  HJB
-
-  This is the full release supporting the integration of CBF and NeXus, including support for the NeXus NXpdb embedding of CIF files in NeXus files. \*\*\* IMPORTANT: Because of the requirements of dynamic loading to support the compressions used by the Dectris NeXus/HDF5 format, all applications require setting of library and plugin paths. See the initialization file cbflib.ini, which should be sourced before running any applications \*\*\*.. The changes from 0.9.5 to 0.9.6 are:  
-improve error reporting in examples/cbf2nexus.c  
-improve examples/cbf_standardize_numbers.c  
-add bslz4 compression option to hdf5 in cif2cbf  
-minor cleanup in examples/convert_minicbf.c  
-minor cleanup in examples/nexus2cbf.c  
-minor cleanup in examples/sequence_match.c  
-minor cleanup in include/cbf_context.h  
-add value clipping to cbf_copy  
-minor cleanuo in cbf_hdf5.h
-
-  [0.9.7](ChangeLog.md#0.9.7)
-
-  June 2021
-
-  HJB
-
-  This is a production release with misc minor updates. The changes from 0.9.6 to 0.9.7 are:  
-update the manual  
-cleanup minor bugs is examples/adscimg2cbf.c, adscimg2cbf_sub.c, cbf2adscimg_sub.c  
-fix examples/cbf_standardize_numbers.c  
-fix examples/testcbf.c  
-fix examples/testcbf.java  
-fix examples/testhdf5.c  
-fix include/cbf_hdf5.h  
-fix include/img.h  
-fix Java.txt  
-fix handling of hex to be int in fcblib_defines, fcb_next_binary, fcb_packed, fcb_read_bits, fcb_read_xds_i2  
-fix pycbf/cbf_autoscrolled_window.py, cbf_axis_text.py, various wrappers, bytestrings in tests, xmas/readmarheader.py, xmasheaders.py  
-fix cbf.c  
-fix cbf_context.c, cbf_copy.c, cbf_hdf5.c, cbf_hdf5_filter.c, cbf_simple.c, cbf_stx.c  
-fix fcb_atol_wcnt.f90, fcb_nblen_array.f90, fcb_read_line.f90, fcb_skip_whitespace.f90  
-fix img.c
-
-  [0.9.8](ChangeLog.md#0.9.8)
-
-  April 2025
-
-  DP, JH, ND, HJB
-
-  This is a final CBFlib release prior to moving all future development under the auspices of the DIALS project. In the past the main repository for CBFlib was at <span http:="" github.com="" yayahjb="" cbflib="" target="_blank">http://github.com/yayahjb/cbflib</span>. In the future tha main repository for CBFlib will be at <span http:="" github.com="" dials="" cbflib="" target="_blank">http://github.com/dials/cbflib</span>. For the convenience of users of legacy versions of CBFlib, there will be legacy fork of the repository frozen at the 0.9.8 revision level <span http:="" github.com="" nsls-ii-mx="" cbflib="" target="_blank">http://github.com/nsls-ii-mx/cbflib</span> The changes from 0.9.7 to 0.9.8 are:  
-in cif2cbf add -I-1, -I-2, -I-4, and -I-8 options for unsigned integers, --{sum\|summing} sumrange option to sum images, and --xdsb2z\|rotate-xds-beam-to-z beamcentx,beamcenty,beamcentz assume the beam is along \[beamx, beamy, beamz\] relative to the image and rotate the image so that the beam is along \[0,0,-1\]  
-split support for languages other than C/C++ to use the 2022 swig-fortran kit for fortran and a recent swig kit for python  
-update tiff2cbf for multiple compression options  
-update cbf_copy options and fix typos  
-drop all support for python2 in favor of python3  
-fix buffer overruns in examples/dectris_cbf_template_test/cbf_template_t.c  
-fix errors in examples/testcbf.java  
-add zstd compression option for hdf5 files  
-update fcblib_defines  
-update pycbf wrappers  
-fix buffer overflow in cbf_binary.c  
-fix parens in cbf_codes.c  
-fix bug in cbf_nibble_offset.c  
-fix tab definition in fcb_skip_whitespace.f90  
-preliminary changes for move from make to cmake by J. Hattne  
-add third dimension in examples/img2cif.c, examples/makecbf.c, examples/nexus2cbf.c  
-fix bugs in examples/tiff2cbf.c examples/tif_sprint.c  
-make handling of version number changes in tests data general  
-fix typoi in test_cbf_airy_disk call  
-fix bug in pycbf_test1.py  
-fix regex dependency handling in cbf_hdf5.c
+Version   Date       By  Description
+0.1       Apr. 1998  PJE This was the first CBFlib release. It supported binary CBF files using binary strings.
+
+[0.2](ChangeLog.md#0.2)
+          Aug. 1998  HJB This release added ascii imgCIF support using MIME-encoded binary sections, added 
+                         the option of MIME headers for the binary strings was well. MIME code adapted from 
+                         mpack 1.5. Added hooks needed for DDL1-style names without categories.
+[0.3](ChangeLog.md#0.3)
+          Sep. 1998  PJE This release cleaned up the changes made for version 0.2, allowing multi-threaded 
+                         use of the code, and removing dependence on the mpack package.
+[0.4](ChangeLog.md#0.4)
+          Nov. 1998  HJB This release merged much of the message digest code into the general file reading 
+                         and writing to reduce the number of passes. More consistency checking between the 
+                         MIME header and the binary header was introduced. The size in the MIME header was 
+                         adjusted to agree with the version 0.2 documentation.
+[0.5](ChangeLog.md#0.5)
+          Dec. 1998  PJE This release greatly increased the speed of processing by allowing for deferred 
+                         digest evaluation.
+                         
+[0.6](ChangeLog.md#0.6)
+          Jan. 1999  HJB This release removed the redundant information (binary id, size, compression id) 
+                         from a binary header when there is a MIME header, removed the unused repeat 
+                         argument, and made the memory allocation for buffering and tables with many rows 
+                         sensitive to the current memory allocation already used.
+                         
+[0.6.1](ChangeLog.md#0.6.1)
+          Feb. 2001  HP (per HJB)
+                         This release fixed a memory leak due to misallocation by size of cbf_handle instead 
+                         of cbf_handle_struct
+                        
+[0.7](ChangeLog.md#0.7)
+          Mar. 2001  PJE This release added high-level instructions based on the imgCIF dictionary version 1.1.
+
+[0.7.1](ChangeLog.md#0.7.1)
+          Mar. 2001  PJE The high-level functions were revised to permit future expansion to files with multiple images.
+
+[0.7.2](ChangeLog.md#0.7.2)
+          Apr. 2001  HJB This release adjusted cbf_cimple.c to conform to cif_img.dic version 1.1.3
+
+[0.7.2.1](ChangeLog.md#0.7.2.1)
+          May 2001   PJE This release corrected an if nesting error in the prior mod to cbf_cimple.c.
+
+[0.7.3](ChangeLog.md#0.7.3)
+          Oct. 2002  PJE This release modified cbf_simple.c to reorder image data on read so that the 
+                         indices are always increasing in memory (this behavior was undefined previously).
+
+[0.7.4](ChangeLog.md#0.7.4)
+          Jan 2004   HJB This release fixes a parse error for quoted strings, adds code to get and set 
+                         character string types, and removes compiler warnings
+ 
+[0.7.5](ChangeLog.md#0.7.5)
+          Apr 2006   HJB This release cleans up some compiler warnings, corrects a parse error on quoted 
+                         strings with a leading blank as adds the new routines for support of aliases, 
+                         dictionaries and real arrays, higher level routines to get and set pixel sizes, 
+                         do cell computations, and to set beam centers, improves support for conversion 
+                         of images, picking up more data from headers.
+
+[0.7.6](ChangeLog.md#0.7.6)
+          Jul 2006   HJB This release reorganizes the kit into two pieces: CBFlib_0.7.6_Data_Files and 
+                         CBFlib_0.7.6. An optional local copy of getopt is added. The 1.4 draft dictionary 
+                         has been added. cif2cbf updated to support vcif2 validation. convert_image and 
+                         cif2cbf updated to report text of error messages. convert_image updated to support 
+                         tag and category aliases, default to adxv images. convert_image and img updated 
+                         to support row-major images. Support added for binning. API Support added for 
+                         validation, wide files and line folding. Logic changed for beam center reporting. 
+                         Added new routines: cbf_validate, cbf_get_bin_sizes, cbf_set_bin_sizes, 
+                         cbf_find_last_typed_child, cbf_compose_itemname, cbf_set_cbf_logfile, cbf_make_widefile, 
+                         cbf_read_anyfile, cbf_read_widefile, cbf_write_local_file, cbf_write_widefile, 
+                         cbf_column_number, cbf_blockitem_number, cbf_log, cbf_check_category_tags, 
+                         cbf_set_beam_center
+
+[0.7.7](ChangeLog.md#0.7.7)
+          February 2007 
+                     HJB This release reflects changes for base 32K support developed by G. Darakev, and 
+                         changes for support of reals, 3d arrays, byte_offset compression and J. P. 
+                         Abrahams packed compression made in consultation with (in alphabetic order) 
+                         E. Eikenberry, A. Hammerley, W. Kabsch, M. Kobas, J. Wright and others at PSI and 
+                         ESRF in January 2007, as well accumulated changes fixing problems in release 0.7.6.
+
+[0.7.7.1](ChangeLog.md#0.7.7.1)
+          February 2007
+                     HJB This release is a patch to 0.7.7 to change the treatment of the byteorder parameter 
+                        from strcpy semantics to return of a pointer to a string constant. Our thanks to E. 
+                        Eikenberry for pointing out the problem.
+
+[0.7.7.2](ChangeLog.md#0.7.7.2)
+          February 2007
+                     HJB This release is a patch to 0.7.7.1 to add testing for JPA packed compression and to 
+                         respect signs declared in the MIME header.
+
+[0.7.7.3](ChangeLog.md#0.7.7.3)
+          April 2007 HJB This release is a patch to 0.7.7.3 to add f90 support for reading of CBF byte-offset 
+                         and packed compression, to fix problems with gcc 4.4.1 and to correct errors in 
+                         multidimensional packed compression.
+
+[0.7.7.4](ChangeLog.md#0.7.7.4)
+          May 2007   HJB Corrects in handling SLS detector mincbfs and reorder dimensions versus arrays for 
+                         some f90 compilers as per H. Powell.
+
+[0.7.7.5](ChangeLog.md#0.7.7.5)
+          May 2007   HJB Fix to cbf_get_image for bug reported by F. Remacle, fixes for windows builds as 
+                         per J. Wright and F. Remacle.
+
+[0.7.7.6](ChangeLog.md#0.7.7.6)
+          Jun 2007   HJB Fix to CBF byte-offset compression writes, fix to Makefiles and m4 for f90 test 
+                         programs to allow adjustable record length.
+
+[0.7.8](ChangeLog.md#0.7.8) 
+          Jul 2007   HJB Release for full support of SLS data files with updated convert_minicbf, and 
+                         support for gfortran from gcc 4.2.
+
+[0.7.8.1](ChangeLog.md#0.7.8.1)
+          Jul 2007   HJB Update to 0.7.8 release to fix memory leaks reported by N. Sauter and to update 
+                         validation checks for recent changes.
+
+[0.7.8.2](ChangeLog.md#0.7.8.2)
+          Dec 2007   CN, HJB
+                         Update to 0.7.8.1 to add ADSC jiffie by Chris Nielsen, and to add ...\_fs and ...\_sf macros.
+
+[0.7.9](ChangeLog.md#0.7.9)
+          Dec 2007   CN, HJB
+                         Identical to 0.7.8.2 except for a cleanup of deprecated examples, e.g. diffrn_frame_data
+
+[0.7.9.1](ChangeLog.md#0.7.9.1)
+          Jan 2008   CN, HJB
+                         Update to 0.7.8.2 to add inverse ADSC jiffie by Chris Nielsen, to clean up problems 
+                         in handling maps for RasMol.
+
+[0.8.0](ChangeLog.md#0.8.0)
+          Jul 2008   GT, HJB
+                         Cleanup of 0.7.9.1 to start 0.8 series.
+
+[0.8.1](ChangeLog.md#0.8.1)
+          Jul 2009   EZ, CN, PC, GW, JH, HJB
+                         Release with EZ's 2008 DDLm support using JH's PyCifRW, also cbff f95 wrapper code, 
+                         PC's java bindings.
+
+[0.9.1](ChangeLog.md#0.9.1)
+          Aug 2010   PC, EE, JLM, NS, EZ, HJB
+                         Release with EE's Dectris template software, also with vcif3, new arvai_test, 
+                         sequence_match.
+
+[0.9.2](ChangeLog.md#0.9.2)
+          Feb 2011   PC, EE, JLM, NS, EZ, HJB
+                         New default release with updated pycbf, tiff support, removal of default use of PyCifRW 
+                         to avoid Fedora license issue.
+
+[0.9.3](ChangeLog.md#0.9.3)
+          Oct 2013   JS, HJB
+                         Added low-level 'cbf_H5\*' functions for interacting with HDF5, higher level functions 
+                         for converting CBF or miniCBF files to NeXus format, two utility programs to convert 
+                         CBF or miniCBF files to NeXus format and some unit tests for the low-level 'cbf_H5\*' 
+                         functions. Add initial FEL detector support.
+
+[0.9.4](ChangeLog.md#0.9.4)
+          March 2014 JS, HJB
+                         Refactored implementation of the NXMX application defintion functional mapping with 
+                         improvements to cmake support and a preliminary effort at handling Stokes polarization 
+                         mapping. This release had serious issues in the functional mapping axis mapping and 
+                         should not be used for production involving NeXus files.
+
+[0.9.5](ChangeLog.md#0.9.5)
+          April 2014  HJB
+                         This is a production release for single detector module single crystal MX NeXus support.
+
+[0.9.6](ChangeLog.md#0.9.6)
+          May 2020    HJB
+                         This is the full release supporting the integration of CBF and NeXus, including support 
+                         for the NeXus NXpdb embedding of CIF files in NeXus files. \*\*\* IMPORTANT: Because of 
+                         the requirements of dynamic loading to support the compressions used by the Dectris 
+                         NeXus/HDF5 format, all applications require setting of library and plugin paths. See 
+                         the initialization file cbflib.ini, which should be sourced before running any applications 
+                         \*\*\*.. The changes from 0.9.5 to 0.9.6 are:  
+                         
+                             improve error reporting in examples/cbf2nexus.c  
+                             improve examples/cbf_standardize_numbers.c  
+                             add bslz4 compression option to hdf5 in cif2cbf  
+                             minor cleanup in examples/convert_minicbf.c  
+                             minor cleanup in examples/nexus2cbf.c  
+                             minor cleanup in examples/sequence_match.c  
+                             minor cleanup in include/cbf_context.h  
+                             add value clipping to cbf_copy  
+                             minor cleanuo in cbf_hdf5.h
+
+[0.9.7](ChangeLog.md#0.9.7)
+          June 2021   HJB
+                        This is a production release with misc minor updates. The changes from 0.9.6 to 0.9.7 are: 
+                        
+                            update the manual  
+                            cleanup minor bugs is examples/adscimg2cbf.c, adscimg2cbf_sub.c, cbf2adscimg_sub.c  
+                            fix examples/cbf_standardize_numbers.c  
+                            fix examples/testcbf.c  
+                            fix examples/testcbf.java  
+                            fix examples/testhdf5.c  
+                            fix include/cbf_hdf5.h  
+                            fix include/img.h  
+                            fix Java.txt  
+                            fix handling of hex to be int in fcblib_defines, fcb_next_binary, fcb_packed, fcb_read_bits, 
+                                fcb_read_xds_i2  
+                            fix pycbf/cbf_autoscrolled_window.py, cbf_axis_text.py, various wrappers, bytestrings in 
+                                tests, xmas/readmarheader.py, xmasheaders.py  
+                            fix cbf.c  
+                            fix cbf_context.c, cbf_copy.c, cbf_hdf5.c, cbf_hdf5_filter.c, cbf_simple.c, cbf_stx.c  
+                            fix fcb_atol_wcnt.f90, fcb_nblen_array.f90, fcb_read_line.f90, fcb_skip_whitespace.f90  
+                            fix img.c
+
+[0.9.8](ChangeLog.md#0.9.8)
+          April 2025  DP, JH, ND, HJB
+                        This is a final CBFlib release prior to moving all future development under the auspices of the 
+                        DIALS project. In the past the main repository for CBFlib was at <span http:="" github.com="" yayahjb="" 
+                        cbflib="" target="_blank">http://github.com/yayahjb/cbflib</span>. In the future tha main repository 
+                        
+                        for CBFlib will be at <span http:="" github.com="" dials="" cbflib=""  
+                        target="_blank">http://github.com/dials/cbflib</span>. For the convenience of users of legacy 
+                        versions of CBFlib, there will be legacy fork of the repository frozen at the 0.9.8 revision 
+                        level <span http:="" github.com="" nsls-ii-mx="" cbflib="" 
+                        target="_blank">http://github.com/nsls-ii-mx/cbflib</span> The changes from 0.9.7 
+                        to 0.9.8 are:  
+                        
+                            in cif2cbf add -I-1, -I-2, -I-4, and -I-8 options for unsigned integers, --{sum\|summing} 
+                            sumrange option to sum images, and --xdsb2z\|rotate-xds-beam-to-z beamcentx,beamcenty,
+                            beamcentz assume the beam is along \[beamx, beamy, beamz\] relative to the image and rotate 
+                            the image so that the beam is along \[0,0,-1\]  
+                            split support for languages other than C/C++ to use the 2022 swig-fortran kit for fortran 
+                            and a recent swig kit for python update tiff2cbf for multiple compression options  
+                            update cbf_copy options and fix typos  
+                            drop all support for python2 in favor of python3  
+                            fix buffer overruns in examples/dectris_cbf_template_test/cbf_template_t.c  
+                            fix errors in examples/testcbf.java  
+                            add zstd compression option for hdf5 files  
+                            update fcblib_defines  
+                            update pycbf wrappers  
+                            fix buffer overflow in cbf_binary.c  
+                            fix parens in cbf_codes.c  
+                            fix bug in cbf_nibble_offset.c  
+                            fix tab definition in fcb_skip_whitespace.f90  
+                            preliminary changes for move from make to cmake by J. Hattne  
+                            add third dimension in examples/img2cif.c, examples/makecbf.c, examples/nexus2cbf.c  
+                            fix bugs in examples/tiff2cbf.c examples/tif_sprint.c  
+                            make handling of version number changes in tests data general  
+                            fix typo in test_cbf_airy_disk call  
+                            fix bug in pycbf_test1.py  
+                            fix regex dependency handling in cbf_hdf5.c
 
 ------------------------------------------------------------------------
 
