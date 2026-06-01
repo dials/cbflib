@@ -1,0 +1,39 @@
+name: CMake build and tests (macOS)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - synchronize
+      - opened
+  workflow_dispatch:
+  schedule:
+    - cron: '0 20 * * 1'  # Monday 20:00 UTC
+
+jobs:
+  build_test:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install extra dependencies
+      run: |
+        brew install bison m4 gcc links swig
+        # Put Homebrew bison ahead of the macOS-bundled one (too old for cbflib).
+        echo "$(brew --prefix bison)/bin" >> "$GITHUB_PATH"
+        # Homebrew's gcc ships a versioned gfortran (e.g. gfortran-14) but no
+        # unversioned 'gfortran', which is the only name CMake's Fortran
+        # detection looks for. Point CMake at the versioned binary explicitly.
+        echo "FC=$(ls "$(brew --prefix)"/bin/gfortran-* | sort -V | tail -n1)" >> "$GITHUB_ENV"
+        # The pycbf tests import numpy at runtime to render array data; without
+        # it they emit a fallback message and the output comparison fails.
+        python3 -m pip install --break-system-packages numpy
+    - name: Build
+      run: |
+        cmake .
+        cmake --build . --parallel $(sysctl -n hw.logicalcpu)
+    - name: Test
+      run: |
+        ctest --parallel $(sysctl -n hw.logicalcpu) --output-on-failure
