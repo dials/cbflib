@@ -21,14 +21,10 @@ jobs:
     - name: Install extra dependencies
       run: |
         brew install bison m4 gcc links swig
-        # Put Homebrew bison ahead of the macOS-bundled one (too old for cbflib).
+        # Use Homebrew bison instead of the bundled one
         echo "$(brew --prefix bison)/bin" >> "$GITHUB_PATH"
-        # Homebrew's gcc ships a versioned gfortran (e.g. gfortran-14) but no
-        # unversioned 'gfortran', which is the only name CMake's Fortran
-        # detection looks for. Point CMake at the versioned binary explicitly.
+        # Let CMake find Homebrew's gfortran, which has a version number
         echo "FC=$(ls "$(brew --prefix)"/bin/gfortran-* | sort -V | tail -n1)" >> "$GITHUB_ENV"
-        # The pycbf tests import numpy at runtime to render array data; without
-        # it they emit a fallback message and the output comparison fails.
         python3 -m pip install --break-system-packages numpy
     - name: Build
       run: |
