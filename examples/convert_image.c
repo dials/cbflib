@@ -309,6 +309,11 @@
 #  include <unistd.h>
 #endif
 
+#ifndef HAVE_MKSTEMP
+#  define mkstemp _cbf_mkstemp
+int
+_cbf_mkstemp(char *templ);
+#endif
 
 
 double rint(double);
@@ -526,7 +531,7 @@ int main (int argc, char *argv [])
   int copt;
   int errflg = 0;
   char * imgtmp=NULL;
-  int imgtmpused = 0;
+  int imgtmpfd = -1;
   const char *imgin, *cbfout, *template, *distancestr, *alias;
   cbf_detector detector;
   char *tag, *data, *root;
@@ -671,12 +676,13 @@ int main (int argc, char *argv [])
   if (!imgin || strcmp(imgin?imgin:"","-") == 0) {
      imgtmp = (char *)malloc(strlen("/tmp/cvt_imgXXXXXX")+1);
      strcpy(imgtmp, "/tmp/cvt_imgXXXXXX");
-     if ((imgin = mktemp(imgtmp)) == NULL ) {
+     if ((imgtmpfd = mkstemp(imgtmp)) == -1 ) {
        fprintf(stderr,"\n convert_image: Can't create temporary file name %s.\n", imgtmp);
        fprintf(stderr,"%s\n",strerror(errno));
        exit(1);
      }
-     imgtmpused = 1;
+     close(imgtmpfd);
+     imgin = imgtmp;
   }
 
     /* Read the image */
@@ -685,7 +691,7 @@ int main (int argc, char *argv [])
 
   cbf_failnez (img_read (img, imgin))
 
-  if (imgtmpused)
+  if (imgtmpfd != -1)
   {
        if (unlink(imgtmp) != 0 ) {
        fprintf(stderr," convert_image:  Can't unlink temporary file %s.\n", imgtmp);

@@ -257,11 +257,6 @@
 
 #define C2CBUFSIZ 8192
 
-#ifdef __MINGW32__
-#define NOMKSTEMP
-#define NOTMPDIR
-#endif
-
 
 int main (int argc, char *argv [])
 {
