@@ -327,7 +327,7 @@ int cbf_get_bintext (const cbf_node  *column, unsigned int row,
 
     /* Parse it */
 
-  type_text = *text;
+  type_text = *(const signed char *)text;
 
   sscanf (text + 1, " %x %p %lx %lx %d %24s %x %d %d %14s %lu %lu %lu %lu %lu %u",
                       (unsigned int *)&id_text,
