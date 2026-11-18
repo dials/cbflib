@@ -1,6 +1,10 @@
+#include <sys/stat.h>
+
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+
 #ifdef _WIN32
-#    include <sys/stat.h>
-#    include <fcntl.h>
 #    include <io.h>
 #    include <windows.h>
 #endif
@@ -17,13 +21,15 @@ _cbf_mkstemp(char *templ)
     strncpy(path, templ, MAX_PATH);
     path[MAX_PATH] = '\0';
     for (i = 0; i < 65536; i++) {
-        strncpy(templ, path, MAX_PATH + 1);
+        strcpy(templ, path);
         if (_mktemp(templ) == NULL) {
             if (errno == EEXIST)
                 continue;
             return (-1);
         }
-        fd = open(templ, _O_CREAT | _O_EXCL | _O_RDWR,  _S_IREAD | _S_IWRITE);
+        fd = open(templ,
+		  _O_BINARY | _O_CREAT | _O_EXCL | _O_RDWR,
+		  _S_IREAD | _S_IWRITE);
         if (fd >= 0) {
             errno = errno_save;
             return (fd);

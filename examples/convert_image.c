@@ -689,7 +689,7 @@ int main (int argc, char *argv [])
 
   img = img_make_handle ();
 
-  cbf_failnez (img_read (img, imgin))
+  errflg = img_read (img, imgin);
 
   if (imgtmpfd != -1)
   {
@@ -699,6 +699,11 @@ int main (int argc, char *argv [])
        exit(1);
      }
 
+  }
+
+  if (errflg) {
+	  fprintf(stderr, "\nCBFlib error %d \n", errflg);
+	  return errflg;
   }
 
 
