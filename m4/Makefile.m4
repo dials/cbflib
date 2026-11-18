@@ -3114,7 +3114,7 @@ endif
 	$(LDPREFIX)  $(TIME) $(BIN)/cif2cbf -e none -c flatpacked \
 	cif2cbf_ehcn.cif cif2cbf_encp.cbf; rm cif2cbf_ehcn.cif
 	-cmp cif2cbf_encp.cbf makecbf.cbf
-	$(LDPREFIX)  $(TIME) $(BIN)/cif2cbf -i 9ins.cif -o 9ins.cbf
+	$(LDPREFIX)  $(TIME) $(BIN)/cif2cbf - 9ins.cbf < 9ins.cif
 	-$(DIFF_IGNORE_VERSIONS) 9ins.cif 9ins.cbf
 	$(LDPREFIX)  $(TIME) $(BIN)/convert_image -p $(TEMPLATES)/template_mar345_2300x2300.cbf -F example.mar2300 converted_flat.cbf
 	-$(DIFF_IGNORE_VERSIONS) converted_flat_orig.cbf converted_flat.cbf

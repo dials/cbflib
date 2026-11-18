@@ -1713,18 +1713,6 @@ int main (int argc, char *argv [])
             fprintf(stderr,"%s\n",strerror(errno));
             exit(1);
         }
-#else
-        if ((ciftmpfd = mkstemp(ciftmp)) == -1 ) {
-            fprintf(stderr,"\n cif2cbf: Can't create temporary file %s.\n", ciftmp);
-            fprintf(stderr,"%s\n",strerror(errno));
-            exit(1);
-        }
-        if ( (file = fdopen(ciftmpfd, "w+")) == NULL) {
-            fprintf(stderr,"Can't open temporary file %s.\n", ciftmp);
-            fprintf(stderr,"%s\n",strerror(errno));
-            exit(1);
-        }
-#endif
         while ((nbytes = fread(buf, 1, C2CBUFSIZ, stdin))) {
             if(nbytes != fwrite(buf, 1, nbytes, file)) {
                 fprintf(stderr,"Failed to write %s.\n", ciftmp);
@@ -1732,6 +1720,19 @@ int main (int argc, char *argv [])
             }
         }
         fclose(file);
+#else
+        if ((ciftmpfd = mkstemp(ciftmp)) == -1 ) {
+            fprintf(stderr,"\n cif2cbf: Can't create temporary file %s.\n", ciftmp);
+            fprintf(stderr,"%s\n",strerror(errno));
+            exit(1);
+        }
+        while ((nbytes = fread(buf, 1, C2CBUFSIZ, stdin))) {
+            if(nbytes != write(ciftmpfd, buf, nbytes)) {
+                fprintf(stderr,"Failed to write %s.\n", ciftmp);
+                exit(1);
+            }
+        }
+#endif
         cifin = ciftmp;
         ciftmpused = 1;
     }
@@ -1793,14 +1794,6 @@ int main (int argc, char *argv [])
         }
     }
 
-    if (ciftmpused) {
-        if (unlink(ciftmp) != 0 ) {
-            fprintf(stderr,"cif2cif:  Can't unlink temporary file %s.\n", ciftmp);
-            fprintf(stderr,"%s\n",strerror(errno));
-            exit(1);
-        }
-    }
-
     if (hdf5mode&HDF5_READ_MODE) {
         cbf_failnez (cbf_read_h5file(cif, h5in, hdf5register|MSG_DIGEST|qrflags|(digest&MSG_DIGESTWARN)))
     } else {
@@ -1808,6 +1801,17 @@ int main (int argc, char *argv [])
             cbf_failnez (cbf_read_file (cif, in, MSG_DIGEST|qrflags|(digest&MSG_DIGESTWARN)))
         } else {
             cbf_failnez (cbf_read_widefile (cif, in, MSG_DIGEST|qrflags|(digest&MSG_DIGESTWARN)))
+        }
+    }
+
+    if (ciftmpused) {
+#ifndef NOMKSTEMP
+        close(ciftmpfd);
+#endif
+        if (unlink(ciftmp) != 0 ) {
+            fprintf(stderr,"cif2cif:  Can't unlink temporary file %s.\n", ciftmp);
+            fprintf(stderr,"%s\n",strerror(errno));
+            exit(1);
         }
     }
 
