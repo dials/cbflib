@@ -1577,6 +1577,7 @@ ifneq ($(NUWEB_DEP),'')
 $(NUWEB_DEP):
 	-rm -rf $(NUWEB_DEP)
 	wget -O - -nv $(NUWEB_URL) | tar -xzf -
+	patch -d$(NUWEB_DEP) -p1 < patches/nuweb-1.62.patch
 
 $(NUWEB_DEP2): $(NUWEB_DEP)
 	(cd $(NUWEB_DEP); make nuweb; cp nuweb $(NUWEB_DEP2))
