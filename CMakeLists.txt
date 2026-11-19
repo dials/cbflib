@@ -1476,10 +1476,15 @@ set_tests_properties(cif2cbf-ehcn-encp-cmp PROPERTIES
 
 #
 # 9ins
+#
+# Unlike other tests involving `cif2cbf`, this reads input from
+# `stdin`.
 add_test(NAME 9ins
-  COMMAND cif2cbf
-    -i "${data_input}/9ins.cif"
-    -o "${CBF__DATA}/9ins.cbf")
+  COMMAND ${CMAKE_COMMAND}
+    "-Dcommand=$<TARGET_FILE:cif2cbf>;-;${CBF__DATA}/9ins.cbf"
+    "-Dinput-file=${data_input}/9ins.cif"
+    "-Doutput-file=${CBF__DATA}/9ins.cbf"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/redirect.cmake")
 set_tests_properties(9ins PROPERTIES
   FIXTURES_SETUP 9ins
   REQUIRED_FILES "${data_input}/9ins.cif")

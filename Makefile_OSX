@@ -1661,6 +1661,7 @@ $(LZ4): $(HDF5)	build_lz4
 	-rm -rf $(LZ4)
 ifneq ($(MSYS2),yes)
 	wget -O - -nv $(LZ4_URL) | tar -xzf -
+	patch -d$(LZ4) -p1 < patches/HDF5Plugin_5Jun21.patch
 	(cp $(LZ4include)/lz4.h $(INCLUDE); \
 	$(CC) $(CFLAGS) $(SOWCFLAGS) $(INCLUDES) $(WARNINGS) -c $(LZ4src)/lz4.c -o lz4.o; \
 	$(CC) $(CFLAGS) $(SOCFLAGS) $(INCLUDES) $(WARNINGS) -c $(LZ4src)/h5zlz4.c -o h5zlz4.o; \
@@ -2740,7 +2741,7 @@ endif
 	$(LDPREFIX)  $(TIME) $(BIN)/cif2cbf -e none -c flatpacked \
 	cif2cbf_ehcn.cif cif2cbf_encp.cbf; rm cif2cbf_ehcn.cif
 	-cmp cif2cbf_encp.cbf makecbf.cbf
-	$(LDPREFIX)  $(TIME) $(BIN)/cif2cbf -i 9ins.cif -o 9ins.cbf
+	$(LDPREFIX)  $(TIME) $(BIN)/cif2cbf - 9ins.cbf < 9ins.cif
 	-$(DIFF_IGNORE_VERSIONS) 9ins.cif 9ins.cbf
 	$(LDPREFIX)  $(TIME) $(BIN)/convert_image -p $(TEMPLATES)/template_mar345_2300x2300.cbf -F example.mar2300 converted_flat.cbf
 	-$(DIFF_IGNORE_VERSIONS) converted_flat_orig.cbf converted_flat.cbf
