@@ -1669,6 +1669,7 @@ $(LZ4): $(HDF5)	build_lz4
 	-rm -rf $(LZ4)
 ifneq ($(MSYS2),yes)
 	wget -O - -nv $(LZ4_URL) | tar -xzf -
+	patch -d$(LZ4) -p1 < patches/HDF5Plugin_5Jun21.patch
 	(cp $(LZ4include)/lz4.h $(INCLUDE); \
 	$(CC) $(CFLAGS) $(SOWCFLAGS) $(INCLUDES) $(WARNINGS) -c $(LZ4src)/lz4.c -o lz4.o; \
 	$(CC) $(CFLAGS) $(SOCFLAGS) $(INCLUDES) $(WARNINGS) -c $(LZ4src)/h5zlz4.c -o h5zlz4.o; \
