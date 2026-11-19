@@ -1,0 +1,10 @@
+--- a/src/h5zlz4.c
++++ b/src/h5zlz4.c
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include <sys/types.h>
++#include <arpa/inet.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <assert.h>

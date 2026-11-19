@@ -1,0 +1,213 @@
+Make used function declarations C89.  The definitions are still
+K&R-style, which raises warnings with e.g. gcc.  The cast in
+scraps.c's write_scraps() call is fishy.  This patch should apply to
+nuweb-1.64 as well.
+--- a/Makefile
++++ b/Makefile
+@@ -1,3 +1,5 @@
++SHELL := /bin/bash
++
+ CC = cc
+ 
+ CFLAGS = -g
+--- a/global.h
++++ b/global.h
+@@ -56,6 +56,8 @@
+    char name[1];
+ } label_node;
+ 
++typedef int *Parameters;
++
+ /* Limits */
+ 
+ #ifndef MAX_NAME_LEN
+@@ -103,41 +105,53 @@
+ extern label_node * label_tab;
+ 
+ /* Function prototypes */
+-extern void pass1();
+-extern void write_tex();
++void pass1(char *file_name);
++void write_tex(char *file_name, char *tex_name, unsigned char sector);
+ void initialise_delimit_scrap_array(void);
+ void update_delimit_scrap();
+ extern int has_sector(Name *, unsigned char);
+-extern void write_html();
+-extern void write_files();
+-extern void source_open(); /* pass in the name of the source file */
++void write_html(char *file_name, char *html_name);
++void write_files(Name *files);
++void source_open(char *name); /* pass in the name of the source file */
+ extern int source_get();   /* no args; returns the next char or EOF */
+ extern int source_last;   /* what last source_get() returned. */
+ extern int source_peek;   /* The next character to get */
+ extern void source_ungetc(int*);
+ extern void init_scraps();
+ extern int collect_scrap();
+-extern int write_scraps();
+-extern void write_scrap_ref();
+-extern void write_single_scrap_ref();
++int write_scraps(FILE *file,
++                 char *spelling,
++                 Scrap_Node *defs,
++                 int global_indent,
++                 char *indent_chars,
++                 char debug_flag,
++                 char tab_flag,
++                 char indent_flag,
++                 unsigned char comment_flag,
++                 Arglist *inArgs,
++                 char *inParams[9],
++                 Parameters parameters,
++                 char *title);
++void write_scrap_ref(FILE *file, int num, int first, int *page);
++void write_single_scrap_ref(FILE *file, int num);
+ extern int num_scraps();
+ extern void add_to_use(Name * name, int current_scrap);
+-Arglist * instance();
+-extern void collect_numbers();
++Arglist * instance(Arglist *a, Arglist *par, char *arg[9], int *ch);
++void collect_numbers(char *aux_name);
+ extern Name *collect_file_name();
+ extern Name *collect_macro_name();
+-extern Arglist *collect_scrap_name();
+-extern Name *name_add();
+-extern Name *prefix_add();
+-extern char *save_string();
+-extern void reverse_lists();
++Arglist * collect_scrap_name(int current_scrap);
++Name *name_add(Name **rt, char *spelling, unsigned char sector);
++Name *prefix_add(Name **rt, char *spelling, unsigned char sector);
++char *save_string(char *s);
++void reverse_lists(Name *names);
+ extern int robs_strcmp(char*, char*);
+-extern Name *install_args();
++Name *install_args(Name *name, int argc, char *arg[9]);
+ extern void search();
+ extern void format_uses_refs(FILE *, int);
+ extern void format_defs_refs(FILE *, int);
+ void write_label(char label_name[], FILE * file);
+-extern void *arena_getmem();
++void *arena_getmem(size_t n);
+ extern void arena_free();
+ 
+ /* Operating System Dependencies */
+@@ -155,4 +169,3 @@
+ #define PATH_SEP_CHAR "/"
+ #define DEFAULT_PATH "."
+ #endif
+-typedef int *Parameters;
+--- a/html.c
++++ b/html.c
+@@ -1,11 +1,11 @@
+ #include "global.h"
+ static int scraps = 1;
+-static void copy_scrap();               /* formats the body of a scrap */
+-static void display_scrap_ref();        /* formats a scrap reference */
+-static void display_scrap_numbers();    /* formats a list of scrap numbers */
+-static void print_scrap_numbers();      /* pluralizes scrap formats list */
+-static void format_entry();             /* formats an index entry */
+-static void format_user_entry();
++static void copy_scrap(FILE *file, int prefix);                         /* formats the body of a scrap */
++static void display_scrap_ref(FILE *html_file, int num);                /* formats a scrap reference */
++static void display_scrap_numbers(FILE *html_file, Scrap_Node *scraps); /* formats a list of scrap numbers */
++static void print_scrap_numbers(FILE *html_file, Scrap_Node *scraps);   /* pluralizes scrap formats list */
++static void format_entry(Name *name, FILE *html_file, int file_flag);   /* formats an index entry */
++static void format_user_entry(Name *name, FILE *html_file, int sector);
+ void write_html(file_name, html_name)
+      char *file_name;
+      char *html_name;
+--- a/latex.c
++++ b/latex.c
+@@ -1,13 +1,13 @@
+ #include "global.h"
+ static int scraps = 1;
+-static void copy_scrap();             /* formats the body of a scrap */
+-static void print_scrap_numbers();      /* formats a list of scrap numbers */
+-static void format_entry();             /* formats an index entry */
+-static void format_file_entry();        /* formats a file index entry */
+-static void format_user_entry();
+-static void write_arg();
+-static void write_literal();
+-static void write_ArglistElement();
++static void copy_scrap(FILE *file, int prefix, Name *name);                 /* formats the body of a scrap */
++static void print_scrap_numbers(FILE *tex_file, Scrap_Node *scraps);        /* formats a list of scrap numbers */
++static void format_entry(Name *name, FILE *tex_file, unsigned char sector); /* formats an index entry */
++static void format_file_entry(Name *name, FILE *tex_file);                  /* formats a file index entry */
++static void format_user_entry(Name *name, FILE *tex_file, unsigned char sector);
++static void write_arg(FILE *tex_file, char *p);
++static void write_literal(FILE *tex_file, char *p, int mode);
++static void write_ArglistElement(FILE *file, Arglist *args, char **params);
+ void write_tex(file_name, tex_name, sector)
+      char *file_name;
+      char *tex_name;
+--- a/main.c
++++ b/main.c
+@@ -191,12 +191,12 @@
+               int saved_number_flag = number_flag;
+               number_flag = TRUE;
+               collect_numbers(aux_name);
+-              write_html(source_name, tex_name, 0/*Dummy */);
++              write_html(source_name, tex_name);
+               number_flag = saved_number_flag;
+             }
+             else {
+               collect_numbers(aux_name);
+-              write_tex(source_name, tex_name);
++              write_tex(source_name, tex_name, 0);
+             }
+           }
+           if (output_flag)
+--- a/names.c
++++ b/names.c
+@@ -33,7 +33,7 @@
+   strcpy(new, s);
+   return new;
+ }
+-static int ambiguous_prefix();
++static int ambiguous_prefix(Name *node, char *spelling, unsigned char sector);
+ 
+ static char * found_name = NULL;
+ 
+@@ -599,7 +599,7 @@
+   exit(-1);
+   return NULL;  /* unreachable return to avoid warnings on some compilers */
+ }
+-static Scrap_Node *reverse(); /* a forward declaration */
++static Scrap_Node *reverse(Scrap_Node *a); /* a forward declaration */
+ 
+ void reverse_lists(names)
+      Name *names;
+--- a/scraps.c
++++ b/scraps.c
+@@ -46,7 +46,7 @@
+      /* Include an embedded scrap in comment */
+      Embed_Node * e = (Embed_Node *)q;
+      fputc('{', file);
+-     write_scraps(file, "", e->defs, -1, "", 0, 0, 0, 0, e->args, 0, 1, "");
++     write_scraps(file, "", e->defs, -1, "", 0, 0, 0, 0, e->args, 0, (int *)1, "");
+      fputc('}', file);
+   } else {
+      /* Include a fragment use in comment */
+@@ -74,8 +74,8 @@
+ char * comment_mid[4] = { "", " * ", "// ", "# "};
+ char * comment_end[4] = { "", " */", "", ""};
+ 
+-static void add_uses();
+-static int scrap_is_in();
++static void add_uses(Uses **root, Name *name);
++static int scrap_is_in(Scrap_Node *list, int i);
+ 
+ void init_scraps()
+ {
+@@ -1317,8 +1317,8 @@
+ 
+    return c;
+ }
+-static void build_gotos();
+-static int reject_match();
++static void build_gotos(Name *tree);
++static int reject_match(Name *name, char post, ArgManager *reader);
+ 
+ void search()
+ {
