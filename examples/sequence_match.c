@@ -43,9 +43,10 @@
 #define C2CBUFSIZ 8192
 
 
-#ifdef __MINGW32__
-#define NOMKSTEMP
-#define NOTMPDIR
+#ifndef HAVE_MKSTEMP
+#    define mkstemp _cbf_mkstemp
+int
+_cbf_mkstemp(char *templ);
 #endif
 
 int local_exit (int status);
@@ -434,9 +435,7 @@ int main (int argc, char *argv [])
     int numleftch, numrightch;
     int iii, jjj;
     int errflg = 0;
-#ifndef NOMKSTEMP
     int leftintmpfd, rightintmpfd;
-#endif
     int leftintmpused, rightintmpused;
     
     const char * optarg;
@@ -564,23 +563,7 @@ int main (int argc, char *argv [])
     
     if (!leftinstr || strcmp(leftinstr?leftinstr:"","-") == 0) {
         leftintmpstr = (char *)malloc(strlen("/tmp/seqmatchlXXXXXX")+1);
-#ifdef NOTMPDIR
-        strcpy(leftintmpstr, "seqmatchlXXXXXX");
-#else
         strcpy(leftintmpstr, "/tmp/seqmatchlXXXXXX");
-#endif
-#ifdef NOMKSTEMP
-        if ((leftintmpstr = mktemp(leftintmpstr)) == NULL ) {
-            fprintf(stderr,"\n seqmatch: Can't create temporary file name %s.\n", leftintmpstr);
-            fprintf(stderr,"%s\n",strerror(errno));
-            exit(1);
-        }
-        if ( (leftin = fopen(leftintmpstr,"wb+")) == NULL) {
-            fprintf(stderr,"Can't open temporary file %s.\n", leftintmpstr);
-            fprintf(stderr,"%s\n",strerror(errno));
-            exit(1);     	
-        }
-#else
         if ((leftintmpfd = mkstemp(leftintmpstr)) == -1 ) {
             fprintf(stderr,"\n seqmatch: Can't create temporary file %s.\n", leftintmpstr);
             fprintf(stderr,"%s\n",strerror(errno));
@@ -591,7 +574,6 @@ int main (int argc, char *argv [])
             fprintf(stderr,"%s\n",strerror(errno));
             exit(1);
         }
-#endif
         while ((nbytes = fread(buf, 1, C2CBUFSIZ, stdin))) {
             if(nbytes != fwrite(buf, 1, nbytes, leftin)) {
                 fprintf(stderr,"Failed to write %s.\n", leftintmpstr);
@@ -624,23 +606,7 @@ int main (int argc, char *argv [])
     
     if (!rightinstr || strcmp(rightinstr?rightinstr:"","-") == 0) {
         rightintmpstr = (char *)malloc(strlen("/tmp/seqmatchrXXXXXX")+1);
-#ifdef NOTMPDIR
-        strcpy(rightintmpstr, "seqmatchrXXXXXX");
-#else
         strcpy(rightintmpstr, "/tmp/seqmatchrXXXXXX");
-#endif
-#ifdef NOMKSTEMP
-        if ((rightintmpstr = mktemp(rightintmpstr)) == NULL ) {
-            fprintf(stderr,"\n seqmatch: Can't create temporary file name %s.\n", rightintmpstr);
-            fprintf(stderr,"%s\n",strerror(errno));
-            exit(1);
-        }
-        if ( (rightin = fopen(rightintmpstr,"wb+")) == NULL) {
-            fprintf(stderr,"Can't open temporary file %s.\n", rightintmpstr);
-            fprintf(stderr,"%s\n",strerror(errno));
-            exit(1);     	
-        }
-#else
         if ((rightintmpfd = mkstemp(rightintmpstr)) == -1 ) {
             fprintf(stderr,"\n seqmatch: Can't create temporary file %s.\n", rightintmpstr);
             fprintf(stderr,"%s\n",strerror(errno));
@@ -651,7 +617,6 @@ int main (int argc, char *argv [])
             fprintf(stderr,"%s\n",strerror(errno));
             exit(1);
         }
-#endif
         while ((nbytes = fread(buf, 1, C2CBUFSIZ, stdin))) {
             if(nbytes != fwrite(buf, 1, nbytes, rightin)) {
                 fprintf(stderr,"Failed to write %s.\n", rightintmpstr);

@@ -321,9 +321,10 @@
 
 #define CVTBUFSIZ 8192
 
-#ifdef __MINGW32__
-#define NOMKSTEMP
-#define NOTMPDIR
+#ifndef HAVE_MKSTEMP
+#    define mkstemp _cbf_mkstemp
+int
+_cbf_mkstemp(char *templ);
 #endif
 
 int outusage ( void );
@@ -1847,9 +1848,7 @@ int main (int argc, char *argv [])
     int copt;
     int errflg = 0;
     char cbfintmp[19];
-#ifndef NOMKSTEMP
     int cbfintmpfd;
-#endif
     int cbfintmpused = 0;
     char buf[CVTBUFSIZ];
     const char *cbfin, *cbfout, *template, *distancestr, *alias;
@@ -2030,23 +2029,7 @@ int main (int argc, char *argv [])
     
     
     if (!cbfin || strcmp(cbfin?cbfin:"","-") == 0) {
-#ifdef NOTMPDIR
-        strcpy(cbfintmp, "cif2cbfXXXXXX");
-#else
         strcpy(cbfintmp, "/tmp/cif2cbfXXXXXX");
-#endif
-#ifdef NOMKSTEMP
-        if (mktemp(cbfintmp) == NULL ) {
-            fprintf(stderr,"\n convert_minicbf: Can't create temporary file name %s.\n", cbfintmp);
-            fprintf(stderr,"%s\n",strerror(errno));
-            exit(1);
-        }
-        if ( (file = fopen(cbfintmp,"wb+")) == NULL) {
-            fprintf(stderr,"Can't open temporary file %s.\n", cbfintmp);
-            fprintf(stderr,"%s\n",strerror(errno));
-            exit(1);
-        }
-#else
         if ((cbfintmpfd = mkstemp(cbfintmp)) == -1 ) {
             fprintf(stderr,"\n convert_minicbf: Can't create temporary file name %s.\n", cbfintmp);
             fprintf(stderr,"%s\n",strerror(errno));
@@ -2057,7 +2040,6 @@ int main (int argc, char *argv [])
             fprintf(stderr,"%s\n",strerror(errno));
             exit(1);
         }
-#endif
         while ((nbytes = fread(buf, 1, CVTBUFSIZ, stdin))) {
             if(nbytes != fwrite(buf, 1, nbytes, file)) {
                 fprintf(stderr,"Failed to write %s.\n", cbfintmp);

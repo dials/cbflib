@@ -274,9 +274,10 @@
 
 #define C2CBUFSIZ 8192
 
-#ifdef __MINGW32__
-#define NOMKSTEMP
-#define NOTMPDIR
+#ifndef HAVE_MKSTEMP
+#define mkstemp _cbf_mkstemp
+int
+_cbf_mkstemp(char *templ);
 #endif
 
 
@@ -510,26 +511,13 @@ int main (int argc, char *argv [])
 #endif
 		for (f = 0; CBF_SUCCESS == error && f != cifid; ++f) {
 			cbf_handle cif = NULL;
-#ifdef NOTMPDIR
-			char ciftmp[] = "cif2cbfXXXXXX";
-#else
 			char ciftmp[] = "/tmp/cif2cbfXXXXXX";
     		int ciftmpfd;
-#endif
 			/* Get suitable file - reading from stdin to a temporary file if needed */
 			if (!(cifin[f]) || strcmp(cifin[f]?cifin[f]:"","-") == 0) {
 				FILE *file = NULL;
 				int nbytes;
 				char buf[C2CBUFSIZ];
-#ifdef NOMKSTEMP
-				if (mktemp(ciftmp) == NULL ) {
-                    fprintf(stderr,"%s: Can't create temporary file name %s.\n%s\n", argv[0], ciftmp,strerror(errno));
-					error |= CBF_FILEOPEN;
-				} else if ((file = fopen(ciftmp,"wb+")) == NULL) {
-                    fprintf(stderr,"Can't open temporary file %s.\n%s\n", ciftmp,strerror(errno));
-					error |= CBF_FILEOPEN;
-                }
-#else
                 if ((ciftmpfd = mkstemp(ciftmp)) == -1 ) {
                     fprintf(stderr,"%s: Can't create temporary file %s.\n%s\n", argv[0], ciftmp,strerror(errno));
 					error |= CBF_FILEOPEN;
@@ -537,7 +525,6 @@ int main (int argc, char *argv [])
                     fprintf(stderr,"Can't open temporary file %s.\n%s\n", ciftmp,strerror(errno));
 					error |= CBF_FILEOPEN;
                 }
-#endif
                 while ((nbytes = fread(buf, 1, C2CBUFSIZ, stdin))) {
                     if(nbytes != fwrite(buf, 1, nbytes, file)) {
                         fprintf(stderr,"Failed to write %s.\n", ciftmp);

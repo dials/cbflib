@@ -505,9 +505,10 @@
 #define C2CBUFSIZ 8192
 #define NUMDICTS 50
 
-#ifdef __MINGW32__
-#define NOMKSTEMP
-#define NOTMPDIR
+#ifndef HAVE_MKSTEMP
+#define mkstemp _cbf_mkstemp
+int
+_cbf_mkstemp(char *templ);
 #endif
 
 #define HDR_FINDDIMS    0x0040  /* On read, find header dims          */
@@ -826,9 +827,7 @@ int main (int argc, char *argv [])
     const char *dictionary[NUMDICTS];
     int dqrflags[NUMDICTS];
     char *ciftmp=NULL;
-#ifndef NOMKSTEMP
     int ciftmpfd;
-#endif
     int ciftmpused;
     int padflag;
     int dimflag;
@@ -1697,23 +1696,7 @@ int main (int argc, char *argv [])
 
     if (!cifin || strcmp(cifin?cifin:"","-") == 0) {
         ciftmp = (char *)malloc(strlen("/tmp/cif2cbfXXXXXX")+1);
-#ifdef NOTMPDIR
-        strcpy(ciftmp, "cif2cbfXXXXXX");
-#else
         strcpy(ciftmp, "/tmp/cif2cbfXXXXXX");
-#endif
-#ifdef NOMKSTEMP
-        if ((ciftmp = mktemp(ciftmp)) == NULL ) {
-            fprintf(stderr,"\n cif2cbf: Can't create temporary file name %s.\n", ciftmp);
-            fprintf(stderr,"%s\n",strerror(errno));
-            exit(1);
-        }
-        if ( (file = fopen(ciftmp,"wb+")) == NULL) {
-            fprintf(stderr,"Can't open temporary file %s.\n", ciftmp);
-            fprintf(stderr,"%s\n",strerror(errno));
-            exit(1);
-        }
-#else
         if ((ciftmpfd = mkstemp(ciftmp)) == -1 ) {
             fprintf(stderr,"\n cif2cbf: Can't create temporary file %s.\n", ciftmp);
             fprintf(stderr,"%s\n",strerror(errno));
@@ -1724,7 +1707,6 @@ int main (int argc, char *argv [])
             fprintf(stderr,"%s\n",strerror(errno));
             exit(1);
         }
-#endif
         while ((nbytes = fread(buf, 1, C2CBUFSIZ, stdin))) {
             if(nbytes != fwrite(buf, 1, nbytes, file)) {
                 fprintf(stderr,"Failed to write %s.\n", ciftmp);
